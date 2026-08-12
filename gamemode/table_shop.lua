@@ -586,7 +586,7 @@ name = "purchase_suicide",
 print_name = "Explosion",
 class = "ability",
 tool_name = "tool_abil_suicide",
-description = "Explode yourself dealing 40 damage to nearby enemies with 30 seconds cooldown. \n( Damage goes through invulnerability and shield. )",
+description = "Explode yourself the old fashioned way - maybe )",
 }
 ,
 

@@ -1,7 +1,7 @@
-"tacticaltoolgameplusminus"
+"tacticaltoolgame"
 {
 	"base"		"base"
-	"title"		"Tactical Tool Game Plus Minus"
+	"title"		"Tactical Tool Game"
 	"maps"		"^ttg_"
 	"menusystem"	"1"
 	"workshopid"	""

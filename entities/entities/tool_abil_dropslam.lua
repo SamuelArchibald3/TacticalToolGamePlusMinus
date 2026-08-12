@@ -69,7 +69,7 @@ function ENT:DropSlam( fallspeed )
 	for k, ent in pairs( orgin_ents ) do
 		if ent:IsValidGamePlayer() and ent:Team() != self.Owner:Team() then
 			local dmginfo = DamageInfo()
-				dmginfo:SetDamage( fallspeed * self.Ref.damage )
+				dmginfo:SetDamage( (fallspeed * self.Ref.damage) - 20 )
 				dmginfo:SetInflictor( self )
 				dmginfo:SetAttacker( self.Owner )
 

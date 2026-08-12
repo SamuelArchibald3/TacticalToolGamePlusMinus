@@ -22,15 +22,9 @@ end
 
 
 
-function SWEP:Charge( x )
+function SWEP:Charge( )
 	self.Owner:EmitSound( self.Ref.sound_charge )
-
-		if x == true then
-			self:Freeze( true )
-		else
-			self:Freeze( false )
-		end
-
+	
 	self.Charging = true
 	
 	timer.Simple( self.Ref.charge_time, function()
@@ -40,7 +34,6 @@ function SWEP:Charge( x )
 				
 	end)
 end
-
 
 
 
