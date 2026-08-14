@@ -353,6 +353,27 @@ function fGiveTool( player, command, arguments )
 		if it's an Ability
 	---------------------------------------------------------*/	
 	elseif tool_class == "ability" then
+
+		//there are only 3 ability slots ( A, B, C ), so find a free one BEFORE charging
+		//IsValid( ) rather than == nil, so a slot whose ent was removed without the
+		//field being cleared counts as free instead of being stuck forever
+		local freeslot = nil
+		if not IsValid( player.Ability_A ) then
+			freeslot = "a"
+		elseif not IsValid( player.Ability_B ) then
+			freeslot = "b"
+		elseif not IsValid( player.Ability_C ) then
+			freeslot = "c"
+		end
+
+		//if all 3 slots are taken, dont charge a token and dont spawn an ability
+		//that has no slot - it would be unusable, invisible on the hud, and never
+		//cleaned up by RemoveAbilities( ) since nothing would reference it
+		if freeslot == nil then
+			player:ChatPrint("No ability slots left!")
+			BuyFailedSound()
+			return
+		end
 	
 	
 		//try to subtract the cost, but if it fails, print to the player he does not have enough money
@@ -367,20 +388,18 @@ function fGiveTool( player, command, arguments )
 		local abil = ents.Create(purchaseref.tool_name)
 			abil:SetOwner(player)
 			
-		//set what slot this ability will be in
+		//put it into the slot that was reserved above
 		//	A = Shift
 		//	B = Z
 		//	C = Alt
-		if player.Ability_A == nil then
+		if freeslot == "a" then
 			player.Ability_A = abil
-			abil.LetterSlot = "a"
-		elseif player.Ability_B == nil then
+		elseif freeslot == "b" then
 			player.Ability_B = abil
-			abil.LetterSlot = "b"
-		elseif player.Ability_C == nil then
+		elseif freeslot == "c" then
 			player.Ability_C = abil
-			abil.LetterSlot = "c"
 		end
+		abil.LetterSlot = freeslot
 		
 		abil:Spawn()
 		BuySuccessfulSound()

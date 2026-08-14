@@ -327,19 +327,20 @@ end
 	Drop Slam
 ---------------------------------------------------------*/
 function TTGPlayer:ActivateDropSlams( fallspeed )
-	if self.Ability_A != nil then
+	//IsValid( ) rather than != nil - :GetClass() on a removed ent would error
+	if IsValid( self.Ability_A ) then
 		if self.Ability_A:GetClass() == "tool_abil_dropslam" and self.Ability_A.Primed == true then
 			self.Ability_A:DropSlam( fallspeed )
 		end
 	end
 	
-	if self.Ability_B != nil then
+	if IsValid( self.Ability_B ) then
 		if self.Ability_B:GetClass() == "tool_abil_dropslam" and self.Ability_B.Primed == true then
 			self.Ability_B:DropSlam( fallspeed )
 		end
 	end
 	
-	if self.Ability_C != nil then
+	if IsValid( self.Ability_C ) then
 		if self.Ability_C:GetClass() == "tool_abil_dropslam" and self.Ability_C.Primed == true then
 			self.Ability_C:DropSlam( fallspeed )
 		end
