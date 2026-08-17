@@ -98,8 +98,10 @@
 				--lock all players so they cant move at all while the buying screen is open
 				v:Freeze( true )
 				
-				--Set everyones tokens to 3, so they can purchase 3 tools in the round
-				v:SetToolTokens(ROUND_TOKENS)
+				--Set everyones tokens for the round, so they can purchase that many
+				--tools. See TTG_RoundStartTokens() in ingame_functions.lua - the
+				--tie breaker round can be set to hand out none.
+				v:SetToolTokens( TTG_RoundStartTokens() )
 				
 				--give attackers god mode so they cant be killed in setup phase later
 				if GetTeamRole(v:Team()) == "Attacking" then

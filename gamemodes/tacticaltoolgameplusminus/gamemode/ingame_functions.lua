@@ -31,22 +31,51 @@
 
 	
 /*---------------------------------------------------------
+	Tokens for the round
+---------------------------------------------------------*/
+
+//How many tool tokens a player should start the current round with.
+//
+//This lives in one place on purpose: the round-setup block is copy-pasted in
+//three spots ( gamesetup.lua for the first round, and twice in ingame.lua for
+//every round after ), so any rule about token amounts has to be shared or the
+//copies drift apart.
+function TTG_RoundStartTokens()
+
+	//the tie breaker is the round after the last normal one. If the setting is
+	//on, it is played out with whatever you can already carry - no purchases.
+	if TIEBREAK_NO_TOKENS == true and G_CurRound == G_TotalRounds + 1 then
+		return 0
+	end
+
+	return ROUND_TOKENS
+end
+
+
+
+/*---------------------------------------------------------
 	Derma panel opening stuff
 ---------------------------------------------------------*/
 
 function Open_BuyingMenus()
 	for k,ply in pairs(player.GetAll()) do
-	
+
 		if ply:Team() != TEAM_SPEC then
-			umsg.Start("Open_BuyingVgui", ply)
-			umsg.End()
-			
+
+			//no point showing the buy menu to someone with no tokens - every
+			//purchase would just be refused. The team purchases panel still
+			//opens so they can watch what their team is buying.
+			if ply:GetToolTokens() > 0 then
+				umsg.Start("Open_BuyingVgui", ply)
+				umsg.End()
+			end
+
 			umsg.Start("Open_TeamPurchasesVgui", ply)
 			umsg.End()
 		else
 			umsg.Start("Open_TeamPurchasesVgui", ply)
 			umsg.End()
-			
+
 		end
 	end
 end

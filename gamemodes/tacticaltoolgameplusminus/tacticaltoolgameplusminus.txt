@@ -26,5 +26,25 @@
 			"type"		"Numeric"
 			"default"	"4"
 		}
+
+
+		3
+		{
+			"name"		"ttg_var_tokens"
+			"text"		"Tool Tokens Per Round"
+			"help"		"How many tools each player can buy each round (takes effect from the next round)"
+			"type"		"Numeric"
+			"default"	"4"
+		}
+
+
+		4
+		{
+			"name"		"ttg_var_tiebreak_notokens"
+			"text"		"No Tokens On Tie Breaker"
+			"help"		"On the tie breaker round everyone gets 0 tool tokens, so the decider is played out with no new purchases"
+			"type"		"CheckBox"
+			"default"	"1"
+		}
 	}
 }

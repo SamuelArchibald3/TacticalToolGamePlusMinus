@@ -83,6 +83,67 @@ if SERVER then
 	elseif set_devmode > 0 then
 		DEV_MODE = true
 	end
+
+
+	--Tool Tokens Per Round
+	--How many tools each player can buy in a single round. Read via
+	--TTG_RoundStartTokens() in ingame_functions.lua, which every round-setup
+	--path calls when handing tokens out.
+	--
+	--The setting is declared in tacticaltoolgameplusminus.txt so it shows up in the
+	--gamemode settings menu, but it is created here as well so it still works when
+	--the menu never runs - a dedicated server started from server.cfg or the command
+	--line, for example.
+	if not ConVarExists( "ttg_var_tokens" ) then
+		CreateConVar( "ttg_var_tokens", tostring( ROUND_TOKENS ), FCVAR_NOTIFY, "How many tools each player can buy each round" )
+	end
+
+	--nil is checked first: GetConVarNumber returns 0 for a missing convar, but
+	--comparing nil with a number would error outright
+	local set_tokens = GetConVarNumber( "ttg_var_tokens" )
+	if set_tokens == nil or set_tokens <= 0 then
+		set_tokens = ROUND_TOKENS
+	end
+	ROUND_TOKENS = set_tokens
+
+	--Applies from the next round, since gamesetup.lua reads ROUND_TOKENS when it
+	--hands out tokens - so no map restart needed, unlike the rounds setting.
+	local function Callback_Tokens( CVar, PreviousValue, NewValue )
+		local newtokens = tonumber( NewValue )
+		if newtokens == nil or newtokens <= 0 then return end
+
+		ROUND_TOKENS = newtokens
+		ChatPrintToAll( "Tool tokens per round set to  " .. newtokens .. "  (applies next round)" )
+	end
+	cvars.AddChangeCallback( "ttg_var_tokens", Callback_Tokens, "ttg_var_tokens_setting" )
+
+
+
+
+	--No Tokens On Tie Breaker
+	--When enabled, everyone gets 0 tool tokens on the tie breaker round, so the
+	--decider is played out with no new purchases. gamesetup.lua checks this when
+	--handing out tokens; the tie breaker is the round after the last normal one
+	--( G_CurRound == G_TotalRounds + 1 ).
+	if not ConVarExists( "ttg_var_tiebreak_notokens" ) then
+		CreateConVar( "ttg_var_tiebreak_notokens", "1", FCVAR_NOTIFY, "Give everyone 0 tool tokens on the tie breaker round" )
+	end
+
+	TIEBREAK_NO_TOKENS = GetConVarNumber( "ttg_var_tiebreak_notokens" ) > 0
+
+	local function Callback_TiebreakTokens( CVar, PreviousValue, NewValue )
+		local newvalue = tonumber( NewValue )
+		if newvalue == nil then return end
+
+		TIEBREAK_NO_TOKENS = newvalue > 0
+
+		if TIEBREAK_NO_TOKENS then
+			ChatPrintToAll( "Tie breaker round will now give 0 tool tokens" )
+		else
+			ChatPrintToAll( "Tie breaker round will now give the usual  " .. ROUND_TOKENS .. "  tool tokens" )
+		end
+	end
+	cvars.AddChangeCallback( "ttg_var_tiebreak_notokens", Callback_TiebreakTokens, "ttg_var_tiebreak_notokens_setting" )
 	
 	
 	
