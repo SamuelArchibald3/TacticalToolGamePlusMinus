@@ -40,20 +40,30 @@ team.SetUp( TEAM_SPEC, "Spectators", Color( 200, 200, 200, 255 ), true )
 
 
 
+//Uses the Global2 ( NW2 ) functions rather than the legacy SetGlobalString.
+//The legacy globals were not reaching remote clients promptly: the role text
+//was correct for the listen server host, who reads the value in-process with no
+//networking involved, while everyone else kept the previous round's role until
+//some later global write happened to flush it. The buy phase writing
+//CL_CurBuyingRole is what appeared to "fix" it, which is why the text only ever
+//refreshed when the buying side switched.
+//
+//BroadcastTeamRoles() in ingame_functions.lua also pushes these over the net
+//library at every point the roles can change, so a missed update self-corrects.
 function SetTeamRole(teamnum, role)
 	if teamnum == TEAM_BLUE then
 		if role == "Attacking" then
-			SetGlobalString("Blue_Role", "Attacking")
+			SetGlobal2String("Blue_Role", "Attacking")
 		elseif role == "Defending" then
-			SetGlobalString("Blue_Role", "Defending")
+			SetGlobal2String("Blue_Role", "Defending")
 		else
 			print("Invalid role")
 		end
 	elseif teamnum == TEAM_RED then
 		if role == "Attacking" then
-			SetGlobalString("Red_Role", "Attacking")
+			SetGlobal2String("Red_Role", "Attacking")
 		elseif role == "Defending" then
-			SetGlobalString("Red_Role", "Defending")
+			SetGlobal2String("Red_Role", "Defending")
 		else
 			print("Invalid role")
 		end
@@ -64,20 +74,20 @@ end
 
 
 function GetTeamRole(teamnum)
-	local role = nil 
+	local role = nil
 	if teamnum == TEAM_BLUE then
-		role = GetGlobalString("Blue_Role")
+		role = GetGlobal2String("Blue_Role")
 	elseif teamnum == TEAM_RED then
-		role = GetGlobalString("Red_Role")	
+		role = GetGlobal2String("Red_Role")
 	elseif teamnum == TEAM_SPEC then
 		role = "Spectator"
 	end
-	
-	
-	if role == nil then 
+
+
+	if role == nil then
 		print("Team has no role!")
 	end
-	
+
 	return role
 end
 

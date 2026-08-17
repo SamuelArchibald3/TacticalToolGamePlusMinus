@@ -31,6 +31,30 @@
 
 	
 /*---------------------------------------------------------
+	Team roles - explicit push to clients
+---------------------------------------------------------*/
+
+util.AddNetworkString( "TTG_TeamRoles" )
+
+//Pushes the current team roles to every client over the net library.
+//
+//The roles already live in Global2 vars, which network on their own. This is a
+//belt and braces resend for the case that made the roles look broken: the text
+//was right for the listen server host ( who reads the value in-process ) while
+//remote clients sat on the previous round's role until some unrelated global
+//write flushed it. net messages are reliable and ordered, so calling this at
+//every point the roles can change means a client cannot be left showing a stale
+//role for a whole phase.
+function BroadcastTeamRoles()
+	net.Start( "TTG_TeamRoles" )
+		net.WriteString( GetTeamRole( TEAM_RED )  or "" )
+		net.WriteString( GetTeamRole( TEAM_BLUE ) or "" )
+	net.Broadcast()
+end
+
+
+
+/*---------------------------------------------------------
 	Tokens for the round
 ---------------------------------------------------------*/
 

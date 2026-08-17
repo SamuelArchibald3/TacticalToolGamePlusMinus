@@ -74,9 +74,13 @@
 		end
 	
 		
+		//the roles for this round are settled above, so push them to every client
+		BroadcastTeamRoles()
+
+
 		//set the zone the teams are vying for control over to be at one of the bomb sites of the de_ map
 		ChooseAttackSite()
-		
+
 		//makes it constantly make sure atleast one person on each team is alive, otherwise end the round
 		Start_TeamsAliveCheck()
 		Start_TriggerHurtCheck()
@@ -422,6 +426,10 @@ function BeginGame()
 	
 	SetTeamRole(G_FirstAttacker, "Attacking")
 	SetTeamRole(G_FirstDefender, "Defending")
+
+	//push the opening roles to clients rather than relying on the networked
+	//global alone - see BroadcastTeamRoles() in ingame_functions.lua
+	BroadcastTeamRoles()
 	
 	for k,v in pairs(player.GetAll()) do
 		--unfreeze people since they were froze during team setup menu

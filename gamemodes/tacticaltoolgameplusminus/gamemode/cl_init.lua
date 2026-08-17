@@ -55,6 +55,25 @@ function ClearOldClientVars()
 end
 usermessage.Hook( "ClearOldClientVars", ClearOldClientVars )
 
+
+--The server pushes the team roles here whenever they can have changed.
+--
+--Writing them with SetTeamRole clientside sets this client's own copy only,
+--which is exactly what is wanted: it fills in the role straight away instead of
+--waiting on the networked global to arrive. When the global does turn up it
+--carries the same value, so the two cannot disagree.
+--
+--Everything that shows a role reads GetTeamRole every frame ( the HUD text, the
+--turn-to-buy prompt, the scoreboard, the purchases menus ), so they all correct
+--themselves as soon as this lands.
+net.Receive( "TTG_TeamRoles", function()
+	local redrole  = net.ReadString()
+	local bluerole = net.ReadString()
+
+	if redrole  != "" then SetTeamRole( TEAM_RED,  redrole  ) end
+	if bluerole != "" then SetTeamRole( TEAM_BLUE, bluerole ) end
+end )
+
 surface.CreateFont( "TheDefaultSettings1", {
 	font = "Arial", --  Use the font-name which is shown to you by your operating system Font Viewer, not the file name
 	extended = false,

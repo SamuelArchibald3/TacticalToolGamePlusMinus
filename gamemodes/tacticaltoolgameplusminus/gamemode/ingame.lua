@@ -86,9 +86,13 @@ function NextRound()
 
 
 
+	//the roles for this round are settled above, so push them to every client
+	BroadcastTeamRoles()
+
+
 	//set the zone the teams are vying for control over to be at one of the bomb sites of the de_ map
 	ChooseAttackSite()
-	
+
 	//makes it constantly make sure atleast one person on each team is alive, otherwise end the round
 	Start_TeamsAliveCheck()
 	Start_TriggerHurtCheck()
@@ -147,8 +151,12 @@ function DefendersBuyPhase()
 		end
 	end
 	
+	//resend the roles at the start of the phase, so a client that somehow missed
+	//the round-start push is corrected here rather than showing a stale role
+	BroadcastTeamRoles()
+
 	SetGlobalString("CL_CurBuyingRole", "Defending")
-	
+
 	SetGlobalString("CL_CurPhase", "DefendersBuy")
 	
 	SetGlobalBool("CL_PlayTimerCountSounds", false)
@@ -171,8 +179,11 @@ function AttackersBuyPhase()
 		end
 	end
 	
+	//resend the roles at the start of the phase, same reasoning as above
+	BroadcastTeamRoles()
+
 	SetGlobalString("CL_CurBuyingRole", "Attacking")
-	
+
 	SetGlobalString("CL_CurPhase", "AttackersBuy")
 	
 	InitializeGCTime(ATTACKERSBUYPHASE_TIME, PlanningPhase)
