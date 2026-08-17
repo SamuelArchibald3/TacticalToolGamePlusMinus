@@ -1,0 +1,21 @@
+# Normalise line endings.
+#
+# Without this, git on Windows converts LF to CRLF on checkout, and every file
+# then reads as "modified" against the repo even when the content is identical.
+# That is exactly what happened before: nine files showed as changed when they
+# were byte-identical to the remote apart from line endings.
+
+* text=auto eol=lf
+
+*.lua  text eol=lf
+*.txt  text eol=lf
+*.md   text eol=lf
+
+# Binary - never touch these
+*.ain  binary
+*.bsp  binary
+*.png  binary
+*.vtf  binary
+*.mdl  binary
+*.wav  binary
+*.mp3  binary

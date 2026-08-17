@@ -1,0 +1,36 @@
+# =============================================================================
+#  Tactical Tool Game - what this repo ships
+# =============================================================================
+#
+#  This repo contains ONLY what someone needs to actually run the gamemode on
+#  a server: copy gamemodes/ and maps/ into their garrysmod/ folder and go.
+#
+#  Development-only material is kept locally but deliberately never committed,
+#  so a server operator cloning this repo gets nothing they don't need.
+# =============================================================================
+
+
+# --- Test suites ------------------------------------------------------------
+# GLuaTest suites live at garrysmod/lua/tests/<project>/ on a real install
+# (GLuaTest discovers tests by scanning the LUA search path for tests/*), so
+# they are outside this repo anyway. These rules make sure they never drift in.
+tests/
+lua/tests/
+**/tests/
+
+
+# --- Developer documentation and tooling ------------------------------------
+# Not needed to run a server: testing guide, and the offline GLua syntax
+# checker used during development.
+TESTING.md
+**/TESTING.md
+dev/
+**/dev/
+
+
+# --- Editor / OS noise ------------------------------------------------------
+.vscode/
+*.code-workspace
+Thumbs.db
+desktop.ini
+.DS_Store
