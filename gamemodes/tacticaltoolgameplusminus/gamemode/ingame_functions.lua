@@ -31,6 +31,27 @@
 
 	
 /*---------------------------------------------------------
+	Aiming at a player
+---------------------------------------------------------*/
+
+//Where to aim at, or trace to, when something wants to hit a player.
+//
+//WorldSpaceCenter is the middle of the entity's CURRENT collision hull, so it
+//drops with a player when they crouch. Anything using a fixed height above
+//GetPos( ) does not: a standing player is 72 units tall and a crouched one is
+//36, so an offset picked to hit a standing chest sails straight over a crouched
+//head. That is what made crouching a complete counter to sentries - the sight
+//trace missed, so the target was never acquired, was dropped the moment they
+//crouched, and would have been shot over anyway.
+//
+//Callers must have checked IsValid first.
+function TTG_AimPointFor( ent )
+	return ent:WorldSpaceCenter()
+end
+
+
+
+/*---------------------------------------------------------
 	Winning the game
 ---------------------------------------------------------*/
 
