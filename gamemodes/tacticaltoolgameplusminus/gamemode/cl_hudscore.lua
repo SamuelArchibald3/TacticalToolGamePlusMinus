@@ -26,7 +26,7 @@ local function ScoreHud()
 	
 	
 	
-	local phase = GetGlobalString("CL_CurPhase")
+	local phase = GetGamePhase()
 	if phase == "GameSetup" then
 		draw.SimpleTextOutlined("GAME SETUP", "TheDefaultSettings5", ScrW()/2, 62, Color(255, 255, 255, 255), 1, 1, 1, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
 	elseif phase == "DefendersBuy" then

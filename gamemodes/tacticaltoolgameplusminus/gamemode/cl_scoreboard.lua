@@ -111,7 +111,7 @@ function DermaScoreboard()
 	
 	
 	
-	if GetGlobalString("CL_CurPhase") == "GameSetup" or GetGlobalString("CL_CurPhase") == ""  then
+	if GetGamePhase() == "GameSetup" or GetGamePhase() == ""  then
 		PanelFriendly:SetVisible( false )
 		PanelEnemy:SetVisible( false )
 	end

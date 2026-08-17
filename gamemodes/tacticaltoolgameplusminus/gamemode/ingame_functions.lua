@@ -65,6 +65,20 @@ end
 ---------------------------------------------------------*/
 
 util.AddNetworkString( "TTG_TeamRoles" )
+util.AddNetworkString( "TTG_GameState" )
+
+//Pushes the current phase and whose turn it is to buy to every client.
+//
+//Called automatically by SetGamePhase( ) and SetBuyingRole( ) in shared.lua, so
+//every phase change resends both. Same reasoning as BroadcastTeamRoles: the
+//networked global alone left remote clients a phase behind while the listen
+//server host was always correct, because the host reads the value in-process.
+function BroadcastGameState()
+	net.Start( "TTG_GameState" )
+		net.WriteString( GetGamePhase() )
+		net.WriteString( GetBuyingRole() )
+	net.Broadcast()
+end
 
 //Pushes the current team roles to every client over the net library.
 //

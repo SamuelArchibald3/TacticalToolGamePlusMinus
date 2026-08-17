@@ -5,8 +5,8 @@
 local drawlogo = true
 
 local function StartScreenLogo()
-	//print(GetGlobalString("CL_CurPhase"))
-	if GetGlobalString("CL_CurPhase") == "GameSetup" or GetGlobalString("CL_CurPhase") == ""  then
+	//print(GetGamePhase())
+	if GetGamePhase() == "GameSetup" or GetGamePhase() == ""  then
 		
 		local function PauseLogo()
 			drawlogo = false

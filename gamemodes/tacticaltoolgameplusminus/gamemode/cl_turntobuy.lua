@@ -10,12 +10,12 @@ local function YourTurnToBuyHud()
 		local buying = false
 		
 		--if CL_CurBuyingRole doesnt have anything, the local player is not buying
-		if not ( GetGlobalString("CL_CurBuyingRole") == "Attacking" or GetGlobalString("CL_CurBuyingRole") == "Defending" ) then
+		if not ( GetBuyingRole() == "Attacking" or GetBuyingRole() == "Defending" ) then
 			return false
 		end
 		
 		
-		if GetTeamRole(Ply:Team()) == GetGlobalString("CL_CurBuyingRole") then
+		if GetTeamRole(Ply:Team()) == GetBuyingRole() then
 			buying = true
 		end
 		

@@ -158,8 +158,8 @@ function Reset_AllGlobalVars()
 
 	
 	--global bools that communicate stuff to the client
-	SetGlobalString("CL_CurPhase", "GameSetup")
-	SetGlobalString("CL_CurBuyingRole", "None")
+	SetGamePhase("GameSetup")
+	SetBuyingRole("None")
 	
 	
 	--make sure all players are their original materials, not the invulnerable material, and other stuff

@@ -92,6 +92,46 @@ function GetTeamRole(teamnum)
 end
 
 
+
+
+/*---------------------------------------------------------
+	Current phase, and whose turn it is to buy
+---------------------------------------------------------*/
+
+//Wrapped for the same reason the team roles were: these were written straight
+//to legacy SetGlobalString from a dozen places, so they carried exactly the
+//staleness that made the role text wrong for everyone except the listen server
+//host. Going through a setter means the Global2 write and the explicit resend
+//happen together and cannot be forgotten at a new call site.
+//
+//BroadcastGameState lives in ingame_functions.lua and is server-only, so the
+//push is guarded - a client setting these only ever updates its own copy.
+
+function SetGamePhase( phase )
+	SetGlobal2String( "CL_CurPhase", phase )
+
+	if SERVER then BroadcastGameState() end
+end
+
+function GetGamePhase()
+	//callers compare against "" for "no phase yet", so never hand back nil
+	return GetGlobal2String( "CL_CurPhase" ) or ""
+end
+
+
+function SetBuyingRole( role )
+	SetGlobal2String( "CL_CurBuyingRole", role )
+
+	if SERVER then BroadcastGameState() end
+end
+
+function GetBuyingRole()
+	return GetGlobal2String( "CL_CurBuyingRole" ) or ""
+end
+
+
+
+
 function SetRound(num)
 	SetGlobalInt("Round", num)
 end

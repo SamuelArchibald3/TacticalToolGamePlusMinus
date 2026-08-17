@@ -150,9 +150,9 @@ function DefendersBuyPhase()
 	//the round-start push is corrected here rather than showing a stale role
 	BroadcastTeamRoles()
 
-	SetGlobalString("CL_CurBuyingRole", "Defending")
+	SetBuyingRole("Defending")
 
-	SetGlobalString("CL_CurPhase", "DefendersBuy")
+	SetGamePhase("DefendersBuy")
 	
 	SetGlobalBool("CL_PlayTimerCountSounds", false)
 	InitializeGCTime(DEFENDERSBUYPHASE_TIME, AttackersBuyPhase)
@@ -177,9 +177,9 @@ function AttackersBuyPhase()
 	//resend the roles at the start of the phase, same reasoning as above
 	BroadcastTeamRoles()
 
-	SetGlobalString("CL_CurBuyingRole", "Attacking")
+	SetBuyingRole("Attacking")
 
-	SetGlobalString("CL_CurPhase", "AttackersBuy")
+	SetGamePhase("AttackersBuy")
 	
 	InitializeGCTime(ATTACKERSBUYPHASE_TIME, PlanningPhase)
 end
@@ -196,9 +196,9 @@ function PlanningPhase()
 	umsg.Start("Sound_BuyingDone")
 	umsg.End()
 	
-	SetGlobalString("CL_CurBuyingRole", "None")
+	SetBuyingRole("None")
 	
-	SetGlobalString("CL_CurPhase", "Planning")
+	SetGamePhase("Planning")
 
 	InitializeGCTime(PLANNINGPHASE_TIME, SetupPhase)
 end
@@ -593,7 +593,7 @@ end
 
 
 
-	SetGlobalString("CL_CurPhase", "Setup")
+	SetGamePhase("Setup")
 	
 	SetGlobalBool("CL_PlayTimerCountSounds", true)
 	
@@ -635,7 +635,7 @@ function CombatPhase()
 
 	end
 
-	SetGlobalString("CL_CurPhase", "Combat")
+	SetGamePhase("Combat")
 	
 	InitializeGCTime(COMBATPHASE_TIME, WinningPhase)
 end
@@ -735,7 +735,7 @@ function WinningPhase(winners)
 	--disables stuff like the sentry gun, proximity mines, etc
 	DisableAllEnts()
 	
-	SetGlobalString("CL_CurPhase", "Winning")
+	SetGamePhase("Winning")
 	
 	InitializeGCTime(3, NextRound)
 end
@@ -760,7 +760,7 @@ function GameEnd(winners)
 	--makes it so it wont play the announcer counting down sounds
 	SetGlobalBool("CL_PlayTimerCountSounds", false)
 	
-	SetGlobalString("CL_CurPhase", "GameEnd")
+	SetGamePhase("GameEnd")
 	
 	InitializeGCTime(5, GameRestart)
 

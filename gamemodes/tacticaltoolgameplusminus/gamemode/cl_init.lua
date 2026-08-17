@@ -74,6 +74,17 @@ net.Receive( "TTG_TeamRoles", function()
 	if bluerole != "" then SetTeamRole( TEAM_BLUE, bluerole ) end
 end )
 
+
+--Current phase and whose turn it is to buy, pushed on every phase change.
+--
+--Written straight to the Global2 vars rather than through SetGamePhase /
+--SetBuyingRole: those setters call BroadcastGameState on the server, and there
+--is nothing to broadcast from a client that has just been told.
+net.Receive( "TTG_GameState", function()
+	SetGlobal2String( "CL_CurPhase",      net.ReadString() )
+	SetGlobal2String( "CL_CurBuyingRole", net.ReadString() )
+end )
+
 surface.CreateFont( "TheDefaultSettings1", {
 	font = "Arial", --  Use the font-name which is shown to you by your operating system Font Viewer, not the file name
 	extended = false,

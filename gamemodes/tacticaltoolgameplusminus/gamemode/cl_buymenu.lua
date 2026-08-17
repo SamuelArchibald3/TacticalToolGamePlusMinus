@@ -11,7 +11,7 @@ function ShowBuyingMenu()
 	local function LocalPlyIsBuying()
 		local buying = false
 		
-		if GetTeamRole(Ply:Team()) == GetGlobalString("CL_CurBuyingRole") then
+		if GetTeamRole(Ply:Team()) == GetBuyingRole() then
 			buying = true
 		end
 		
