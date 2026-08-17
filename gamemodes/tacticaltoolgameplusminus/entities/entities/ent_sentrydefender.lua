@@ -142,7 +142,7 @@ end
 function ENT:DoShootEffect( forward )
 	local effectdata = EffectData()
 		effectdata:SetOrigin( self:GetPos() + Vector(0, 0, 40) )
-		effectdata:SetStart( self.SentryTarget:GetPos() + Vector(0, 0, 40) )
+		effectdata:SetStart( TTG_AimPointFor( self.SentryTarget, self.Ref.aim_height ) )
 		effectdata:SetScale( 8 )
 		effectdata:SetAttachment( 1 )
 		effectdata:SetEntity( self )
@@ -156,7 +156,7 @@ function ENT:Shoot( )
 
 	
 	local self_vec = self:GetPos() + Vector(0, 0, 40)
-	local target_vec = self.SentryTarget:GetPos() + Vector(0, 0, 40)
+	local target_vec = TTG_AimPointFor( self.SentryTarget, self.Ref.aim_height )
 	
 	local shoot_ang = ( target_vec - self_vec):GetNormal()
 	local rot = Angle(0, 0, 0)
@@ -183,11 +183,12 @@ end
 
 --do a trace on the current target, return true if target still in sight
 function ENT:CheckTargetTrace()
+	if not IsValid( self.SentryTarget ) then return false end
 
 	-- Make a trace to check if the sentry can see the target
 	local Trace = {}
 		Trace.start = self:GetPos() + Vector(0, 0, 40)
-		Trace.endpos = self.SentryTarget:GetPos() + Vector(0, 0, 45)
+		Trace.endpos = TTG_AimPointFor( self.SentryTarget, self.Ref.aim_height )
 		Trace.filter = self
 		Trace.mask = MASK_SOLID - CONTENTS_GRATE
 		Trace = util.TraceLine(Trace) 
@@ -227,8 +228,10 @@ function ENT:Think()
 			
 				-- Make a trace to see if it can shoot this player
 				local Trace = {}
+					--aim a fraction up their hull rather than a fixed height off
+					--the floor, so a crouched player is still visible to the trace
 					Trace.start = self:GetPos() + Vector(0, 0, 40)
-					Trace.endpos = v:GetPos() + Vector(0, 0, 45)
+					Trace.endpos = TTG_AimPointFor( v, self.Ref.aim_height )
 					Trace.filter = self
 					Trace.mask = MASK_SOLID - CONTENTS_GRATE
 					Trace = util.TraceLine(Trace) 

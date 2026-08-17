@@ -31,6 +31,44 @@
 
 	
 /*---------------------------------------------------------
+	Aiming at a player
+---------------------------------------------------------*/
+
+//Where to aim at, or trace to, when something wants to hit a player.
+//
+//Measured as a fraction of the target's CURRENT collision hull rather than a
+//fixed height off the floor. A standing player is 72 units tall and a crouched
+//one is 36, so an offset picked to hit a standing chest sails straight over a
+//crouched head. That is what made crouching a complete counter to sentries: the
+//sight trace missed, so the target was never acquired, was dropped the moment
+//they crouched, and would have been shot over anyway.
+//
+//A fraction keeps the point tied to the hull, so it follows a player down as
+//they crouch, while still letting each weapon pick where it aims - .5 is the
+//waist, .7 is about the chest. Sentries pass their aim_height from table_ent.
+//
+//Deliberately NOT a bone lookup. Source traces a player as a box, so the aim
+//point has to stay inside that box: a bone follows the animation and can sit
+//outside it, which would miss the hull entirely and bring the original bug
+//back through a different door. The clamp keeps a mistuned aim_height inside
+//the hull for the same reason.
+//
+//Callers must have checked IsValid first.
+local AIM_HEIGHT_DEFAULT = 0.7
+
+function TTG_AimPointFor( ent, fraction )
+	fraction = math.Clamp( fraction or AIM_HEIGHT_DEFAULT, 0.05, 0.95 )
+
+	local mins = ent:OBBMins()
+	local maxs = ent:OBBMaxs()
+	local height = maxs.z - mins.z
+
+	return ent:GetPos() + Vector( 0, 0, mins.z + height * fraction )
+end
+
+
+
+/*---------------------------------------------------------
 	Winning the game
 ---------------------------------------------------------*/
 
