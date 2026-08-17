@@ -62,16 +62,19 @@ local function ScoreHud()
 	function fVote( ply, command, arguments )
 	end
 
-	if redscore > 2 then
-		for i, ply in ipairs(player.GetAll()) do
-			ply:PrintMessage(HUD_PRINTCENTER, "The game has ended!" .. " ".. redscore .. " - " .. bluescore)
-		end
-	end
-	if bluescore > 2 then
-		for i, ply in ipairs(player.GetAll()) do
-			ply:PrintMessage(HUD_PRINTCENTER, "The game has ended!" .. " ".. redscore .. " - " .. bluescore)
-		end
-	end
+	--A "the game has ended" centre-print used to sit here, on the same hardcoded
+	--"> 2" as the server did. Three separate problems, so it is gone rather than
+	--corrected:
+	--
+	--  * this runs in HUDPaint, so it re-printed every single frame for as long as
+	--    a team held 3 points
+	--  * it looped every player calling PrintMessage on them from the client,
+	--    which only ever affects the local player anyway
+	--  * the threshold was wrong for any game longer than 5 rounds, so it fired
+	--    while the game was still being played
+	--
+	--Nothing is lost: the phase readout above already prints GAME OVER from
+	--CL_CurPhase, and GameEnd() announces the winner server-side.
 
 
 end

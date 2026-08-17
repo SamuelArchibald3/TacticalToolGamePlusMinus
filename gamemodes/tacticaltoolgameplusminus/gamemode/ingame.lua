@@ -36,26 +36,21 @@ function NextRound()
 	
 	G_CurRound = G_CurRound + 1
 	SetRound(G_CurRound)
-	local redscore = team.GetScore(TEAM_RED)
-	local bluescore = team.GetScore(TEAM_BLUE)
-	
-	if redscore > 2 then
-		for i, ply in ipairs(player.GetAll()) do
-			ply:PrintMessage(HUD_PRINTCENTER, "The game has ended!" .. " ".. redscore .. " - " .. bluescore)
-		end
-		RunConsoleCommand("ttg_restart")
-	
-	
-	end
-	
-	
-	if bluescore > 2 then
-		for i, ply in ipairs(player.GetAll()) do
-			ply:PrintMessage(HUD_PRINTCENTER, "The game has ended!" .. " ".. redscore .. " - " .. bluescore)
-		end
-		RunConsoleCommand("ttg_restart")
-	
-	
+	--Never start a round for a game that is already decided.
+	--
+	--The usual place this is caught is EndRound, right after the winning point is
+	--awarded. This is the backstop for a score that got there some other way, and
+	--it defers to TTG_TeamThatHasWon() so it can no longer disagree with that
+	--check the way the old hardcoded "> 2" did.
+	--
+	--Ends through GameEnd() rather than ttg_restart, so the winner is announced and
+	--the winning phase plays out instead of the map simply resetting, and returns
+	--so the rest of NextRound does not set up a round that is about to be thrown
+	--away.
+	local gamewinner = TTG_TeamThatHasWon()
+	if gamewinner then
+		GameEnd( gamewinner )
+		return
 	end
 	--if its not the first round, then flip around the teams roles
 	if G_CurRound != 1 then
@@ -679,11 +674,10 @@ function WinningPhase(winners)
 	
 	
 	--if a team has enough points to straight up win the game, then end the game with that team being the winner
-	if team.GetScore(TEAM_RED) >= G_MaxScore then
-		GameEnd(TEAM_RED)
-		return
-	elseif team.GetScore(TEAM_BLUE) >= G_MaxScore then
-		GameEnd(TEAM_BLUE)
+	--( shared with the backstop in NextRound - see TTG_TeamThatHasWon in ingame_functions.lua )
+	local gamewinner = TTG_TeamThatHasWon()
+	if gamewinner then
+		GameEnd( gamewinner )
 		return
 	end
 

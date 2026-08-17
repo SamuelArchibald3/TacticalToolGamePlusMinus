@@ -31,6 +31,36 @@
 
 	
 /*---------------------------------------------------------
+	Winning the game
+---------------------------------------------------------*/
+
+//Returns the team with enough points to win the game outright, or nil if
+//neither has yet.
+//
+//One place for the rule, because the two callers had already drifted apart:
+//EndRound compared against G_MaxScore while NextRound had "> 2" written into it.
+//G_MaxScore is ( G_TotalRounds/2 + 1 ), so from 6 rounds up the two disagreed -
+//the real target was 4 or more while NextRound ended the game at 3, restarting
+//before anyone could reach it and making the rounds setting look like it did
+//nothing at all.
+//
+//G_MaxScore is 0 until BeginGame() sets it, so it is only trusted once positive.
+//Without that guard every score would count as a win before the game starts.
+function TTG_TeamThatHasWon()
+	if not G_MaxScore or G_MaxScore <= 0 then return nil end
+
+	if team.GetScore( TEAM_RED ) >= G_MaxScore then
+		return TEAM_RED
+	elseif team.GetScore( TEAM_BLUE ) >= G_MaxScore then
+		return TEAM_BLUE
+	end
+
+	return nil
+end
+
+
+
+/*---------------------------------------------------------
 	Team roles - explicit push to clients
 ---------------------------------------------------------*/
 
