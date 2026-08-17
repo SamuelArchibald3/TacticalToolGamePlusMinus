@@ -87,7 +87,9 @@ end
 
 function GM:PlayerSelectSpawn( ply )
 	--this is used if the player falls into a trigger_hurt during setup time, he will teleport back to spawn
-	if ply.CurRoundSpawn != nil then
+	--IsValid rather than != nil: a removed spawn entity is NULL, not nil, and
+	--handing a NULL back from PlayerSelectSpawn would leave the player unplaced
+	if IsValid( ply.CurRoundSpawn ) then
 		return ply.CurRoundSpawn
 	end
 

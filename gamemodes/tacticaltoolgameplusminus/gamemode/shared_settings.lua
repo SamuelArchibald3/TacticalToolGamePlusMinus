@@ -69,18 +69,22 @@ if SERVER then
 	--Number of Rounds
 	--The number of rounds to play per game
 	--this will be turned into the closest even number if its not already
+	--nil is tested first on purpose. Comparing nil with a number is a hard error
+	--in Lua, so "set_rounds <= 0 or set_rounds == nil" would have thrown before it
+	--ever reached the nil check. It never fired only because GetConVarNumber
+	--returns 0, not nil, for a convar that does not exist.
 	local set_rounds = GetConVarNumber( "ttg_var_rounds" )
-	if set_rounds <= 0 or set_rounds == nil then
+	if set_rounds == nil or set_rounds <= 0 then
 		set_rounds = 4
 	end
 	ROUNDS = set_rounds
-	
+
 	--Developer mode
 	//makes it so menus switch fast, noclip is enabled, the game doesnt end if one teams dead, etc
 	local set_devmode = GetConVarNumber( "ttg_var_devmode" )
-	if set_devmode <= 0 then
+	if set_devmode == nil or set_devmode <= 0 then
 		DEV_MODE = false
-	elseif set_devmode > 0 then
+	else
 		DEV_MODE = true
 	end
 

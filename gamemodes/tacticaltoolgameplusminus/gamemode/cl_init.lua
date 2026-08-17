@@ -390,7 +390,10 @@ function hud()
 		end
 		
 		--draw special aiming icon on the player you're aiming at
-		if lowest_dist.ply != nil then
+		--IsValid rather than != nil, matching the check further up: a player who
+		--disconnects while aimed at leaves a NULL entity here, which is not nil, so
+		--:UniqueID() below would error - and this runs every frame while drawing
+		if IsValid( lowest_dist.ply ) then
 			local lowestdistply = lowest_dist.ply
 		
 			--redo this to only run the command when the target changes, not every think

@@ -119,7 +119,9 @@ function ENT:FinishBuild()
 		vec:Add(-(self.WallNormal*32))
 		self:SetPos(vec)
 	
-	if self.HitStepBox != nil then
+	--IsValid rather than != nil: the box this one snapped to may have been
+	--destroyed since, leaving a NULL entity, and :GetPos() on it would error
+	if IsValid( self.HitStepBox ) then
 		local pos = self.HitStepBox:GetPos()
 
 		local x = self.WallNormal.x

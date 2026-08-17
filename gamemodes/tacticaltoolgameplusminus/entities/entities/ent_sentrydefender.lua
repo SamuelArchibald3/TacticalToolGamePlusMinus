@@ -287,7 +287,10 @@ function ENT:Think()
 		end
 		
 		--if the player is out of the range then lose its target
-		if  self.SentryTarget != nil then
+		--IsValid rather than != nil, matching the check in the firing code above:
+		--a target who disconnects or is removed leaves a NULL entity here, which is
+		--not nil, so :GetPos() on the next line would error
+		if IsValid( self.SentryTarget ) then
 			local ply_dist = self.SentryTarget:GetPos():Distance(self:GetPos())
 			if ply_dist > self.Ref.radius then
 				self.SentryMode = "search"
