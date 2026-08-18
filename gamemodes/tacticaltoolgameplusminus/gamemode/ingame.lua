@@ -548,44 +548,14 @@ end)
 -- end)
 -- end)
 -- end)
-    -- Respawn all players
-	timer.Simple(99999999, function()
-        for k, v in pairs(player.GetAll()) do
-            if !v:Alive() then
-				
-				
-				for k,v in pairs(player.GetAll()) do	
-					if v:Team() != TEAM_SPEC then
-						-- take away all the players tools from the previous round
-						v:StripWeapons()
-						
-						--make sure they arent in specate mode like they are when theyre dead
-						v:UnSpectate()
-
-						v:Spawn()
-						--sets the default stuff for the player, speed, model, default_melee, etc
-						SetSpawnStuff( v )
-					
-						--lock all players so they cant move at all while the buying screen is open
-						v:Freeze( true )
-						
-						--Set everyones tokens for the round. See TTG_RoundStartTokens()
-						--in ingame_functions.lua - the tie breaker can hand out none.
-						v:SetToolTokens( TTG_RoundStartTokens() )
-						
-						--give attackers god mode so they cant be killed in setup phase later
-						if GetTeamRole(v:Team()) == "Attacking" then
-							v:TTG_Invuln( true )
-							//v:TTG_Freeze( true )
-							hook.Remove("KeyPress", "SpectatorKeyPress")
-						end	
-					end
-				end
-
-
-            end
-        end
-    end)
+	--A third copy of the round-setup player loop used to sit here, wrapped in
+	--timer.Simple( 99999999, ... ) - about 3.17 years, so it never ran. It sat
+	--among the commented-out spectateOnDeath experiments above, which is fairly
+	--clearly what it was: abandoned work on respawning.
+	--
+	--Removed because a copy that looks live but is not is worse than no copy:
+	--it was counted as one of the three round-setup blocks that had to be kept
+	--in step, and edits were made to it that could never have had any effect.
 end
 
 
