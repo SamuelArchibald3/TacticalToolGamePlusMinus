@@ -44,6 +44,16 @@ TIME_TO_CAPTURE = 30
 
 ROUND_TOKENS = 4	//cant decide between 3 or 4
 
+//How many bought tools can be listed at once. Every tool costs a token, so a
+//player can never own more than ROUND_TOKENS of them - this only has to stay
+//ahead of any sane token setting.
+//
+//There used to be three, named A/B/C. A fourth tool was still bought and worked
+//perfectly, but its info never reached the client, so it was missing from the
+//bought list with no warning beyond a print on the server. ROUND_TOKENS is 4,
+//so the stock settings already reached it.
+MAX_TOOL_SLOTS = 10
+
 
 
 --Makes it so teams dont have to be full for the game to start, the player just has to press the ready button
@@ -118,6 +128,13 @@ if SERVER then
 
 		ROUND_TOKENS = newtokens
 		ChatPrintToAll( "Tool tokens per round set to  " .. newtokens .. "  (applies next round)" )
+
+		--every tool costs a token, so more tokens than slots means the extras
+		--would be bought and usable but missing from the bought list
+		if newtokens > MAX_TOOL_SLOTS then
+			print( "TTG: ttg_var_tokens is " .. newtokens .. " but only " .. MAX_TOOL_SLOTS ..
+				" tools can be listed - raise MAX_TOOL_SLOTS in shared_settings.lua" )
+		end
 	end
 	cvars.AddChangeCallback( "ttg_var_tokens", Callback_Tokens, "ttg_var_tokens_setting" )
 

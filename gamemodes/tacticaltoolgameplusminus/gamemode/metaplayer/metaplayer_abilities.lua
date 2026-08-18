@@ -82,18 +82,22 @@ end
 
 
 //resets all the networked vars of a player's tool info
+--Name of one field of a numbered tool slot, eg SwepTool_3_Ammo.
+--
+--The slots used to be named A, B and C, and a player who bought a fourth tool
+--got it - it just never appeared in their list, because there was nowhere left
+--to network it to. Numbering them means the count is one constant to change.
+local function ToolSlotKey( index, field )
+	return "SwepTool_" .. index .. "_" .. field
+end
+
+
 function TTGPlayer:ResetSwepToolInfo()
-	self:SetNetworkedString( "SwepTool_A_Name", "none" )
-	self:SetNetworkedInt( "SwepTool_A_Ammo", 0 )
-	self:SetNetworkedInt( "SwepTool_A_NumGuns", 0 )
-	
-	self:SetNetworkedString( "SwepTool_B_Name", "none" )
-	self:SetNetworkedInt( "SwepTool_B_Ammo", 0 )
-	self:SetNetworkedInt( "SwepTool_B_NumGuns", 0 )
-	
-	self:SetNetworkedString( "SwepTool_C_Name", "none" )
-	self:SetNetworkedInt( "SwepTool_C_Ammo", 0 )
-	self:SetNetworkedInt( "SwepTool_C_NumGuns", 0 )
+	for i = 1, MAX_TOOL_SLOTS do
+		self:SetNetworkedString( ToolSlotKey( i, "Name" ), "none" )
+		self:SetNetworkedInt( ToolSlotKey( i, "Ammo" ), 0 )
+		self:SetNetworkedInt( ToolSlotKey( i, "NumGuns" ), 0 )
+	end
 end
 
 
@@ -104,42 +108,24 @@ end
 --returns a table of the player's networked swep ents
 --used because GetWeapons is broken and bad
 function TTGPlayer:GetSwepToolInfo()
-	local a_recieve = self:GetNetworkedString( "SwepTool_A_Name",  "none"  )
-	local b_recieve = self:GetNetworkedString( "SwepTool_B_Name",  "none"  )
-	local c_recieve = self:GetNetworkedString( "SwepTool_C_Name",  "none"  )
-	
 	local sweptool_table = {}
 
-	if a_recieve !=  "none"  then
-		swep_a = 
-		{ 
-		name = self:GetNetworkedString( "SwepTool_A_Name" ), 
-		ammo = self:GetNetworkedInt( "SwepTool_A_Ammo" ), 
-		numguns = self:GetNetworkedInt( "SwepTool_A_NumGuns" ), 
-		}
-		table.insert(sweptool_table, swep_a)
+	for i = 1, MAX_TOOL_SLOTS do
+		local slotname = self:GetNetworkedString( ToolSlotKey( i, "Name" ), "none" )
+
+		if slotname != "none" then
+			--was three globals named swep_a/b/c, which leaked into _G every call
+			local swep_info =
+			{
+			name = slotname,
+			ammo = self:GetNetworkedInt( ToolSlotKey( i, "Ammo" ) ),
+			numguns = self:GetNetworkedInt( ToolSlotKey( i, "NumGuns" ) ),
+			}
+			table.insert( sweptool_table, swep_info )
+		end
 	end
 
-	if b_recieve !=  "none"  then
-		swep_b = 
-		{ 
-		name = self:GetNetworkedString( "SwepTool_B_Name" ), 
-		ammo = self:GetNetworkedInt( "SwepTool_B_Ammo" ), 
-		numguns = self:GetNetworkedInt( "SwepTool_B_NumGuns" ), 
-		}
-		table.insert(sweptool_table, swep_b)
-	end
-	
-	if c_recieve !=  "none"  then
-		swep_c = 
-		{ 
-		name = self:GetNetworkedString( "SwepTool_C_Name" ), 
-		ammo = self:GetNetworkedInt( "SwepTool_C_Ammo" ), 
-		numguns = self:GetNetworkedInt( "SwepTool_C_NumGuns" ), 
-		}
-		table.insert(sweptool_table, swep_c)
-	end
-
+	--callers check for false rather than an empty table, so keep that contract
 	if table.Count( sweptool_table ) > 0 then
 		return sweptool_table
 	else
@@ -151,41 +137,36 @@ end
 
 --Adds the swep to the networked swep tools
 function TTGPlayer:SetSwepToolInfo( swepname, ammo, numguns )
-	local a_recieve = self:GetNetworkedString( "SwepTool_A_Name", "none" )
-	local b_recieve = self:GetNetworkedString( "SwepTool_B_Name", "none" )
-	local c_recieve = self:GetNetworkedString( "SwepTool_C_Name", "none" )
-	
-	if swepname == a_recieve then
-		self:SetNetworkedInt( "SwepTool_A_Ammo", ammo )
-		self:SetNetworkedInt( "SwepTool_A_NumGuns", numguns )
-		return
-	elseif swepname == b_recieve then
-		self:SetNetworkedInt( "SwepTool_B_Ammo", ammo )
-		self:SetNetworkedInt( "SwepTool_B_NumGuns", numguns )
-		return
-	elseif swepname == c_recieve then
-		self:SetNetworkedInt( "SwepTool_C_Ammo", ammo )
-		self:SetNetworkedInt( "SwepTool_C_NumGuns", numguns )
-		return
-	else
-		if a_recieve == "none" then
-			self:SetNetworkedString( "SwepTool_A_Name", swepname )
-			self:SetNetworkedInt( "SwepTool_A_Ammo", ammo )
-			self:SetNetworkedInt( "SwepTool_A_NumGuns", numguns )
-			return
-		elseif b_recieve == "none" then
-			self:SetNetworkedString( "SwepTool_B_Name", swepname )
-			self:SetNetworkedInt( "SwepTool_B_Ammo", ammo )
-			self:SetNetworkedInt( "SwepTool_B_NumGuns", numguns )
-			return
-		elseif c_recieve == "none" then
-			self:SetNetworkedString( "SwepTool_C_Name", swepname )
-			self:SetNetworkedInt( "SwepTool_C_Ammo", ammo )
-			self:SetNetworkedInt( "SwepTool_C_NumGuns", numguns )
-			return
-		else
-			print("Error adding swep tool networked var")
+	local firstfree = nil
+
+	--One pass: a tool already in the list just has its numbers refreshed, and
+	--the earliest empty slot is remembered in case it is not there yet. The
+	--whole list has to be checked for a match before claiming a free slot, or
+	--buying more of something you own would list it twice.
+	for i = 1, MAX_TOOL_SLOTS do
+		local slotname = self:GetNetworkedString( ToolSlotKey( i, "Name" ), "none" )
+
+		if slotname == swepname then
+			self:SetNetworkedInt( ToolSlotKey( i, "Ammo" ), ammo )
+			self:SetNetworkedInt( ToolSlotKey( i, "NumGuns" ), numguns )
 			return
 		end
+
+		if firstfree == nil and slotname == "none" then
+			firstfree = i
+		end
 	end
+
+	--Only reachable if MAX_TOOL_SLOTS is lower than the tokens a player can
+	--spend, since every tool costs one. The tool still works - it is the list
+	--that cannot show it - so say so plainly rather than the old bare "Error".
+	if firstfree == nil then
+		print( "TTG: no free tool slot to display " .. tostring( swepname ) ..
+			" - MAX_TOOL_SLOTS (" .. MAX_TOOL_SLOTS .. ") is below the tokens a player can spend" )
+		return
+	end
+
+	self:SetNetworkedString( ToolSlotKey( firstfree, "Name" ), swepname )
+	self:SetNetworkedInt( ToolSlotKey( firstfree, "Ammo" ), ammo )
+	self:SetNetworkedInt( ToolSlotKey( firstfree, "NumGuns" ), numguns )
 end
