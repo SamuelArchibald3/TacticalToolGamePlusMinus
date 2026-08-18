@@ -9,124 +9,16 @@
 	--"GameEnd
 
 	
-	function NextRound()
-
-		ResetVarsBetweenRounds()
-		
-		--[[
-		//join all players who signed up to join last round, if pub mode is on
-		if PUB_MODE == true then
-			NextRoundJoinAllPlayers()
-		end
-		]]--
-		
-		--end the whole game if one team has no players at all
-		if DEV_MODE != true then
-			local redplys = team.NumPlayers( TEAM_RED )
-			local blueplys = team.NumPlayers( TEAM_BLUE )
-		
-			if redplys == 0 then
-				GameRestart()
-				ChatPrintToAll( "All of red team's players have left, restarting!" )
-				return
-			end
-			if blueplys == 0 then
-				GameRestart()
-				ChatPrintToAll( "All of blue team's players have left, restarting!" )
-				return
-			end
-		end
-		
-		//set all spawns to be availible
-		SetupRoundSpawnTables()
-		
-		--Remove all leftover TTG ents in the world.  (for example: barriers, invis reveal devices, etc) And Abilities as well
-		RemoveAllGameEnts()
-		
-		
-		G_CurRound = G_CurRound + 1
-		SetRound(G_CurRound)
-		
-		--if its not the first round, then flip around the teams roles
-		if G_CurRound != 1 then
-			if GetTeamRole(TEAM_RED) == "Attacking" then
-				SetTeamRole(TEAM_RED, "Defending")
-				SetTeamRole(TEAM_BLUE, "Attacking")
-			elseif GetTeamRole(TEAM_RED) == "Defending" then
-				SetTeamRole(TEAM_RED, "Attacking")
-				SetTeamRole(TEAM_BLUE, "Defending")
-			end
-		end
-	
-		
-		--Checks if this will be a tie breaker round, randomly gives roles out
-		if G_CurRound == G_TotalRounds + 1 then
-			--Set the roles randomly for the first round
-			local rand = math.random(2)
-			
-			if rand == 1 then
-				SetTeamRole(TEAM_RED, "Defending")
-				SetTeamRole(TEAM_BLUE, "Attacking")
-			elseif rand == 2 then
-				SetTeamRole(TEAM_RED, "Attacking")
-				SetTeamRole(TEAM_BLUE, "Defending")
-			end
-		end
-	
-		
-		//the roles for this round are settled above, so push them to every client
-		BroadcastTeamRoles()
-
-
-		//set the zone the teams are vying for control over to be at one of the bomb sites of the de_ map
-		ChooseAttackSite()
-
-		//makes it constantly make sure atleast one person on each team is alive, otherwise end the round
-		Start_TeamsAliveCheck()
-		Start_TriggerHurtCheck()
-		
-		for k,v in pairs(player.GetAll()) do	
-			if v:Team() != TEAM_SPEC then
-				-- take away all the players tools from the previous round
-				v:StripWeapons()
-			
-				--make sure they arent in specate mode like they are when theyre dead
-				v:UnSpectate()
-			
-				--spawn all players, except specs
-				v:Spawn()
-				
-				--sets the default stuff for the player, speed, model, default_melee, etc
-				SetSpawnStuff( v )
-			
-				--lock all players so they cant move at all while the buying screen is open
-				v:Freeze( true )
-				
-				--Set everyones tokens for the round, so they can purchase that many
-				--tools. See TTG_RoundStartTokens() in ingame_functions.lua - the
-				--tie breaker round can be set to hand out none.
-				v:SetToolTokens( TTG_RoundStartTokens() )
-				
-				--give attackers god mode so they cant be killed in setup phase later
-				if GetTeamRole(v:Team()) == "Attacking" then
-					v:TTG_Invuln( true )
-					//v:TTG_Freeze( true )
-				end	
-				
-				--give defending god mode so they cant be killed in setup phase later
-				if GetTeamRole(v:Team()) == "Defending" then
-					v:TTG_Invuln( true )
-					//v:TTG_Freeze( true )
-					hook.Remove("KeyPress", "SpectatorKeyPress")
-				end	
-			end
-		end
-		
-		
-		DefendersBuyPhase()
-		
-		CloseAttackersDoors()
-	end
+	--NextRound was defined here as well as in ingame.lua. init.lua includes
+	--gamesetup before ingame, so this copy was overwritten at load and never ran:
+	--BeginGame's call to NextRound() further down resolves to ingame.lua's
+	--version at runtime.
+	--
+	--It had drifted from the live one, and those differences therefore never took
+	--effect. Removed rather than merged, because folding them in would be a
+	--gameplay change rather than a refactor. For the record, this copy also:
+	--  * gave DEFENDERS TTG_Invuln( true ) during setup, not just attackers
+	--  * did hook.Remove( "KeyPress", "SpectatorKeyPress" ) for them
 	
 --Redo this so it just triggers resetvarsbetweenrounds, and does extra stuff for the vars beyond that
 function Reset_AllGlobalVars()
