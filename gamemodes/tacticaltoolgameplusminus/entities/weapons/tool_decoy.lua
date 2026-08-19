@@ -65,14 +65,9 @@ function SWEP:StartBarrelDisguise()
 	barrel:SetPos( ply:GetPos() )
 	barrel:Spawn()
 
-	barrel:SetParent( ply )
-
-	--zeroed AFTER parenting, so these are relative to the player: the barrel sits
-	--on their origin and turns with them. Setting world angles before parenting
-	--leaves a fixed offset that only looks right facing one direction.
-	barrel:SetLocalPos( vector_origin )
-	barrel:SetLocalAngles( angle_zero )
-
+	--Deliberately NOT parented. Parenting drags the barrel through the player's
+	--full orientation, so looking up and down tilted it over. Think drives the
+	--position instead and takes only the yaw, keeping the barrel upright.
 	barrel:SetSolid( SOLID_NONE )
 	barrel:SetCollisionGroup( COLLISION_GROUP_WEAPON )
 	barrel:SetRenderMode( RENDERMODE_TRANSCOLOR )
@@ -117,6 +112,22 @@ function SWEP:OnRemove()
 
 	if self.BaseClass and self.BaseClass.OnRemove then
 		self.BaseClass.OnRemove( self )
+	end
+end
+
+
+--The barrel is carried here rather than parented, so that only the player's yaw
+--reaches it. Parenting also passed on their pitch, which tipped the barrel over
+--whenever they looked up or down.
+function SWEP:Think()
+	if SERVER and IsValid( self.DisguiseProp ) and IsValid( self.Owner ) then
+		self.DisguiseProp:SetPos( self.Owner:GetPos() )
+		self.DisguiseProp:SetAngles( Angle( 0, self.Owner:EyeAngles().y, 0 ) )
+	end
+
+	--the base drives reloading and other per-tick tool work
+	if self.BaseClass and self.BaseClass.Think then
+		self.BaseClass.Think( self )
 	end
 end
 
