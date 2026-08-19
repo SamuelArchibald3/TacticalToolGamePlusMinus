@@ -143,8 +143,8 @@ end
 //Teams are not always even - somebody leaves, or there is an odd number of
 //players in the lobby. These give the short handed side something back for it.
 //
-//Everything scales off one number, how many players a team is down by, so a
-//1v3 is worth twice a 1v2 without any of the levers needing to know that.
+//Everything scales off one number, how badly a team is outnumbered, so no lever
+//has to work that out for itself.
 
 
 //How a team compares to the other one in player count. Positive when it has
@@ -165,31 +165,81 @@ function TTG_TeamNumberEdge( teamnum )
 end
 
 
-//How many players this player's team is down by. 0 if it is level or ahead.
-function TTG_PlayerShortBy( ply )
+//How badly a team is outnumbered, as a fraction of its own size. 0 when the
+//teams are level or it has the extra players.
+//
+//A ratio rather than the plain difference, because the difference is a bad
+//measure of how hard the fight is: 1v2 and 3v4 are both one player apart, but
+//the 1v2 player faces twice the opposition while the 3v4 player faces a third
+//more again. Handing them the same bonus was wrong.
+//
+//	1v2  ->  1.0     twice the numbers
+//	2v3  ->  0.5
+//	3v4  ->  0.333
+//	1v3  ->  2.0     three times the numbers
+function TTG_TeamOutnumberedBy( teamnum )
+	local mine, theirs = team.NumPlayers( TEAM_RED ), team.NumPlayers( TEAM_BLUE )
+
+	if teamnum == TEAM_BLUE then
+		mine, theirs = theirs, mine
+	elseif teamnum != TEAM_RED then
+		//spectators, and anything else that is not a playing team
+		return 0
+	end
+
+	//an empty team cannot be handicapped, and dividing by it would be an error
+	//rather than an enormous bonus
+	if mine <= 0 then return 0 end
+	if theirs <= mine then return 0 end
+
+	return ( theirs / mine ) - 1
+end
+
+
+//The same for one player, which is how every lever below asks
+function TTG_PlayerOutnumberedBy( ply )
 	if not IsValid( ply ) then return 0 end
 
-	local edge = TTG_TeamNumberEdge( ply:Team() )
-	if edge >= 0 then return 0 end
-
-	return -edge
+	return TTG_TeamOutnumberedBy( ply:Team() )
 end
 
 
-//Extra max health for a short handed player. Applied in SetSpawnStuff().
+//Extra max health for an outnumbered player. Applied in SetSpawnStuff().
+//
+//Snapped to the nearest whole BALANCE_HEALTH_STEP, which is one melee hit at 20
+//damage. Health that does not land on a multiple of that buys nothing against
+//the weapon everybody carries: 33 extra health takes the same two melee hits to
+//chew through as 20 does, so it may as well be 20 and read honestly on the bar.
+//
+//With the setting at its default of 40, that works out as
+//	1v2  ->  40    two extra melee hits
+//	2v3  ->  20
+//	3v4  ->  20
+//	5v6  ->   0    too close to matter
 function TTG_HandicapHealth( ply )
-	if BALANCE_HEALTH_PER_PLAYER <= 0 then return 0 end
+	if BALANCE_HEALTH_OUTNUMBERED <= 0 then return 0 end
 
-	return TTG_PlayerShortBy( ply ) * BALANCE_HEALTH_PER_PLAYER
+	local raw = TTG_PlayerOutnumberedBy( ply ) * BALANCE_HEALTH_OUTNUMBERED
+
+	//a step of 0 would divide by zero, so fall back to no rounding at all
+	if BALANCE_HEALTH_STEP == nil or BALANCE_HEALTH_STEP <= 0 then
+		return math.Round( raw )
+	end
+
+	return math.Round( raw / BALANCE_HEALTH_STEP ) * BALANCE_HEALTH_STEP
 end
 
 
-//Extra tool tokens for a short handed player. Applied through
+//Extra tool tokens for an outnumbered player. Applied through
 //TTG_RoundStartTokens(), so it lands wherever tokens are handed out.
+//
+//Floored rather than rounded: a token is a whole extra tool, so it should take
+//a real imbalance to earn one instead of arriving on a rounding boundary. At a
+//setting of 1 that means a 1v2 earns one and a 2v3 earns nothing.
 function TTG_HandicapTokens( ply )
-	if BALANCE_TOKENS_PER_PLAYER <= 0 then return 0 end
+	if BALANCE_TOKENS_OUTNUMBERED <= 0 then return 0 end
 
-	return TTG_PlayerShortBy( ply ) * BALANCE_TOKENS_PER_PLAYER
+	return math.floor( TTG_PlayerOutnumberedBy( ply ) * BALANCE_TOKENS_OUTNUMBERED )
 end
 
 
@@ -225,20 +275,26 @@ function TTG_ApplyHandicaps()
 		shortteam, bigteam = TEAM_BLUE, TEAM_RED
 	end
 
-	local down = math.abs( red - blue )
+	//ask for one of them, so the numbers announced are the ones players get
+	local sample = team.GetPlayers( shortteam )[ 1 ]
 
 	//built up as a list so the line reads properly with one lever on or both
 	local gains = {}
-	if BALANCE_HEALTH_PER_PLAYER > 0 then
-		table.insert( gains, "+" .. ( down * BALANCE_HEALTH_PER_PLAYER ) .. " max health" )
+
+	local bonushealth = TTG_HandicapHealth( sample )
+	if bonushealth > 0 then
+		table.insert( gains, "+" .. bonushealth .. " max health" )
 	end
-	if BALANCE_TOKENS_PER_PLAYER > 0 then
-		table.insert( gains, "+" .. ( down * BALANCE_TOKENS_PER_PLAYER ) .. " tool tokens" )
+
+	local bonustokens = TTG_HandicapTokens( sample )
+	if bonustokens > 0 then
+		table.insert( gains, "+" .. bonustokens .. " tool tokens" )
 	end
 
 	if table.Count( gains ) > 0 then
-		ChatPrintToAll( ConvertToTeamName( shortteam ) .. " are " .. down ..
-			" down, so they get  " .. table.concat( gains, " and " ) )
+		ChatPrintToAll( ConvertToTeamName( shortteam ) .. " are outnumbered " ..
+			math.min( red, blue ) .. " to " .. math.max( red, blue ) ..
+			", so they get  " .. table.concat( gains, " and " ) )
 	end
 
 	if BALANCE_NO_FIRSTAID == true then

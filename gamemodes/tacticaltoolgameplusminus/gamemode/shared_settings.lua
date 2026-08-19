@@ -39,11 +39,21 @@ PLAYER_BASE_MAXHEALTH = 100
 
 --Uneven Teams Handicap
 --When one team has fewer players than the other, these hand the short handed
---side something to make up for it. Each scales with how many players they are
---down by, so being two down is worth twice being one down. 0 turns a lever off.
+--side something to make up for it. 0 turns a lever off.
+--
+--The amounts below are what a team gets facing twice its own numbers, and they
+--scale down from there: a 1v2 is the full amount, a 2v3 half of it, a 3v4 a
+--third. Ratio rather than the plain difference, because 1v2 and 3v4 are both
+--one player apart and are nothing like the same fight.
+--
+--Health lands on whole multiples of BALANCE_HEALTH_STEP. A melee hit does 20
+--damage, so a bonus that is not a multiple of 20 buys nothing against the one
+--weapon everybody always has - 25 extra health survives exactly as many melee
+--hits as 20 does.
 --Applied by TTG_HandicapHealth() and friends in ingame_functions.lua.
-BALANCE_HEALTH_PER_PLAYER = 25		//extra max health per player the team is down
-BALANCE_TOKENS_PER_PLAYER = 0		//extra tool tokens per player the team is down
+BALANCE_HEALTH_OUTNUMBERED = 40		//extra max health when facing twice your numbers
+BALANCE_HEALTH_STEP = 20			//round health bonuses to this - one melee hit, see table_tool.lua
+BALANCE_TOKENS_OUTNUMBERED = 0		//extra tool tokens when facing twice your numbers
 BALANCE_NO_FIRSTAID = false			//stop the team with more players buying First Aid
 
 
@@ -182,14 +192,14 @@ if SERVER then
 
 	--Uneven Teams Handicap
 	--Three separate levers for making a short handed team competitive, each one
-	--scaling with how many players down they are. 0 turns a lever off, which is
+	--scaling with how badly they are outnumbered. 0 turns a lever off, which is
 	--why these accept 0 where the token setting above does not. All three apply
 	--from the next round, since the handicap is worked out during round setup.
 	if not ConVarExists( "ttg_var_balance_health" ) then
-		CreateConVar( "ttg_var_balance_health", tostring( BALANCE_HEALTH_PER_PLAYER ), FCVAR_NOTIFY, "Extra max health for each player a team is short by" )
+		CreateConVar( "ttg_var_balance_health", tostring( BALANCE_HEALTH_OUTNUMBERED ), FCVAR_NOTIFY, "Extra max health for a team facing twice its numbers, scaled down for smaller gaps" )
 	end
 	if not ConVarExists( "ttg_var_balance_tokens" ) then
-		CreateConVar( "ttg_var_balance_tokens", tostring( BALANCE_TOKENS_PER_PLAYER ), FCVAR_NOTIFY, "Extra tool tokens for each player a team is short by" )
+		CreateConVar( "ttg_var_balance_tokens", tostring( BALANCE_TOKENS_OUTNUMBERED ), FCVAR_NOTIFY, "Extra tool tokens for a team facing twice its numbers, scaled down for smaller gaps" )
 	end
 	if not ConVarExists( "ttg_var_balance_nofirstaid" ) then
 		CreateConVar( "ttg_var_balance_nofirstaid", "0", FCVAR_NOTIFY, "Stop the team with more players buying First Aid" )
@@ -197,12 +207,12 @@ if SERVER then
 
 	local set_balhealth = GetConVarNumber( "ttg_var_balance_health" )
 	if set_balhealth != nil and set_balhealth >= 0 then
-		BALANCE_HEALTH_PER_PLAYER = set_balhealth
+		BALANCE_HEALTH_OUTNUMBERED = set_balhealth
 	end
 
 	local set_baltokens = GetConVarNumber( "ttg_var_balance_tokens" )
 	if set_baltokens != nil and set_baltokens >= 0 then
-		BALANCE_TOKENS_PER_PLAYER = set_baltokens
+		BALANCE_TOKENS_OUTNUMBERED = set_baltokens
 	end
 
 	BALANCE_NO_FIRSTAID = GetConVarNumber( "ttg_var_balance_nofirstaid" ) > 0
@@ -212,12 +222,12 @@ if SERVER then
 		local newvalue = tonumber( NewValue )
 		if newvalue == nil or newvalue < 0 then return end
 
-		BALANCE_HEALTH_PER_PLAYER = newvalue
+		BALANCE_HEALTH_OUTNUMBERED = newvalue
 
 		if newvalue == 0 then
 			ChatPrintToAll( "Short handed teams will no longer get extra health" )
 		else
-			ChatPrintToAll( "Short handed teams now get  " .. newvalue .. "  extra max health per player they are down (applies next round)" )
+			ChatPrintToAll( "Outnumbered teams now get up to  " .. newvalue .. "  extra max health (applies next round)" )
 		end
 	end
 	cvars.AddChangeCallback( "ttg_var_balance_health", Callback_BalanceHealth, "ttg_var_balance_health_setting" )
@@ -227,17 +237,19 @@ if SERVER then
 		local newvalue = tonumber( NewValue )
 		if newvalue == nil or newvalue < 0 then return end
 
-		BALANCE_TOKENS_PER_PLAYER = newvalue
+		BALANCE_TOKENS_OUTNUMBERED = newvalue
 
 		if newvalue == 0 then
 			ChatPrintToAll( "Short handed teams will no longer get extra tool tokens" )
 		else
-			ChatPrintToAll( "Short handed teams now get  " .. newvalue .. "  extra tool tokens per player they are down (applies next round)" )
+			ChatPrintToAll( "Outnumbered teams now get up to  " .. newvalue .. "  extra tool tokens (applies next round)" )
 		end
 
-		--every tool costs a token, and the bought list only has room for so many
+		--every tool costs a token, and the bought list only has room for so many.
+		--newvalue is the bonus at double the numbers; being outnumbered worse than
+		--that scales past it, so this is a floor on the warning rather than a cap
 		if ROUND_TOKENS + newvalue > MAX_TOOL_SLOTS then
-			print( "TTG: a short handed player could reach " .. ( ROUND_TOKENS + newvalue ) ..
+			print( "TTG: an outnumbered player could reach " .. ( ROUND_TOKENS + newvalue ) ..
 				" tokens but only " .. MAX_TOOL_SLOTS .. " tools can be listed - raise MAX_TOOL_SLOTS in shared_settings.lua" )
 		end
 	end
