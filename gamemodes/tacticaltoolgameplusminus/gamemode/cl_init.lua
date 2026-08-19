@@ -809,6 +809,17 @@ end )
 		health = 0
 	end
 	
+	--The bar is 200 wide, so drawing it health*2 assumed a maximum of 100 and ran
+	--off the end of its own background as soon as the uneven teams handicap
+	--raised that. Measured against the player's real maximum, a full bar means
+	--full whatever the maximum happens to be, and the number beside it still
+	--says what the number is.
+	local maxhealth = LocalPlayer():GetMaxHealth()
+	if maxhealth <= 0 then
+		maxhealth = PLAYER_BASE_MAXHEALTH
+	end
+	local healthfraction = math.Clamp( health / maxhealth, 0, 1 )
+
 	local health_color = Color(255,255,255,255)
 	local health_color_bg = Color(100,100,100,255)
 	
@@ -822,7 +833,7 @@ end )
 	
 	draw.RoundedBox(8, 15, ScrH()-50, 210, 35, Color(50,50,50,255))			--background box
 	draw.RoundedBox(8, 20, ScrH() - 25 - 20, 200, 25, health_color_bg) --background health bar
-	draw.RoundedBox(8, 20, ScrH() - 25 - 20, health*2, 25, health_color) --changing health bar
+	draw.RoundedBox(8, 20, ScrH() - 25 - 20, 200 * healthfraction, 25, health_color) --changing health bar
 	draw.SimpleTextOutlined(health, "TheDefaultSettings6", 120, ScrH() -25 -7, Color(255, 255, 255, 255), 1, 1, 1, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
 	
 	

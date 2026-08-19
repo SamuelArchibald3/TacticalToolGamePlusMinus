@@ -111,13 +111,20 @@ local function HeadBars()
 		draw.SimpleTextOutlined(v:Name(), "default", PosScr.x, PosScr.y, white, 1, 1, 1, Color(0, 0, 0, 255))	--player name
 			
 		-- Healthbar stuff
+		--76 is the width of the bar inside its box. Same reason as the bar in
+		--cl_init.lua: a fixed .76 per point assumed a maximum of 100, so a short
+		--handed player with bonus health drew straight past the box.
 		local health = v:Health()
+		local maxhealth = v:GetMaxHealth()
+		if maxhealth <= 0 then
+			maxhealth = PLAYER_BASE_MAXHEALTH
+		end
 
 		draw.RoundedBox(8, PosScr.x-40, PosScr.y+10, 80, 10, Color(50,50,50,255))			--background box
 		if v.prevhealth_alt != nil then
-			draw.RoundedBox(8, PosScr.x-38, PosScr.y+12,v.prevhealth_alt*.76, 6, white)		--white dropping health
+			draw.RoundedBox(8, PosScr.x-38, PosScr.y+12, 76 * math.Clamp( v.prevhealth_alt / maxhealth, 0, 1 ), 6, white)		--white dropping health
 		end
-		draw.RoundedBox(8, PosScr.x-38, PosScr.y+12, health*.76, 6, teamcolor)			--health box
+		draw.RoundedBox(8, PosScr.x-38, PosScr.y+12, 76 * math.Clamp( health / maxhealth, 0, 1 ), 6, teamcolor)			--health box
 		
 
 		
