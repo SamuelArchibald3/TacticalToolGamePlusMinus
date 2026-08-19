@@ -107,6 +107,16 @@ function ShowTeamMenu()
 		gui.OpenURL( "https://steamcommunity.com/sharedfiles/filedetails/?id=2858619284" )
 	end
 
+	local RandomizeButton = vgui.Create( "DButton" )
+	RandomizeButton:SetParent( DermaPanel )
+	RandomizeButton:SetText( "Randomize Teams" )
+	RandomizeButton:SetPos( 133, (panel_height - 50) )
+	RandomizeButton:SetSize( 122, 25 )
+	RandomizeButton:SetEnabled( true )
+	RandomizeButton.DoClick = function ()
+		RunConsoleCommand( "ttg_randomizeteams" )
+	end
+
 	local PlayerCountRed = vgui.Create("DLabel", DermaPanel)
 	PlayerCountRed :SetPos(100, 100) // Position
 	PlayerCountRed :SetColor(Color(255,150,150,255)) // Color

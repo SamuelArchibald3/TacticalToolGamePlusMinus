@@ -136,6 +136,9 @@ function GameRestart()
 	for k,v in pairs(player.GetAll()) do		
 		v:StripWeapons()
 		v:SetTeam(TEAM_SPEC)
+		
+		--back to nobody having picked a side, so Randomize Teams deals everyone in
+		v.TTG_ChoseSpectator = false
 		v:Spawn()
 		v:SetMoney(0)
 		
@@ -167,6 +170,55 @@ function Close_TeamSetupMenu( ply )
 
 	umsg.Start( "GCTeamsPanel_close", ply )
 	umsg.End()
+end
+
+
+
+--Shuffles the lobby across red and blue.
+--Everyone lands on spectators when they connect without having picked anything,
+--so those players get dealt a side as well - otherwise the button does nothing
+--in a fresh lobby, which is exactly when it is most useful. Only players who
+--actually pressed Join Spectators are left where they are.
+function RandomizeTeams()
+
+	--work out who is taking part
+	local playing = {}
+	for k,v in pairs(player.GetAll()) do
+		if v.TTG_ChoseSpectator != true then
+			table.insert( playing, v )
+		end
+	end
+
+	--Fisher-Yates shuffle
+	for i = table.Count( playing ), 2, -1 do
+		local j = math.random( i )
+		playing[ i ], playing[ j ] = playing[ j ], playing[ i ]
+	end
+
+	--How many of them can actually play. Without the cap everybody gets a side;
+	--with it the two sides fill up and whoever is left over sits this one out.
+	local maxplaying = table.Count( playing )
+	if RESTRICT_PLAYERS_PER_TEAM == true then
+		maxplaying = math.min( maxplaying, PLAYERS_PER_TEAM * 2 )
+	end
+
+	--deal out alternately, so the two sides differ by at most one player
+	for i,v in ipairs( playing ) do
+		if i > maxplaying then
+			--no room left. Not marked as choosing to spectate, so the next
+			--shuffle deals them in like anyone else
+			v:SetTeam( TEAM_SPEC )
+		elseif i % 2 == 0 then
+			v:SetTeam( TEAM_BLUE )
+		else
+			v:SetTeam( TEAM_RED )
+		end
+
+		--Clear ready, so nobody gets counted down into a game on a side they
+		--have not seen. ReadyChecker runs on Think, so it cancels a countdown
+		--already in progress by itself.
+		v:SetReady( false )
+	end
 end
 
 
