@@ -63,16 +63,31 @@ function SWEP:StartBarrelDisguise()
 
 	barrel:SetModel( self.Ref.decoy_model )
 	barrel:SetPos( ply:GetPos() )
-	barrel:SetAngles( Angle( 0, ply:EyeAngles().y, 0 ) )
 	barrel:Spawn()
 
 	barrel:SetParent( ply )
+
+	--zeroed AFTER parenting, so these are relative to the player: the barrel sits
+	--on their origin and turns with them. Setting world angles before parenting
+	--leaves a fixed offset that only looks right facing one direction.
+	barrel:SetLocalPos( vector_origin )
+	barrel:SetLocalAngles( angle_zero )
+
 	barrel:SetSolid( SOLID_NONE )
 	barrel:SetCollisionGroup( COLLISION_GROUP_WEAPON )
 	barrel:SetRenderMode( RENDERMODE_TRANSCOLOR )
 	barrel:SetColor( self.TeamColor )
 
 	self.DisguiseProp = barrel
+
+	--a floating toolgun beside a barrel gives the whole thing away. Holster is
+	--blocked while disguised, so the active weapon stays this one, but capture it
+	--rather than assume so the same entity is the one restored.
+	local wep = ply:GetActiveWeapon()
+	if IsValid( wep ) then
+		wep:SetNoDraw( true )
+		self.HiddenWeapon = wep
+	end
 end
 
 
@@ -81,6 +96,11 @@ function SWEP:StopBarrelDisguise()
 		self.DisguiseProp:Remove()
 	end
 	self.DisguiseProp = nil
+
+	if IsValid( self.HiddenWeapon ) then
+		self.HiddenWeapon:SetNoDraw( false )
+	end
+	self.HiddenWeapon = nil
 
 	local ply = self.Owner
 	if IsValid( ply ) then
