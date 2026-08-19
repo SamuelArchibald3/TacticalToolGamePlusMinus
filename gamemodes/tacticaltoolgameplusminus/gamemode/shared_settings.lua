@@ -51,9 +51,10 @@ PLAYER_BASE_MAXHEALTH = 100
 --weapon everybody always has - 25 extra health survives exactly as many melee
 --hits as 20 does.
 --Applied by TTG_HandicapHealth() and friends in ingame_functions.lua.
-BALANCE_HEALTH_OUTNUMBERED = 40		//extra max health when facing twice your numbers
+BALANCE_ENABLED = true				//master switch - off means no handicap of any kind
+BALANCE_HEALTH_OUTNUMBERED = 120    //extra max health when facing twice your numbers
 BALANCE_HEALTH_STEP = 20			//round health bonuses to this - one melee hit, see table_tool.lua
-BALANCE_TOKENS_OUTNUMBERED = 0		//extra tool tokens when facing twice your numbers
+BALANCE_TOKENS_OUTNUMBERED = 3		//extra tool tokens when facing twice your numbers
 BALANCE_NO_FIRSTAID = false			//stop the team with more players buying First Aid
 
 
@@ -195,6 +196,9 @@ if SERVER then
 	--scaling with how badly they are outnumbered. 0 turns a lever off, which is
 	--why these accept 0 where the token setting above does not. All three apply
 	--from the next round, since the handicap is worked out during round setup.
+	if not ConVarExists( "ttg_var_balance_enabled" ) then
+		CreateConVar( "ttg_var_balance_enabled", "1", FCVAR_NOTIFY, "Give a team that is outnumbered a handicap to make up for it" )
+	end
 	if not ConVarExists( "ttg_var_balance_health" ) then
 		CreateConVar( "ttg_var_balance_health", tostring( BALANCE_HEALTH_OUTNUMBERED ), FCVAR_NOTIFY, "Extra max health for a team facing twice its numbers, scaled down for smaller gaps" )
 	end
@@ -204,6 +208,8 @@ if SERVER then
 	if not ConVarExists( "ttg_var_balance_nofirstaid" ) then
 		CreateConVar( "ttg_var_balance_nofirstaid", "0", FCVAR_NOTIFY, "Stop the team with more players buying First Aid" )
 	end
+
+	BALANCE_ENABLED = GetConVarNumber( "ttg_var_balance_enabled" ) > 0
 
 	local set_balhealth = GetConVarNumber( "ttg_var_balance_health" )
 	if set_balhealth != nil and set_balhealth >= 0 then
@@ -216,6 +222,21 @@ if SERVER then
 	end
 
 	BALANCE_NO_FIRSTAID = GetConVarNumber( "ttg_var_balance_nofirstaid" ) > 0
+
+
+	local function Callback_BalanceEnabled( CVar, PreviousValue, NewValue )
+		local newvalue = tonumber( NewValue )
+		if newvalue == nil then return end
+
+		BALANCE_ENABLED = newvalue > 0
+
+		if BALANCE_ENABLED then
+			ChatPrintToAll( "Outnumbered teams will get a handicap again (applies next round)" )
+		else
+			ChatPrintToAll( "Outnumbered teams will no longer get a handicap (applies next round)" )
+		end
+	end
+	cvars.AddChangeCallback( "ttg_var_balance_enabled", Callback_BalanceEnabled, "ttg_var_balance_enabled_setting" )
 
 
 	local function Callback_BalanceHealth( CVar, PreviousValue, NewValue )

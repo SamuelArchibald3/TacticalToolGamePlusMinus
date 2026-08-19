@@ -217,6 +217,7 @@ end
 //	3v4  ->  20
 //	5v6  ->   0    too close to matter
 function TTG_HandicapHealth( ply )
+	if BALANCE_ENABLED != true then return 0 end
 	if BALANCE_HEALTH_OUTNUMBERED <= 0 then return 0 end
 
 	local raw = TTG_PlayerOutnumberedBy( ply ) * BALANCE_HEALTH_OUTNUMBERED
@@ -237,15 +238,25 @@ end
 //a real imbalance to earn one instead of arriving on a rounding boundary. At a
 //setting of 1 that means a 1v2 earns one and a 2v3 earns nothing.
 function TTG_HandicapTokens( ply )
+	if BALANCE_ENABLED != true then return 0 end
 	if BALANCE_TOKENS_OUTNUMBERED <= 0 then return 0 end
 
-	return math.floor( TTG_PlayerOutnumberedBy( ply ) * BALANCE_TOKENS_OUTNUMBERED )
+	local bonus = math.floor( TTG_PlayerOutnumberedBy( ply ) * BALANCE_TOKENS_OUTNUMBERED )
+
+	//A lopsided enough game scales past what the bought list can show: at a
+	//setting of 3, a 1v4 earns 9 on top of the usual 4, and only MAX_TOOL_SLOTS
+	//of them can be listed. A tool that is bought and usable but missing from
+	//the list is exactly the bug MAX_TOOL_SLOTS was raised to fix, so cap it.
+	local room = math.max( MAX_TOOL_SLOTS - ROUND_TOKENS, 0 )
+
+	return math.min( bonus, room )
 end
 
 
 //True if this player is on the bigger team while First Aid is being withheld
 //from it.
 function TTG_HandicapNoFirstAid( ply )
+	if BALANCE_ENABLED != true then return false end
 	if BALANCE_NO_FIRSTAID != true then return false end
 	if not IsValid( ply ) then return false end
 
@@ -297,7 +308,9 @@ function TTG_ApplyHandicaps()
 			", so they get  " .. table.concat( gains, " and " ) )
 	end
 
-	if BALANCE_NO_FIRSTAID == true then
+	//asked of a real player rather than read off the setting, so this can only
+	//say First Aid was withheld in the cases where it actually was
+	if TTG_HandicapNoFirstAid( team.GetPlayers( bigteam )[ 1 ] ) then
 		ChatPrintToAll( ConvertToTeamName( bigteam ) .. " have the extra players, so no First Aid for them this round" )
 	end
 end
