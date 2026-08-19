@@ -56,6 +56,11 @@ function SetSpawnStuff( ply )
 	//ply:SetEyeAngles(bang)
 	//print("setting ang to", bang)
 	
+	--anything that hides a player - the invisibility buff, the decoy's barrel
+	--disguise - must not survive a respawn. Cheap insurance: whatever went wrong
+	--last round, nobody starts one invisible.
+	ply:SetRenderMode( RENDERMODE_NORMAL )
+
 	--set base material of the player, so stuff that changes this has it saved to change it back
 	ply.TTG_OrigMat = ply:GetMaterial( )
 	
