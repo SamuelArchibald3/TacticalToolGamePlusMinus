@@ -63,6 +63,10 @@ function SWEP:StartBarrelDisguise()
 
 	barrel:SetModel( self.Ref.decoy_model )
 	barrel:SetPos( ply:GetPos() )
+
+	--the one and only time its angle is set: facing where the player was when
+	--they dropped into the disguise, and fixed there from then on
+	barrel:SetAngles( Angle( 0, ply:EyeAngles().y, 0 ) )
 	barrel:Spawn()
 
 	--Deliberately NOT parented. Parenting drags the barrel through the player's
@@ -116,13 +120,15 @@ function SWEP:OnRemove()
 end
 
 
---The barrel is carried here rather than parented, so that only the player's yaw
---reaches it. Parenting also passed on their pitch, which tipped the barrel over
---whenever they looked up or down.
+--The barrel is carried here rather than parented. Parenting passed on the
+--player's whole orientation, so it tipped over when they looked up or down and
+--turned with them when they looked around - neither of which a barrel does.
 function SWEP:Think()
 	if SERVER and IsValid( self.DisguiseProp ) and IsValid( self.Owner ) then
+		--position only. The angle is set once when the disguise starts and left
+		--alone: a barrel that swivels to follow whoever is looking at it gives
+		--the disguise away immediately.
 		self.DisguiseProp:SetPos( self.Owner:GetPos() )
-		self.DisguiseProp:SetAngles( Angle( 0, self.Owner:EyeAngles().y, 0 ) )
 	end
 
 	--the base drives reloading and other per-tick tool work
