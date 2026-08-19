@@ -181,6 +181,27 @@ function SetTotalRounds(num)
 	SetGlobalInt("TotalRounds", num)
 end
 
+
+
+
+/*---------------------------------------------------------
+	Purchases withheld from a team
+---------------------------------------------------------*/
+
+--First Aid can be withheld from whichever team has the extra players, as one of
+--the uneven team handicaps. The server decides per player and networks it,
+--because the client cannot read the setting itself. TTG_HandicapNoFirstAid()
+--in ingame_functions.lua is where the decision is made.
+--
+--Shared because both ends need it: the buy menu leaves a withheld purchase out
+--of its list, and fGiveTool refuses it if the click gets through anyway.
+function TTG_PurchaseBlocked( ply, purchasename )
+	if not IsValid( ply ) then return false end
+	if purchasename != "purchase_firstaid" then return false end
+
+	return ply:GetNW2Bool( "TTG_NoFirstAid", false )
+end
+
 function GetTotalRounds()
 	local num = GetGlobalInt("TotalRounds")
 	return num

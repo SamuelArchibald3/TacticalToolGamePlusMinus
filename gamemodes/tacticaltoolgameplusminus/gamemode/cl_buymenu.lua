@@ -112,21 +112,24 @@ function ShowBuyingMenu()
 
 	
 	
-	//add all purchases to the shops
+	//add all purchases to the shops.
+	//TTG_PurchaseBlocked keeps out anything withheld from this player's team -
+	//First Aid, when the uneven teams handicap is set to take it off the bigger
+	//side. Better to leave it unlisted than to refuse the click afterwards.
 	for _, purchase in pairs(FIRSTSHOP_TABLE) do
-		if purchase.not_in_shop != true then
+		if purchase.not_in_shop != true and not TTG_PurchaseBlocked( LocalPlayer(), purchase.name ) then
 			FirstShopColumn:AddLine( purchase.print_name, purchase.pack_amount )  
 		end
 	end
 	
 	for _, purchase in pairs(SECONDSHOP_TABLE) do
-		if purchase.not_in_shop != true then
+		if purchase.not_in_shop != true and not TTG_PurchaseBlocked( LocalPlayer(), purchase.name ) then
 			SecondShopColumn:AddLine( purchase.print_name )  
 		end
 	end	
 	
 	for _, purchase in pairs(THIRDSHOP_TABLE) do
-		if purchase.not_in_shop != true then
+		if purchase.not_in_shop != true and not TTG_PurchaseBlocked( LocalPlayer(), purchase.name ) then
 			ThirdShopColumn:AddLine( purchase.print_name )  
 		end
 	end

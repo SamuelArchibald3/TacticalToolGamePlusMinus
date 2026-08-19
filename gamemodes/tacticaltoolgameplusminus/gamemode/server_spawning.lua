@@ -69,7 +69,13 @@ function SetSpawnStuff( ply )
 	
 	--set base stats of the player
     ply:SetGravity  ( 1 )  
-    ply:SetMaxHealth( PLAYER_BASE_MAXHEALTH, true )  
+	--A short handed team spawns with extra health. TTG_HandicapHealth() gives
+	--back 0 when the teams are level or the lever is off, so this is the plain
+	--base health in an even game. Health is set as well as max health, because
+	--the engine already spawned them on the old value.
+	local maxhealth = PLAYER_BASE_MAXHEALTH + TTG_HandicapHealth( ply )
+    ply:SetMaxHealth( maxhealth, true )
+	ply:SetHealth   ( maxhealth )
 	ply:SetJumpPower( PLAYER_BASE_JUMPPOWER )
     ply:SetBaseSpeed( ply.BaseSpeed )
 	ply:SetCrouchedWalkSpeed( PLAYER_BASE_CROUCHMULTIPLIER )

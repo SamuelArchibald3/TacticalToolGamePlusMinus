@@ -262,7 +262,17 @@ function fGiveTool( player, command, arguments )
 	if not CheckIfInShopTables(purchase) then
 		player:ChatPrint("invalid purchase")
 		BuyFailedSound()
-		return 
+		return
+	end
+
+
+	//the team with more players can be locked out of First Aid when the teams
+	//are uneven. The buy menu already leaves it out of the list, so this catches
+	//a console purchase, or a menu that was built before the flag reached the client
+	if TTG_PurchaseBlocked( player, purchase ) then
+		player:ChatPrint("Your team has the extra players, so First Aid is not available")
+		BuyFailedSound()
+		return
 	end
 	
 	

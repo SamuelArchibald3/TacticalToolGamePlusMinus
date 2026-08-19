@@ -137,6 +137,119 @@ end
 
 
 /*---------------------------------------------------------
+	Uneven team handicap
+---------------------------------------------------------*/
+
+//Teams are not always even - somebody leaves, or there is an odd number of
+//players in the lobby. These give the short handed side something back for it.
+//
+//Everything scales off one number, how many players a team is down by, so a
+//1v3 is worth twice a 1v2 without any of the levers needing to know that.
+
+
+//How a team compares to the other one in player count. Positive when it has
+//spare players, negative when it is short handed, 0 when they are level.
+//Spectators are on neither team, so they do not count either way.
+function TTG_TeamNumberEdge( teamnum )
+	local red  = team.NumPlayers( TEAM_RED )
+	local blue = team.NumPlayers( TEAM_BLUE )
+
+	if teamnum == TEAM_RED then
+		return red - blue
+	elseif teamnum == TEAM_BLUE then
+		return blue - red
+	end
+
+	//spectators, and anything else that is not a playing team
+	return 0
+end
+
+
+//How many players this player's team is down by. 0 if it is level or ahead.
+function TTG_PlayerShortBy( ply )
+	if not IsValid( ply ) then return 0 end
+
+	local edge = TTG_TeamNumberEdge( ply:Team() )
+	if edge >= 0 then return 0 end
+
+	return -edge
+end
+
+
+//Extra max health for a short handed player. Applied in SetSpawnStuff().
+function TTG_HandicapHealth( ply )
+	if BALANCE_HEALTH_PER_PLAYER <= 0 then return 0 end
+
+	return TTG_PlayerShortBy( ply ) * BALANCE_HEALTH_PER_PLAYER
+end
+
+
+//Extra tool tokens for a short handed player. Applied through
+//TTG_RoundStartTokens(), so it lands wherever tokens are handed out.
+function TTG_HandicapTokens( ply )
+	if BALANCE_TOKENS_PER_PLAYER <= 0 then return 0 end
+
+	return TTG_PlayerShortBy( ply ) * BALANCE_TOKENS_PER_PLAYER
+end
+
+
+//True if this player is on the bigger team while First Aid is being withheld
+//from it.
+function TTG_HandicapNoFirstAid( ply )
+	if BALANCE_NO_FIRSTAID != true then return false end
+	if not IsValid( ply ) then return false end
+
+	return TTG_TeamNumberEdge( ply:Team() ) > 0
+end
+
+
+//Networks the First Aid lock to each player and says out loud what the uneven
+//teams are worth this round. Called once during round setup.
+//
+//The buy menu reads the networked flag when it builds its list, so a locked out
+//team never sees First Aid in the first place. That is the nice version rather
+//than the reliable one - a client could build the menu before the flag reaches
+//it - so fGiveTool refuses the purchase as well, and that is the authority.
+function TTG_ApplyHandicaps()
+
+	for k,ply in pairs(player.GetAll()) do
+		ply:SetNW2Bool( "TTG_NoFirstAid", TTG_HandicapNoFirstAid( ply ) )
+	end
+
+	local red  = team.NumPlayers( TEAM_RED )
+	local blue = team.NumPlayers( TEAM_BLUE )
+	if red == blue then return end
+
+	local shortteam, bigteam = TEAM_RED, TEAM_BLUE
+	if blue < red then
+		shortteam, bigteam = TEAM_BLUE, TEAM_RED
+	end
+
+	local down = math.abs( red - blue )
+
+	//built up as a list so the line reads properly with one lever on or both
+	local gains = {}
+	if BALANCE_HEALTH_PER_PLAYER > 0 then
+		table.insert( gains, "+" .. ( down * BALANCE_HEALTH_PER_PLAYER ) .. " max health" )
+	end
+	if BALANCE_TOKENS_PER_PLAYER > 0 then
+		table.insert( gains, "+" .. ( down * BALANCE_TOKENS_PER_PLAYER ) .. " tool tokens" )
+	end
+
+	if table.Count( gains ) > 0 then
+		ChatPrintToAll( ConvertToTeamName( shortteam ) .. " are " .. down ..
+			" down, so they get  " .. table.concat( gains, " and " ) )
+	end
+
+	if BALANCE_NO_FIRSTAID == true then
+		ChatPrintToAll( ConvertToTeamName( bigteam ) .. " have the extra players, so no First Aid for them this round" )
+	end
+end
+
+
+
+
+/*---------------------------------------------------------
 	Tokens for the round
 ---------------------------------------------------------*/
 
@@ -146,7 +259,9 @@ end
 //three spots ( gamesetup.lua for the first round, and twice in ingame.lua for
 //every round after ), so any rule about token amounts has to be shared or the
 //copies drift apart.
-function TTG_RoundStartTokens()
+//ply is optional. Without one this is just the amount a player on an even team
+//gets, which is what the tie breaker rule and the settings tests care about.
+function TTG_RoundStartTokens( ply )
 
 	//the tie breaker is the round after the last normal one. If the setting is
 	//on, it is played out with whatever you can already carry - no purchases.
@@ -154,7 +269,7 @@ function TTG_RoundStartTokens()
 		return 0
 	end
 
-	return ROUND_TOKENS
+	return ROUND_TOKENS + TTG_HandicapTokens( ply )
 end
 
 

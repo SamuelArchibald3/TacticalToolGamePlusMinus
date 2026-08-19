@@ -84,6 +84,10 @@ function NextRound()
 	//the roles for this round are settled above, so push them to every client
 	BroadcastTeamRoles()
 
+	//work out what uneven teams are worth this round, before anyone spawns or
+	//any buy menu opens
+	TTG_ApplyHandicaps()
+
 
 	//set the zone the teams are vying for control over to be at one of the bomb sites of the de_ map
 	ChooseAttackSite()
@@ -111,7 +115,7 @@ function NextRound()
 			
 			--Set everyones tokens for the round. See TTG_RoundStartTokens() in
 			--ingame_functions.lua - the tie breaker round can hand out none.
-			v:SetToolTokens( TTG_RoundStartTokens() )
+			v:SetToolTokens( TTG_RoundStartTokens( v ) )
 			
 			--give attackers god mode so they cant be killed in setup phase later
 			if GetTeamRole(v:Team()) == "Attacking" then
