@@ -125,6 +125,13 @@ function fJoinTeam( player, command, arguments )
 	theteam = TEAM_SPEC
 	end
 	
+	--anything else is not a team, and SetTeam( nil ) would error further down
+	if theteam == nil then return end
+	
+	--Remember whether sitting out was a choice. Everyone starts on spectators
+	--without having picked, and Randomize Teams has to tell those two apart.
+	player.TTG_ChoseSpectator = ( theteam == TEAM_SPEC )
+	
 	if theteam != TEAM_SPEC then
 	
 		--dont allow the player to join if the team has enough players already
@@ -142,6 +149,40 @@ function fJoinTeam( player, command, arguments )
 	end
 end
 concommand.Add( "gc_jointeam", fJoinTeam )
+
+
+
+
+
+/*---------------------------------------------------------
+	Randomize Teams
+---------------------------------------------------------*/
+--Command behind the Randomize Teams button on the team setup screen.
+--It has to be a command of its own rather than a use of gc_jointeam, which only
+--ever moves the player who ran it - a client must not be able to move anyone else.
+
+--The caller is 'ply' rather than 'player' like the commands above, because this
+--one needs the player library itself for player.GetAll()
+function fRandomizeTeams( ply, command, arguments )
+
+	--teams are fixed once a game is running
+	if G_GameBegun == true then return end
+
+	--stop one player spamming the shuffle while everyone else is still picking
+	if G_LastTeamShuffle != nil and CurTime() < G_LastTeamShuffle + TEAM_SHUFFLE_COOLDOWN then
+		ply:ChatPrint( "Teams were just randomized, give it a second." )
+		return
+	end
+	G_LastTeamShuffle = CurTime()
+
+	RandomizeTeams()
+
+	--say who did it, so a shuffle nobody asked for is not a mystery
+	for k,v in pairs(player.GetAll()) do
+		v:PrintMessage( HUD_PRINTTALK, ply:Nick() .. " randomized the teams." )
+	end
+end
+concommand.Add( "ttg_randomizeteams", fRandomizeTeams )
 
 
 

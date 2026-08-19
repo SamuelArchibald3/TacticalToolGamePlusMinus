@@ -19,6 +19,7 @@ PUB_MODE = false
 BEGINNING_COUNTDOWN = 3		//seconds to countdown from when beginning the round once all players are ready
 PLAYERS_PER_TEAM = 6		//amount of players per team
 RESTRICT_PLAYERS_PER_TEAM = true
+TEAM_SHUFFLE_COOLDOWN = 3		//seconds before the Randomize Teams button can be used again
 
 
 
