@@ -540,22 +540,19 @@ end
 //reset the player's ability slots, so the ents are destroyed
 function Reset_PlyAbilities( ply )
 	//IsValid( ) rather than != nil - the ent may already be gone, and calling
-	//:Remove() on a NULL entity errors. The field gets cleared either way.
-	if IsValid( ply.Ability_A ) then
-		ply.Ability_A:Remove()
+	//:Remove() on a NULL entity errors. The slot gets cleared either way.
+	//
+	//Emptied rather than replaced with a fresh table, so anything holding a
+	//reference to the slots table is looking at the same one afterwards.
+	local slots = ply:GetAbilitySlots()
+
+	for i, abil in pairs( slots ) do
+		if IsValid( abil ) then
+			abil:Remove()
+		end
+		slots[ i ] = nil
 	end
-	ply.Ability_A = nil
-	
-	if IsValid( ply.Ability_B ) then
-		ply.Ability_B:Remove()
-	end
-	ply.Ability_B = nil
-	
-	if IsValid( ply.Ability_C ) then
-		ply.Ability_C:Remove()
-	end
-	ply.Ability_C = nil
-	
+
 	ply:ResetAbilityInfo()
 	ply:ResetSwepToolInfo()
 end
