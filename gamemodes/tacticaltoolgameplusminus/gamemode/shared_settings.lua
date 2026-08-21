@@ -290,40 +290,6 @@ if SERVER then
 		end
 	end
 	cvars.AddChangeCallback( "ttg_var_balance_nofirstaid", Callback_BalanceFirstAid, "ttg_var_balance_nofirstaid_setting" )
-	
-	
-	
-	
-	
-	
-	
-	
-	--[[
-	CreateConVar("ttg_var_devmode", GetConVarNumber( "default_ttg_devmode" ), FCVAR_NOTIFY, "Enables developers mode (allows you to start the game with 1 person, noclip, etc)")
-	CreateConVar("ttg_var_rounds", GetConVarNumber( "default_ttg_rounds" ), FCVAR_NOTIFY, "Amount of rounds to play in one game")
-	
-	
-	local function Callback_Devmode(CVar, PreviousValue, NewValue)
-		if tonumber(NewValue) >= 1 then
-			ChatPrintToAll( "Developer Mode turned ON! RESTARTING" )
-			DEV_MODE = true
-			GameRestart()
-		elseif tonumber(NewValue) <= 0 then
-			ChatPrintToAll( "Developer Mode turned OFF! RESTARTING" )
-			DEV_MODE = false
-			GameRestart()
-		end
-	end
-	cvars.AddChangeCallback("ttg_var_devmode", Callback_Devmode)
-	
-	
-	local function Callback_Rounds(CVar, PreviousValue, NewValue)
-		ChatPrintToAll( "Number of rounds set to  " .. NewValue .. "  RESTARTING" )
-		ROUNDS = tonumber(NewValue)
-		GameRestart()
-	end
-	cvars.AddChangeCallback("ttg_var_rounds", Callback_Rounds)
-]]--
 
 end
 
