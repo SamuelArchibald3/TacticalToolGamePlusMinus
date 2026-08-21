@@ -51,7 +51,7 @@
 		5
 		{
 			"name"		"ttg_var_balance_enabled"
-			"text"		"Handicap Uneven Teams"
+			"text"		"Handicap: Enable For Uneven Teams"
 			"help"		"Give a team that is outnumbered something back for it (takes effect from the next round)"
 			"type"		"CheckBox"
 			"default"	"1"
@@ -61,7 +61,7 @@
 		6
 		{
 			"name"		"ttg_var_balance_health"
-			"text"		"Handicap - Extra Health"
+			"text"		"Handicap: Extra Health"
 			"help"		"Extra max health for a team facing twice its numbers, scaled down for smaller gaps and rounded to whole melee hits. 0 turns it off"
 			"type"		"Numeric"
 			"default"	"120"
@@ -71,7 +71,7 @@
 		7
 		{
 			"name"		"ttg_var_balance_tokens"
-			"text"		"Handicap - Extra Tool Tokens"
+			"text"		"Handicap: Extra Tool Tokens"
 			"help"		"Extra tool tokens for a team facing twice its numbers, scaled down for smaller gaps. 0 turns it off"
 			"type"		"Numeric"
 			"default"	"3"
@@ -81,7 +81,7 @@
 		8
 		{
 			"name"		"ttg_var_balance_nofirstaid"
-			"text"		"Handicap - No First Aid For The Bigger Team"
+			"text"		"Handicap: No First Aid For Bigger Team"
 			"help"		"Whichever team has the extra players cannot buy First Aid at all"
 			"type"		"CheckBox"
 			"default"	"0"
