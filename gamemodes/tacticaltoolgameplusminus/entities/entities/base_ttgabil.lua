@@ -72,6 +72,24 @@ function ENT:InitiateCooldown()
 	self.Cooldown = true
 	self.Time = self.Ref.cooldown
 	self:UpdateNetworkedVars( true, self.Time )
-	
+
 	self:NextThink( CurTime() + 1)
+end
+
+
+--The hud and the buy menu counter both read a networked copy of the slot, so an
+--ability that goes away without the round reset running would keep showing on
+--them and the counter would claim a slot that is actually free.
+function ENT:OnRemove()
+	if not IsValid( self.Owner ) then return end
+	if self.AbilitySlot == nil then return end
+
+	local slots = self.Owner:GetAbilitySlots()
+
+	--only clear the slot if it is still ours. A swap may have moved another
+	--ability into it, and the round reset may have emptied it already
+	if slots[ self.AbilitySlot ] != self then return end
+
+	self.Owner:ClearAbilityInfo( self.AbilitySlot )
+	slots[ self.AbilitySlot ] = nil
 end
