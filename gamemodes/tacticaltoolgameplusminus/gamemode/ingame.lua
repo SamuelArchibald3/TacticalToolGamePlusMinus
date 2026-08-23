@@ -34,9 +34,12 @@ function NextRound()
 	RemoveAllGameEnts()
 	
 	
-	G_CurRound = G_CurRound + 1
-	SetRound(G_CurRound)
 	--Never start a round for a game that is already decided.
+	--
+	--Checked BEFORE the round number moves. It used to increment and network the
+	--new round first, so a decided game published a round one past the last one
+	--and every client drew "TIE BREAKER" across the final score until the map
+	--reset - GameEnd does not put the round back.
 	--
 	--The usual place this is caught is EndRound, right after the winning point is
 	--awarded. This is the backstop for a score that got there some other way, and
@@ -52,6 +55,10 @@ function NextRound()
 		GameEnd( gamewinner )
 		return
 	end
+
+	G_CurRound = G_CurRound + 1
+	SetRound(G_CurRound)
+
 	--if its not the first round, then flip around the teams roles
 	if G_CurRound != 1 then
 		if GetTeamRole(TEAM_RED) == "Attacking" then

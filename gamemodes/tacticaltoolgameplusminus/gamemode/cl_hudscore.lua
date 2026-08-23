@@ -55,7 +55,10 @@ local function ScoreHud()
 	end
 	draw.SimpleTextOutlined("ROUND: " .. round, "TheDefaultSettings2", ScrW()/2, 85, Color(255, 255, 255, 255), 1, 1, 1, Color(0, 0, 0, 255))
 
-	if round > GetTotalRounds() then
+	--Only while a tie breaker is actually being played. GetRound() keeps its
+	--value through the game end phase, so without the phase test this label
+	--sat over the final results of any game that reached a tie breaker.
+	if round > GetTotalRounds() and phase != "GameEnd" then
 		draw.SimpleTextOutlined("TIE BREAKER", "TheDefaultSettings5", ScrW()/2 + 0.5, 108, Color(255, 255, 100, 255), 1, 1, 1, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
 	end
 	
