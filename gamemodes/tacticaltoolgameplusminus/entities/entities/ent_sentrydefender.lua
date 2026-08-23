@@ -204,6 +204,24 @@ end
 
 
 
+--True once the target has been out of sight for longer than the sentry will
+--wait. Starts the clock on the first miss, and CheckTargetTrace clears it again
+--the moment the target reappears.
+function ENT:LostSightTooLong()
+	if self.LostSightAt == nil then
+		self.LostSightAt = CurTime()
+		return false
+	end
+
+	if CurTime() - self.LostSightAt <= self.Ref.sight_grace then
+		return false
+	end
+
+	self.LostSightAt = nil
+	return true
+end
+
+
 function ENT:Think()
 
 	--when ready to build before building, wait until there are no players in the way to do it
@@ -256,6 +274,7 @@ function ENT:Think()
 					self.SentryMode = "chargeup"
 					self.SentryTarget = v
 					self.TimeToShoot = CurTime() + self.Ref.charge_time
+					self.LostSightAt = nil
 					break
 				end
 			end
@@ -264,15 +283,24 @@ function ENT:Think()
 		
 	elseif self.SentryMode == "chargeup" then
 	
-		--if the sentry can no longer see the target, then switch back to search mode begin looking for a new target
-		if not self:CheckTargetTrace() then
+		--A momentary loss of sight no longer hands the target back its head start.
+		--
+		--This think runs at 10hz and charge_time is .3, so firing a single bullet
+		--takes three clean looks in a row. Dropping the target on the first miss
+		--meant anything that broke the trace for one tenth of a second reset the
+		--whole thing - and a jumping player breaks it repeatedly, which is why
+		--they were so much harder to hit than one standing still.
+		if self:CheckTargetTrace() then
+			self.LostSightAt = nil
+
+			--if the chargeup time has elapsed, then start shooting the target on the next think
+			if CurTime() >= self.TimeToShoot then
+				self.SentryMode = "shoot"
+			end
+
+		elseif self:LostSightTooLong() then
 			self.SentryMode = "search"
 			self.SentryTarget = nil
-			
-		--if the chargeup time has eclapsed, then start shooting the target on the next think
-		elseif CurTime() >= self.TimeToShoot then
-			self.SentryMode = "shoot"
-			
 		end
 		
 		
@@ -280,11 +308,13 @@ function ENT:Think()
 		
 	elseif self.SentryMode == "shoot" then
 	
-		--shoot at the current target
-		self:Shoot()
-		
-		--if the sentry can no longer see the target, then switch back to search mode begin looking for a new target
-		if not self:CheckTargetTrace() then
+		--Shoot only while it can actually see the target, but keep hold of it
+		--through a brief break rather than starting the charge again.
+		if self:CheckTargetTrace() then
+			self.LostSightAt = nil
+			self:Shoot()
+
+		elseif self:LostSightTooLong() then
 			self.SentryMode = "search"
 			self.SentryTarget = nil
 		end

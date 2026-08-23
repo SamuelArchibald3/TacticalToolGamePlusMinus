@@ -192,6 +192,7 @@ bullet_damage = 1,	--3
 aim_cone = .02,
 charge_time = .3,	//.2
 aim_height = .7,	--where up the target to aim, as a fraction of their height. .5 is the waist, .7 is about the chest
+sight_grace = .4,	--how long it keeps a target it cannot currently see, before giving up and searching again
 }
 ,
 
