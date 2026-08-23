@@ -34,7 +34,9 @@ local function ReturnToolPurchaseDisplay( swepname, ammo, numguns )
 	--Items
 	elseif toolref.class == "item" then
 		//namedisplay = ( "(ITEM) " .. convertedname .. " x" .. ammo)
-		namedisplay = ( convertedname .. " x" .. ammo)
+		--nil rather than a number here used to throw, and an error thrown mid
+		--rebuild is what froze the whole list
+		namedisplay = ( convertedname .. " x" .. ( ammo or 0 ) )
 	end
 	
 	
@@ -172,7 +174,13 @@ function NewShowTeamPurchasesMenu()
 
 		local signature = InventorySignature()
 		if signature == shown then return end
-		shown = signature
+
+		--`shown` is set at the END of this function, not here.
+		--
+		--Setting it up front meant an error part way through the rebuild left
+		--the list half built AND the guard satisfied, so it never rebuilt again:
+		--partial items, frozen for the rest of the round. Marking it only on a
+		--completed pass turns that into a retry next tick instead.
 
 		--Friendly Vars--------------------------------------------------
 		local friendly_team = nil
@@ -340,6 +348,9 @@ function NewShowTeamPurchasesMenu()
 				end	
 			end
 		end
+
+		--got all the way here, so what is on screen now matches the signature
+		shown = signature
 	end
 	Update()
 	
