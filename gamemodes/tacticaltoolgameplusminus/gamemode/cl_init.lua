@@ -37,6 +37,7 @@ include("cl_hud_headbars.lua")
 include("cl_scoreboard.lua")
 include("cl_typecommands.lua")
 include("cl_helpmenu.lua")
+include("cl_abilitykeys.lua")
 include("lf_playermodel_selector.lua")
 
 AddCSLuaFile("lf_playermodel_selector.lua")
@@ -665,57 +666,27 @@ end )
 /*---------------------------------------------------------
 	Ability HUD info
 ---------------------------------------------------------*/	
-	local Ability_A = Ply:GetAbilityInfo("a")
-	
-	if Ability_A.name != "none" then
+	--One block per ability slot, stacked upwards 50 apart. This was three copies
+	--of the same drawing with the key label and the offsets written into each,
+	--which is why a fourth slot was never going to appear on its own.
+	for slot = 1, TTG_AbilitySlotCount() do
+		local info = Ply:GetAbilityInfo( slot )
+		local bind = ABILITY_KEYS[ slot ]
 
-		draw.RoundedBox(8, 10, ScrH()-185, 85, 45, Color(50,50,50,255))			--background box
-		
-		draw.RoundedBox(8, 85, ScrH()-180, 190, 35, Color(50,50,50,180))			--2nd background box
-		
-		draw.SimpleText("SHIFT", "TheDefaultSettings2", 53, ScrH() - 175, Color(255,255,255,255), TEXT_ALIGN_CENTER) 
-		if (Ability_A.cooldown) == true then
-			draw.SimpleText( ConvertToPrintName(Ability_A.name), "TheDefaultSettings6", 100, ScrH() - 180, Color(255,100,100,255)) 
-			draw.SimpleText( Ability_A.time, "TheDefaultSettings2", 260, ScrH() - 175, Color(255,100,100,255), TEXT_ALIGN_CENTER) 
-		else
-			draw.SimpleText( ConvertToPrintName(Ability_A.name), "TheDefaultSettings6", 100, ScrH() - 180, Color(200,200,200,255)) 
-		end
-	end
-	
-	
-	
-	local Ability_B = Ply:GetAbilityInfo("b")
-	
-	if Ability_B.name != "none" then
+		if info.name != "none" and bind != nil then
+			local boxy = ScrH() - 135 - ( slot * 50 )
 
-		draw.RoundedBox(8, 10, ScrH()-235, 85, 45, Color(50,50,50,255))			--background box
-		
-		draw.RoundedBox(8, 85, ScrH()-230, 190, 35, Color(50,50,50,180))			--2nd background box
-		
-		draw.SimpleText("USE", "TheDefaultSettings2", 52, ScrH() - 224, Color(255,255,255,255), TEXT_ALIGN_CENTER) 
-		if (Ability_B.cooldown) == true then
-			draw.SimpleText( ConvertToPrintName(Ability_B.name), "TheDefaultSettings6", 100, ScrH() - 230, Color(255,100,100,255)) 
-			draw.SimpleText( Ability_B.time, "TheDefaultSettings2", 260, ScrH() - 225, Color(255,100,100,255), TEXT_ALIGN_CENTER) 
-		else
-			draw.SimpleText( ConvertToPrintName(Ability_B.name), "TheDefaultSettings6", 100, ScrH() - 230, Color(200,200,200,255)) 
-		end
-	end
-	
-	
-	local Ability_C = Ply:GetAbilityInfo("c")
-	
-	if Ability_C.name != "none" then
+			draw.RoundedBox(8, 10, boxy, 85, 45, Color(50,50,50,255))			--background box
 
-		draw.RoundedBox(8, 10, ScrH()-285, 85, 45, Color(50,50,50,255))			--background box
-		
-		draw.RoundedBox(8, 85, ScrH()-280, 190, 35, Color(50,50,50,180))			--2nd background box
-		
-		draw.SimpleText("ALT", "TheDefaultSettings2", 52, ScrH() - 275, Color(255,255,255,255), TEXT_ALIGN_CENTER) 
-		if (Ability_C.cooldown) == true then
-			draw.SimpleText( ConvertToPrintName(Ability_C.name), "TheDefaultSettings6", 100, ScrH() - 280, Color(255,100,100,255)) 
-			draw.SimpleText( Ability_C.time, "TheDefaultSettings2", 260, ScrH() - 275, Color(255,100,100,255), TEXT_ALIGN_CENTER) 
-		else
-			draw.SimpleText( ConvertToPrintName(Ability_C.name), "TheDefaultSettings6", 100, ScrH() - 280, Color(200,200,200,255)) 
+			draw.RoundedBox(8, 85, boxy + 5, 190, 35, Color(50,50,50,180))			--2nd background box
+
+			draw.SimpleText( bind.label, "TheDefaultSettings2", 52, boxy + 10, Color(255,255,255,255), TEXT_ALIGN_CENTER)
+			if info.cooldown == true then
+				draw.SimpleText( ConvertToPrintName(info.name), "TheDefaultSettings6", 100, boxy + 5, Color(255,100,100,255))
+				draw.SimpleText( info.time, "TheDefaultSettings2", 260, boxy + 10, Color(255,100,100,255), TEXT_ALIGN_CENTER)
+			else
+				draw.SimpleText( ConvertToPrintName(info.name), "TheDefaultSettings6", 100, boxy + 5, Color(200,200,200,255))
+			end
 		end
 	end
 	

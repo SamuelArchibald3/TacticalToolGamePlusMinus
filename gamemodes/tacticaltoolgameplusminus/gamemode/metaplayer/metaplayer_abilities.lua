@@ -4,77 +4,144 @@
 local TTGPlayer = FindMetaTable("Player")
 
 
+--Name of one field of a numbered ability slot, eg Ability_2_name.
+--
+--The slots used to be named A, B and C, spelled out in the buy logic, the
+--keybinds, the hud, the reset path and the drop slam hook. Numbering them puts
+--the count in one constant and lets an ability move between slots.
+local function AbilitySlotKey( index, field )
+	return "Ability_" .. index .. "_" .. field
+end
+
+
+--The hard ceiling, as opposed to MAX_ABILITY_SLOTS which is the current setting.
+--Resets clear up to here, so lowering the setting cannot strand a networked slot
+--with a stale ability still showing on somebody's hud.
+local function AbilitySlotLimit()
+	return table.Count( ABILITY_KEYS )
+end
+
+
+--The player's ability slots, keyed 1 to MAX_ABILITY_SLOTS. Built on demand so
+--no caller has to nil check it.
+function TTGPlayer:GetAbilitySlots()
+	if self.AbilitySlots == nil then
+		self.AbilitySlots = {}
+	end
+
+	return self.AbilitySlots
+end
+
+
 //change this into ResetAllInfo, and make it reset ALL networked vars
 //resets all the networked vars of a player's ability tools
 function TTGPlayer:ResetAbilityInfo()
-		--ability stuff
-		self:SetNetworkedString( "Ability_A_name", "none" )
-		self:SetNetworkedBool( "Ability_A_cooldown", false )
-		self:SetNetworkedInt( "Ability_A_time", 0 )
-		
-		self:SetNetworkedString( "Ability_B_name", "none" )
-		self:SetNetworkedBool( "Ability_B_cooldown", false )
-		self:SetNetworkedInt( "Ability_B_time", 0 )
-		
-		self:SetNetworkedString( "Ability_C_name", "none" )
-		self:SetNetworkedBool( "Ability_C_cooldown", false )
-		self:SetNetworkedInt( "Ability_C_time", 0 )
-		
-		--aim target stuff
-		self:SetNetworkedEntity("AimTarget", nil)
-		self:SetNetworkedBool("IsAimTarget", false)
-		
-		self:SetNetworkedInt("AimTargetDist", 0)
-		
+	--ability stuff
+	for i = 1, AbilitySlotLimit() do
+		self:ClearAbilityInfo( i )
+	end
+
+	--aim target stuff
+	self:SetNW2Entity("AimTarget", nil)
+	self:SetNW2Bool("IsAimTarget", false)
+
+	self:SetNW2Int("AimTargetDist", 0)
 end
 
+
+--Networks one slot as empty
+function TTGPlayer:ClearAbilityInfo( slot )
+	self:SetNW2String( AbilitySlotKey( slot, "name" ), "none" )
+	self:SetNW2Bool( AbilitySlotKey( slot, "cooldown" ), false )
+	self:SetNW2Int( AbilitySlotKey( slot, "time" ), 0 )
+end
+
+
+--Networks what is in one slot. Called by the ability ent itself, so nothing
+--outside this file has to know the networked var names.
+function TTGPlayer:SetAbilityInfo( slot, name, cooldown, time )
+	if slot == nil then return end
+
+	self:SetNW2String( AbilitySlotKey( slot, "name" ), name )
+	self:SetNW2Bool( AbilitySlotKey( slot, "cooldown" ), cooldown )
+	self:SetNW2Int( AbilitySlotKey( slot, "time" ), time )
+end
 
 
 //returns a table of networked info of a player's specific ability
 //used to display the ability on the player's hud, with the time left on the cooldown
-function TTGPlayer:GetAbilityInfo(letter)
-	if letter == "a" then
-		name_recieve = self:GetNetworkedString( "Ability_A_name", "none" )
-		cooldown_recieve = self:GetNetworkedBool( "Ability_A_cooldown", false )
-		time_recieve = self:GetNetworkedInt( "Ability_A_time", 0 )
-		
-	elseif letter == "b" then
-		name_recieve = self:GetNetworkedString( "Ability_B_name", "none" )
-		cooldown_recieve = self:GetNetworkedBool( "Ability_B_cooldown", false )
-		time_recieve = self:GetNetworkedInt( "Ability_B_time", 0 )
-		
-	elseif letter == "c" then
-		name_recieve = self:GetNetworkedString( "Ability_C_name", "none" )
-		cooldown_recieve = self:GetNetworkedBool( "Ability_C_cooldown", false )
-		time_recieve = self:GetNetworkedInt( "Ability_C_time", 0 )
-		
-	end	
-		
-	return {name = name_recieve, cooldown = cooldown_recieve, time = time_recieve}
+function TTGPlayer:GetAbilityInfo( slot )
+	return {
+		name     = self:GetNW2String( AbilitySlotKey( slot, "name" ), "none" ),
+		cooldown = self:GetNW2Bool( AbilitySlotKey( slot, "cooldown" ), false ),
+		time     = self:GetNW2Int( AbilitySlotKey( slot, "time" ), 0 ),
+	}
+end
+
+
+--How many ability slots are in use. Reads the networked copy, so the buy menu
+--can show it without asking the server.
+function TTGPlayer:GetAbilityCount()
+	local used = 0
+
+	for i = 1, TTG_AbilitySlotCount() do
+		if self:GetAbilityInfo( i ).name != "none" then
+			used = used + 1
+		end
+	end
+
+	return used
 end
 
 
 //returns a table of the names of the ability ents the player has
 function TTGPlayer:GetAbilityNames()
-	local a_name_recieve = self:GetNetworkedString( "Ability_A_name", nil )
-	local b_name_recieve = self:GetNetworkedString( "Ability_B_name", nil )
-	local c_name_recieve = self:GetNetworkedString( "Ability_C_name", nil )
-	
 	local abil_table = {}
 
-	if a_name_recieve != nil then
-		table.insert(abil_table, a_name_recieve)
-	end
+	for i = 1, AbilitySlotLimit() do
+		local name = self:GetAbilityInfo( i ).name
 
-	if b_name_recieve != nil then
-		table.insert(abil_table, b_name_recieve)
-	end
-	
-	if c_name_recieve != nil then
-		table.insert(abil_table, c_name_recieve)
+		--"none" is what an empty slot is set to, and it was being returned as
+		--though it were an ability. GetSwepToolInfo already filters the same way.
+		if name != "none" then
+			table.insert( abil_table, name )
+		end
 	end
 
 	return abil_table
+end
+
+
+--Re-networks a slot from whatever ent is in it now, and tells the ent where it
+--lives. The pair of these is what makes moving an ability between slots work.
+function TTGPlayer:RefreshAbilitySlot( slot )
+	local abil = self:GetAbilitySlots()[ slot ]
+
+	if not IsValid( abil ) then
+		self:ClearAbilityInfo( slot )
+		return
+	end
+
+	abil:SetAbilitySlot( slot )
+	abil:RefreshNetworkedVars()
+end
+
+
+--Swaps what is in two ability slots, which is the same thing as swapping which
+--key runs which ability. Returns false if either slot is not a real one.
+function TTGPlayer:SwapAbilitySlots( a, b )
+	if a == b then return false end
+	if a == nil or b == nil then return false end
+	if a < 1 or b < 1 then return false end
+	if a > MAX_ABILITY_SLOTS or b > MAX_ABILITY_SLOTS then return false end
+
+	local slots = self:GetAbilitySlots()
+	slots[ a ], slots[ b ] = slots[ b ], slots[ a ]
+
+	self:RefreshAbilitySlot( a )
+	self:RefreshAbilitySlot( b )
+
+	return true
 end
 
 
@@ -94,9 +161,9 @@ end
 
 function TTGPlayer:ResetSwepToolInfo()
 	for i = 1, MAX_TOOL_SLOTS do
-		self:SetNetworkedString( ToolSlotKey( i, "Name" ), "none" )
-		self:SetNetworkedInt( ToolSlotKey( i, "Ammo" ), 0 )
-		self:SetNetworkedInt( ToolSlotKey( i, "NumGuns" ), 0 )
+		self:SetNW2String( ToolSlotKey( i, "Name" ), "none" )
+		self:SetNW2Int( ToolSlotKey( i, "Ammo" ), 0 )
+		self:SetNW2Int( ToolSlotKey( i, "NumGuns" ), 0 )
 	end
 end
 
@@ -111,15 +178,15 @@ function TTGPlayer:GetSwepToolInfo()
 	local sweptool_table = {}
 
 	for i = 1, MAX_TOOL_SLOTS do
-		local slotname = self:GetNetworkedString( ToolSlotKey( i, "Name" ), "none" )
+		local slotname = self:GetNW2String( ToolSlotKey( i, "Name" ), "none" )
 
 		if slotname != "none" then
 			--was three globals named swep_a/b/c, which leaked into _G every call
 			local swep_info =
 			{
 			name = slotname,
-			ammo = self:GetNetworkedInt( ToolSlotKey( i, "Ammo" ) ),
-			numguns = self:GetNetworkedInt( ToolSlotKey( i, "NumGuns" ) ),
+			ammo = self:GetNW2Int( ToolSlotKey( i, "Ammo" ) ),
+			numguns = self:GetNW2Int( ToolSlotKey( i, "NumGuns" ) ),
 			}
 			table.insert( sweptool_table, swep_info )
 		end
@@ -144,11 +211,11 @@ function TTGPlayer:SetSwepToolInfo( swepname, ammo, numguns )
 	--whole list has to be checked for a match before claiming a free slot, or
 	--buying more of something you own would list it twice.
 	for i = 1, MAX_TOOL_SLOTS do
-		local slotname = self:GetNetworkedString( ToolSlotKey( i, "Name" ), "none" )
+		local slotname = self:GetNW2String( ToolSlotKey( i, "Name" ), "none" )
 
 		if slotname == swepname then
-			self:SetNetworkedInt( ToolSlotKey( i, "Ammo" ), ammo )
-			self:SetNetworkedInt( ToolSlotKey( i, "NumGuns" ), numguns )
+			self:SetNW2Int( ToolSlotKey( i, "Ammo" ), ammo )
+			self:SetNW2Int( ToolSlotKey( i, "NumGuns" ), numguns )
 			return
 		end
 
@@ -166,7 +233,7 @@ function TTGPlayer:SetSwepToolInfo( swepname, ammo, numguns )
 		return
 	end
 
-	self:SetNetworkedString( ToolSlotKey( firstfree, "Name" ), swepname )
-	self:SetNetworkedInt( ToolSlotKey( firstfree, "Ammo" ), ammo )
-	self:SetNetworkedInt( ToolSlotKey( firstfree, "NumGuns" ), numguns )
+	self:SetNW2String( ToolSlotKey( firstfree, "Name" ), swepname )
+	self:SetNW2Int( ToolSlotKey( firstfree, "Ammo" ), ammo )
+	self:SetNW2Int( ToolSlotKey( firstfree, "NumGuns" ), numguns )
 end

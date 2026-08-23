@@ -77,6 +77,24 @@ ROUND_TOKENS = 4	//cant decide between 3 or 4
 MAX_TOOL_SLOTS = 10
 
 
+--The button each ability slot answers to, in order: slot 1 is the first entry.
+--This list is the only place the mapping lives. It used to be spelled out as
+--three named fields ( Ability_A / _B / _C ) wired to three fixed keys across
+--six files, so adding or moving one meant finding every copy.
+--
+--label is what the hud draws next to the ability.
+ABILITY_KEYS =
+{
+	{ key = IN_SPEED, label = "SHIFT" },
+	{ key = IN_USE,   label = "USE" },
+	{ key = IN_WALK,  label = "ALT" },
+}
+
+--How many abilities a player can carry at once. Never more than there are keys
+--to trigger them with - a slot with no key would be unusable.
+MAX_ABILITY_SLOTS = 3
+
+
 
 --Makes it so teams dont have to be full for the game to start, the player just has to press the ready button
 MUST_HAVE_FULL_TEAMS = false
@@ -290,40 +308,39 @@ if SERVER then
 		end
 	end
 	cvars.AddChangeCallback( "ttg_var_balance_nofirstaid", Callback_BalanceFirstAid, "ttg_var_balance_nofirstaid_setting" )
-	
-	
-	
-	
-	
-	
-	
-	
-	--[[
-	CreateConVar("ttg_var_devmode", GetConVarNumber( "default_ttg_devmode" ), FCVAR_NOTIFY, "Enables developers mode (allows you to start the game with 1 person, noclip, etc)")
-	CreateConVar("ttg_var_rounds", GetConVarNumber( "default_ttg_rounds" ), FCVAR_NOTIFY, "Amount of rounds to play in one game")
-	
-	
-	local function Callback_Devmode(CVar, PreviousValue, NewValue)
-		if tonumber(NewValue) >= 1 then
-			ChatPrintToAll( "Developer Mode turned ON! RESTARTING" )
-			DEV_MODE = true
-			GameRestart()
-		elseif tonumber(NewValue) <= 0 then
-			ChatPrintToAll( "Developer Mode turned OFF! RESTARTING" )
-			DEV_MODE = false
-			GameRestart()
+
+
+
+
+	--Ability Slots
+	--How many abilities a player can carry. Capped at the number of keys in
+	--ABILITY_KEYS, since a slot nothing can trigger is not a slot.
+	--Applies from the next round, which is when abilities are handed out.
+	if not ConVarExists( "ttg_var_abilityslots" ) then
+		CreateConVar( "ttg_var_abilityslots", tostring( MAX_ABILITY_SLOTS ), FCVAR_NOTIFY, "How many abilities a player can carry at once" )
+	end
+
+	local set_abilslots = GetConVarNumber( "ttg_var_abilityslots" )
+	if set_abilslots != nil and set_abilslots >= 1 then
+		MAX_ABILITY_SLOTS = math.min( set_abilslots, table.Count( ABILITY_KEYS ) )
+	end
+	SetAbilitySlotCount( MAX_ABILITY_SLOTS )
+
+	local function Callback_AbilitySlots( CVar, PreviousValue, NewValue )
+		local newvalue = tonumber( NewValue )
+		if newvalue == nil or newvalue < 1 then return end
+
+		local keys = table.Count( ABILITY_KEYS )
+		MAX_ABILITY_SLOTS = math.min( newvalue, keys )
+		SetAbilitySlotCount( MAX_ABILITY_SLOTS )
+
+		if newvalue > keys then
+			ChatPrintToAll( "Ability slots set to  " .. MAX_ABILITY_SLOTS .. "  - there are only " .. keys .. " keys to trigger them with (applies next round)" )
+		else
+			ChatPrintToAll( "Ability slots set to  " .. MAX_ABILITY_SLOTS .. "  (applies next round)" )
 		end
 	end
-	cvars.AddChangeCallback("ttg_var_devmode", Callback_Devmode)
-	
-	
-	local function Callback_Rounds(CVar, PreviousValue, NewValue)
-		ChatPrintToAll( "Number of rounds set to  " .. NewValue .. "  RESTARTING" )
-		ROUNDS = tonumber(NewValue)
-		GameRestart()
-	end
-	cvars.AddChangeCallback("ttg_var_rounds", Callback_Rounds)
-]]--
+	cvars.AddChangeCallback( "ttg_var_abilityslots", Callback_AbilitySlots, "ttg_var_abilityslots_setting" )
 
 end
 

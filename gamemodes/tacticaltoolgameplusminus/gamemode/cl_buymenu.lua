@@ -175,6 +175,14 @@ function ShowBuyingMenu()
 
 	
 	//the money you have
+	--how many ability slots are spoken for. You used to find out you were full
+	--by buying a fourth ability and being refused
+	local AbilitySlots = vgui.Create("DLabel", DermaPanel)
+	AbilitySlots:SetPos(620, 462) // Position
+	AbilitySlots:SetColor(Color(100,255,100,255)) // Color
+	AbilitySlots:SetFont("TheDefaultSettings5")
+	AbilitySlots:SetText("-") // Text
+
 	local ToolTokens = vgui.Create("DLabel", DermaPanel)
 	ToolTokens:SetPos(620, 490) // Position
 	ToolTokens:SetColor(Color(100,255,100,255)) // Color
@@ -389,6 +397,18 @@ function ShowBuyingMenu()
 		ToolTokens:SetText("Tool Tokens:\n  " .. Ply:GetToolTokens() .. " left")
 		ToolTokens:SetFont( "TheDefaultSettings5" )
 		ToolTokens:SizeToContents()
+
+		local abilitiesused = Ply:GetAbilityCount()
+		local abilityslots = TTG_AbilitySlotCount()
+
+		if abilitiesused < abilityslots then
+			AbilitySlots:SetColor(Color(100,255,100,255))
+		else
+			AbilitySlots:SetColor(Color(255,100,100,255))
+		end
+
+		AbilitySlots:SetText("Abilities: " .. abilitiesused .. "/" .. abilityslots)
+		AbilitySlots:SizeToContents()
 	end
 	hook.Add("Think", "UpdateBuyingVgui", Update)
 
@@ -402,7 +422,16 @@ function ShowBuyingMenu()
 		Close
 	---------------------------------------------------------*/
 	local function Close()
-		DermaPanel:Close()
+		--The hook outlives the panel. It is registered in here, so it holds the
+		--DermaPanel from whichever round last opened one, and the server sends
+		--the close to everybody whether or not they were shown a menu. A player
+		--with no tokens - the tie breaker, once the no-tokens setting is on -
+		--never had one opened this round, so this would land on a panel that
+		--has already gone.
+		if IsValid( DermaPanel ) then
+			DermaPanel:Close()
+		end
+
 		hook.Remove( "Think", "UpdateBuyingVgui" )
 		gui.EnableScreenClicker(false)
 	end

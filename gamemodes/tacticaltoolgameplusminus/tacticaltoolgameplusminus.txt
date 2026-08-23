@@ -86,5 +86,15 @@
 			"type"		"CheckBox"
 			"default"	"0"
 		}
+
+
+		9
+		{
+			"name"		"ttg_var_abilityslots"
+			"text"		"Ability Slots"
+			"help"		"How many abilities a player can carry at once, up to the number of keys bound to them (takes effect from the next round)"
+			"type"		"Numeric"
+			"default"	"3"
+		}
 	}
 }

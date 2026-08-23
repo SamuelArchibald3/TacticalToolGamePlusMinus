@@ -5,31 +5,31 @@ local TTGPlayer = FindMetaTable("Player")
 
 
 function TTGPlayer:SetAimTarget(ply)
-	self:SetNetworkedEntity("AimTarget", ply)
+	self:SetNW2Entity("AimTarget", ply)
 end
 
 function TTGPlayer:GetAimTarget()
-	return self:GetNetworkedEntity("AimTarget")
+	return self:GetNW2Entity("AimTarget")
 end
 
 
 
 
 function TTGPlayer:SetIfAimTarget(x)
-	self:SetNetworkedBool("IsAimTarget", x)
+	self:SetNW2Bool("IsAimTarget", x)
 end
 
 function TTGPlayer:GetIfAimTarget()
-	return self:GetNetworkedBool("IsAimTarget", false)
+	return self:GetNW2Bool("IsAimTarget", false)
 end
 
 
 
 
 function TTGPlayer:SetAimTargetMaxDist(dist)
-	self:SetNetworkedInt("AimTargetDist", dist)
+	self:SetNW2Int("AimTargetDist", dist)
 end
 
 function TTGPlayer:GetAimTargetMaxDist()
-	return self:GetNetworkedInt("AimTargetDist", 0)
+	return self:GetNW2Int("AimTargetDist", 0)
 end

@@ -82,7 +82,7 @@ function NextRound()
 
 	
 	--Checks if this will be a tie breaker round, randomly gives roles out
-	if G_CurRound == G_TotalRounds + 1 then
+	if TTG_IsTiebreakRound() then
 		--Set the roles randomly for the first round
 		local rand = math.random(2)
 		
@@ -134,11 +134,15 @@ function NextRound()
 			--ingame_functions.lua - the tie breaker round can hand out none.
 			v:SetToolTokens( TTG_RoundStartTokens( v ) )
 			
-			--give attackers god mode so they cant be killed in setup phase later
-			if GetTeamRole(v:Team()) == "Attacking" then
+			--Give attackers god mode so they cant be killed in setup phase later.
+			--
+			--The tie breaker has no setup phase to protect them through, so
+			--there is nothing for it to do there but hand one side a few free
+			--seconds of the fight.
+			if GetTeamRole(v:Team()) == "Attacking" and not TTG_IsTiebreakRound() then
 				v:TTG_Invuln( true )
 				//v:TTG_Freeze( true )
-			end	
+			end
 		end
 	end
 	
@@ -584,16 +588,32 @@ end
 
 
 
+	--The tie breaker skips the setup phase and goes straight to fighting.
+	--
+	--It skips the WAIT, not the work: everything above this still runs, which
+	--is the point. Setup is where the buy menus are closed and where everyone
+	--is unfrozen, and CombatPhase does neither - wiring planning directly to
+	--combat would start the decider with everybody frozen and their buy menu
+	--still open. Defenders get their setup speed set just above and CombatPhase
+	--puts it straight back, which costs nothing and keeps one code path.
+	if TTG_IsTiebreakRound() then
+		CombatPhase()
+		return
+	end
+
 	SetGamePhase("Setup")
-	
+
 	SetGlobalBool("CL_PlayTimerCountSounds", true)
-	
+
 	InitializeGCTime(SETUPPHASE_TIME, CombatPhase)
 end
 
 
 function CombatPhase()
 	G_CurrentPhase = "Combat"
+
+	--keys are settled once the fighting starts
+	Close_AbilityKeysMenus()
 	
 	Start_CaptureCheck()
 	
@@ -693,7 +713,7 @@ function WinningPhase(winners)
 	
 	
 	--if it was a tiebreaker round then have the winners of the round win the whole game
-	if G_CurRound == G_TotalRounds + 1 then
+	if TTG_IsTiebreakRound() then
 		GameEnd(winners)
 		return
 	end

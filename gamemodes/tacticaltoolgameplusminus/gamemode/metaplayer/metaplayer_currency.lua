@@ -9,20 +9,20 @@ local TTGPlayer = FindMetaTable("Player")
 //money is unused currently( later i will make it used by an upgrading system ) , tokens are used to buy tools
 
 function TTGPlayer:SetMoney(amount)
-	self:SetNetworkedInt( "Money", amount )
+	self:SetNW2Int( "Money", amount )
 end
 
 function TTGPlayer:GetMoney()
-	local money = self:GetNetworkedInt( "Money", 0 )
+	local money = self:GetNW2Int( "Money", 0 )
 	return money
 end
 
 
 //gives the player a certain amount of money
 function TTGPlayer:AddMoney(amount)
-	local money = self:GetNetworkedInt( "Money", 0 )
+	local money = self:GetNW2Int( "Money", 0 )
 	local newmoney = money + amount
-	self:SetNetworkedInt( "Money", newmoney )
+	self:SetNW2Int( "Money", newmoney )
 end
 
 
@@ -30,13 +30,13 @@ end
 //if the requested subtraction is larger than the total current money of the player:
 //do nothing and return false
 function TTGPlayer:SubtractMoney(amount)
-	local money = self:GetNetworkedInt( "Money", 0 )
+	local money = self:GetNW2Int( "Money", 0 )
 	
 	if amount > money then
 		return false
 	else
 		local newmoney = money - amount
-		self:SetNetworkedInt( "Money", newmoney )
+		self:SetNW2Int( "Money", newmoney )
 		return true
 	end
 end
@@ -47,11 +47,11 @@ end
 
 
 function TTGPlayer:SetToolTokens(amount)
-	self:SetNetworkedInt( "ToolTokens", amount )
+	self:SetNW2Int( "ToolTokens", amount )
 end
 
 function TTGPlayer:GetToolTokens()
-	local tokens = self:GetNetworkedInt( "ToolTokens", 0 )
+	local tokens = self:GetNW2Int( "ToolTokens", 0 )
 	return tokens
 end
 
@@ -59,13 +59,13 @@ end
 //if the requested subtraction is larger than the total current tokens of the player:
 //do nothing and return false
 function TTGPlayer:SubtractToolTokens(amount)
-	local money = self:GetNetworkedInt( "ToolTokens", 0 )
+	local money = self:GetNW2Int( "ToolTokens", 0 )
 	
 	if amount > money then
 		return false
 	else
 		local newmoney = money - amount
-		self:SetNetworkedInt( "ToolTokens", newmoney )
+		self:SetNW2Int( "ToolTokens", newmoney )
 		return true
 	end
 end

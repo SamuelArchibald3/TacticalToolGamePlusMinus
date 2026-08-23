@@ -405,21 +405,22 @@ function fGiveTool( player, command, arguments )
 	---------------------------------------------------------*/	
 	elseif tool_class == "ability" then
 
-		//there are only 3 ability slots ( A, B, C ), so find a free one BEFORE charging
+		//find a free slot BEFORE charging
 		//IsValid( ) rather than == nil, so a slot whose ent was removed without the
 		//field being cleared counts as free instead of being stuck forever
+		local slots = player:GetAbilitySlots()
 		local freeslot = nil
-		if not IsValid( player.Ability_A ) then
-			freeslot = "a"
-		elseif not IsValid( player.Ability_B ) then
-			freeslot = "b"
-		elseif not IsValid( player.Ability_C ) then
-			freeslot = "c"
+
+		for i = 1, MAX_ABILITY_SLOTS do
+			if not IsValid( slots[ i ] ) then
+				freeslot = i
+				break
+			end
 		end
 
-		//if all 3 slots are taken, dont charge a token and dont spawn an ability
+		//if every slot is taken, dont charge a token and dont spawn an ability
 		//that has no slot - it would be unusable, invisible on the hud, and never
-		//cleaned up by RemoveAbilities( ) since nothing would reference it
+		//cleaned up by Reset_PlyAbilities( ) since nothing would reference it
 		if freeslot == nil then
 			player:ChatPrint("No ability slots left!")
 			BuyFailedSound()
@@ -439,19 +440,12 @@ function fGiveTool( player, command, arguments )
 		local abil = ents.Create(purchaseref.tool_name)
 			abil:SetOwner(player)
 			
-		//put it into the slot that was reserved above
-		//	A = Shift
-		//	B = Z
-		//	C = Alt
-		if freeslot == "a" then
-			player.Ability_A = abil
-		elseif freeslot == "b" then
-			player.Ability_B = abil
-		elseif freeslot == "c" then
-			player.Ability_C = abil
-		end
-		abil.LetterSlot = freeslot
-		
+		//put it into the slot that was reserved above. Which key that slot
+		//answers to is ABILITY_KEYS in shared_settings.lua, and the player can
+		//move it afterwards with ttg_swapabilities
+		slots[ freeslot ] = abil
+		abil:SetAbilitySlot( freeslot )
+
 		abil:Spawn()
 		BuySuccessfulSound()
 		return
@@ -461,6 +455,52 @@ function fGiveTool( player, command, arguments )
 	
 end
 concommand.Add( "ttg_givepurchase", fGiveTool )
+
+
+
+
+
+
+
+
+/*---------------------------------------------------------
+	Swap Abilities
+---------------------------------------------------------*/
+--A bought ability used to take the first free slot and stay on that key for the
+--round, so the only way to arrange your keys was to plan the order you bought
+--in. This moves one ability to another key, swapping with whatever is there.
+
+function fSwapAbilities( ply, command, arguments )
+
+	--Before the fighting only. Rearranging your keys is a setup decision, and
+	--allowing it mid firefight would make a fumbled ability a free do-over.
+	if G_CurrentPhase != "DefendersBuy" and G_CurrentPhase != "AttackersBuy"
+		and G_CurrentPhase != "Planning" and G_CurrentPhase != "Setup" then
+		ply:ChatPrint( "Ability keys can only be changed before combat starts" )
+		return
+	end
+
+	local first = tonumber( arguments[1] )
+	local second = tonumber( arguments[2] )
+
+	if first == nil or second == nil then
+		ply:ChatPrint( "Usage: ttg_swapabilities <slot> <slot>  ( or just press F2 )" )
+		return
+	end
+
+	if not ply:SwapAbilitySlots( math.floor( first ), math.floor( second ) ) then
+		ply:ChatPrint( "There are only " .. MAX_ABILITY_SLOTS .. " ability slots, and they have to be different" )
+		return
+	end
+
+	--name the keys rather than the slot numbers, since the keys are what the
+	--player actually pressed
+	local firstkey = ABILITY_KEYS[ math.floor( first ) ]
+	local secondkey = ABILITY_KEYS[ math.floor( second ) ]
+
+	ply:ChatPrint( "Swapped " .. firstkey.label .. " and " .. secondkey.label )
+end
+concommand.Add( "ttg_swapabilities", fSwapAbilities )
 
 
 

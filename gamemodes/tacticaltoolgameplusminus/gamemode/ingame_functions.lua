@@ -319,6 +319,23 @@ end
 
 
 /*---------------------------------------------------------
+	The tie breaker round
+---------------------------------------------------------*/
+
+//The decider, played when the teams finish level. It is the round after the
+//last normal one.
+//
+//Four separate rules now key off this - no tokens, random roles, no setup
+//phase, no invulnerability - so the comparison lives here rather than being
+//written out at each one. Four copies of a condition is how DEBT-1 started.
+function TTG_IsTiebreakRound()
+	return G_CurRound == G_TotalRounds + 1
+end
+
+
+
+
+/*---------------------------------------------------------
 	Tokens for the round
 ---------------------------------------------------------*/
 
@@ -334,7 +351,7 @@ function TTG_RoundStartTokens( ply )
 
 	//the tie breaker is the round after the last normal one. If the setting is
 	//on, it is played out with whatever you can already carry - no purchases.
-	if TIEBREAK_NO_TOKENS == true and G_CurRound == G_TotalRounds + 1 then
+	if TIEBREAK_NO_TOKENS == true and TTG_IsTiebreakRound() then
 		return 0
 	end
 
@@ -386,6 +403,25 @@ function Close_BuyingMenus()
 		end
 	end
 end
+
+--Shuts the ability keys panel for one player, and remembers that it is shut.
+function Close_AbilityKeysForPly( ply )
+	umsg.Start("Close_AbilityKeysVgui", ply)
+	umsg.End()
+
+	ply.AbilityKeysMenuIsOpen = false
+end
+
+
+--Shuts it for everybody. Called when combat starts: the panel turns on the
+--screen clicker, so leaving it open would hand somebody a cursor instead of a
+--crosshair for the round.
+function Close_AbilityKeysMenus()
+	for k,ply in pairs(player.GetAll()) do
+		Close_AbilityKeysForPly( ply )
+	end
+end
+
 
 --this is if the player joins spec in the middle of a round, the menus need to close out
 function Close_BuyingMenusForPly( ply )
@@ -540,22 +576,19 @@ end
 //reset the player's ability slots, so the ents are destroyed
 function Reset_PlyAbilities( ply )
 	//IsValid( ) rather than != nil - the ent may already be gone, and calling
-	//:Remove() on a NULL entity errors. The field gets cleared either way.
-	if IsValid( ply.Ability_A ) then
-		ply.Ability_A:Remove()
+	//:Remove() on a NULL entity errors. The slot gets cleared either way.
+	//
+	//Emptied rather than replaced with a fresh table, so anything holding a
+	//reference to the slots table is looking at the same one afterwards.
+	local slots = ply:GetAbilitySlots()
+
+	for i, abil in pairs( slots ) do
+		if IsValid( abil ) then
+			abil:Remove()
+		end
+		slots[ i ] = nil
 	end
-	ply.Ability_A = nil
-	
-	if IsValid( ply.Ability_B ) then
-		ply.Ability_B:Remove()
-	end
-	ply.Ability_B = nil
-	
-	if IsValid( ply.Ability_C ) then
-		ply.Ability_C:Remove()
-	end
-	ply.Ability_C = nil
-	
+
 	ply:ResetAbilityInfo()
 	ply:ResetSwepToolInfo()
 end

@@ -328,21 +328,11 @@ end
 ---------------------------------------------------------*/
 function TTGPlayer:ActivateDropSlams( fallspeed )
 	//IsValid( ) rather than != nil - :GetClass() on a removed ent would error
-	if IsValid( self.Ability_A ) then
-		if self.Ability_A:GetClass() == "tool_abil_dropslam" and self.Ability_A.Primed == true then
-			self.Ability_A:DropSlam( fallspeed )
-		end
-	end
-	
-	if IsValid( self.Ability_B ) then
-		if self.Ability_B:GetClass() == "tool_abil_dropslam" and self.Ability_B.Primed == true then
-			self.Ability_B:DropSlam( fallspeed )
-		end
-	end
-	
-	if IsValid( self.Ability_C ) then
-		if self.Ability_C:GetClass() == "tool_abil_dropslam" and self.Ability_C.Primed == true then
-			self.Ability_C:DropSlam( fallspeed )
+	for _, abil in pairs( self:GetAbilitySlots() ) do
+		if IsValid( abil ) then
+			if abil:GetClass() == "tool_abil_dropslam" and abil.Primed == true then
+				abil:DropSlam( fallspeed )
+			end
 		end
 	end
 end

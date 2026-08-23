@@ -185,6 +185,32 @@ end
 
 
 /*---------------------------------------------------------
+	How many ability slots are in play
+---------------------------------------------------------*/
+
+--MAX_ABILITY_SLOTS is set from a convar, and convars only exist on the server,
+--so a client would always believe the shared default. The hud and the buy menu
+--both need the real number, so it is networked.
+function SetAbilitySlotCount( num )
+	SetGlobal2Int( "TTG_AbilitySlots", num )
+end
+
+--Falls back to the shared default, which covers the moment before the first
+--push and anywhere the count was never set.
+function TTG_AbilitySlotCount()
+	local num = GetGlobal2Int( "TTG_AbilitySlots", 0 )
+
+	if num == nil or num < 1 then
+		return MAX_ABILITY_SLOTS
+	end
+
+	return num
+end
+
+
+
+
+/*---------------------------------------------------------
 	Purchases withheld from a team
 ---------------------------------------------------------*/
 
