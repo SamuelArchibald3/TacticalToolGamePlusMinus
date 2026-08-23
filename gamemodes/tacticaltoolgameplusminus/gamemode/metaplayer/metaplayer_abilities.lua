@@ -42,18 +42,18 @@ function TTGPlayer:ResetAbilityInfo()
 	end
 
 	--aim target stuff
-	self:SetNetworkedEntity("AimTarget", nil)
-	self:SetNetworkedBool("IsAimTarget", false)
+	self:SetNW2Entity("AimTarget", nil)
+	self:SetNW2Bool("IsAimTarget", false)
 
-	self:SetNetworkedInt("AimTargetDist", 0)
+	self:SetNW2Int("AimTargetDist", 0)
 end
 
 
 --Networks one slot as empty
 function TTGPlayer:ClearAbilityInfo( slot )
-	self:SetNetworkedString( AbilitySlotKey( slot, "name" ), "none" )
-	self:SetNetworkedBool( AbilitySlotKey( slot, "cooldown" ), false )
-	self:SetNetworkedInt( AbilitySlotKey( slot, "time" ), 0 )
+	self:SetNW2String( AbilitySlotKey( slot, "name" ), "none" )
+	self:SetNW2Bool( AbilitySlotKey( slot, "cooldown" ), false )
+	self:SetNW2Int( AbilitySlotKey( slot, "time" ), 0 )
 end
 
 
@@ -62,9 +62,9 @@ end
 function TTGPlayer:SetAbilityInfo( slot, name, cooldown, time )
 	if slot == nil then return end
 
-	self:SetNetworkedString( AbilitySlotKey( slot, "name" ), name )
-	self:SetNetworkedBool( AbilitySlotKey( slot, "cooldown" ), cooldown )
-	self:SetNetworkedInt( AbilitySlotKey( slot, "time" ), time )
+	self:SetNW2String( AbilitySlotKey( slot, "name" ), name )
+	self:SetNW2Bool( AbilitySlotKey( slot, "cooldown" ), cooldown )
+	self:SetNW2Int( AbilitySlotKey( slot, "time" ), time )
 end
 
 
@@ -72,9 +72,9 @@ end
 //used to display the ability on the player's hud, with the time left on the cooldown
 function TTGPlayer:GetAbilityInfo( slot )
 	return {
-		name     = self:GetNetworkedString( AbilitySlotKey( slot, "name" ), "none" ),
-		cooldown = self:GetNetworkedBool( AbilitySlotKey( slot, "cooldown" ), false ),
-		time     = self:GetNetworkedInt( AbilitySlotKey( slot, "time" ), 0 ),
+		name     = self:GetNW2String( AbilitySlotKey( slot, "name" ), "none" ),
+		cooldown = self:GetNW2Bool( AbilitySlotKey( slot, "cooldown" ), false ),
+		time     = self:GetNW2Int( AbilitySlotKey( slot, "time" ), 0 ),
 	}
 end
 
@@ -161,9 +161,9 @@ end
 
 function TTGPlayer:ResetSwepToolInfo()
 	for i = 1, MAX_TOOL_SLOTS do
-		self:SetNetworkedString( ToolSlotKey( i, "Name" ), "none" )
-		self:SetNetworkedInt( ToolSlotKey( i, "Ammo" ), 0 )
-		self:SetNetworkedInt( ToolSlotKey( i, "NumGuns" ), 0 )
+		self:SetNW2String( ToolSlotKey( i, "Name" ), "none" )
+		self:SetNW2Int( ToolSlotKey( i, "Ammo" ), 0 )
+		self:SetNW2Int( ToolSlotKey( i, "NumGuns" ), 0 )
 	end
 end
 
@@ -178,15 +178,15 @@ function TTGPlayer:GetSwepToolInfo()
 	local sweptool_table = {}
 
 	for i = 1, MAX_TOOL_SLOTS do
-		local slotname = self:GetNetworkedString( ToolSlotKey( i, "Name" ), "none" )
+		local slotname = self:GetNW2String( ToolSlotKey( i, "Name" ), "none" )
 
 		if slotname != "none" then
 			--was three globals named swep_a/b/c, which leaked into _G every call
 			local swep_info =
 			{
 			name = slotname,
-			ammo = self:GetNetworkedInt( ToolSlotKey( i, "Ammo" ) ),
-			numguns = self:GetNetworkedInt( ToolSlotKey( i, "NumGuns" ) ),
+			ammo = self:GetNW2Int( ToolSlotKey( i, "Ammo" ) ),
+			numguns = self:GetNW2Int( ToolSlotKey( i, "NumGuns" ) ),
 			}
 			table.insert( sweptool_table, swep_info )
 		end
@@ -211,11 +211,11 @@ function TTGPlayer:SetSwepToolInfo( swepname, ammo, numguns )
 	--whole list has to be checked for a match before claiming a free slot, or
 	--buying more of something you own would list it twice.
 	for i = 1, MAX_TOOL_SLOTS do
-		local slotname = self:GetNetworkedString( ToolSlotKey( i, "Name" ), "none" )
+		local slotname = self:GetNW2String( ToolSlotKey( i, "Name" ), "none" )
 
 		if slotname == swepname then
-			self:SetNetworkedInt( ToolSlotKey( i, "Ammo" ), ammo )
-			self:SetNetworkedInt( ToolSlotKey( i, "NumGuns" ), numguns )
+			self:SetNW2Int( ToolSlotKey( i, "Ammo" ), ammo )
+			self:SetNW2Int( ToolSlotKey( i, "NumGuns" ), numguns )
 			return
 		end
 
@@ -233,7 +233,7 @@ function TTGPlayer:SetSwepToolInfo( swepname, ammo, numguns )
 		return
 	end
 
-	self:SetNetworkedString( ToolSlotKey( firstfree, "Name" ), swepname )
-	self:SetNetworkedInt( ToolSlotKey( firstfree, "Ammo" ), ammo )
-	self:SetNetworkedInt( ToolSlotKey( firstfree, "NumGuns" ), numguns )
+	self:SetNW2String( ToolSlotKey( firstfree, "Name" ), swepname )
+	self:SetNW2Int( ToolSlotKey( firstfree, "Ammo" ), ammo )
+	self:SetNW2Int( ToolSlotKey( firstfree, "NumGuns" ), numguns )
 end
