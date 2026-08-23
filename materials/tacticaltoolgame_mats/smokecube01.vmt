@@ -1,0 +1,17 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "tacticaltoolgame_mats/smokecube01.vtf"
+	"$model" 1
+	
+
+	"Proxies"
+	{
+		"TextureScroll"
+		{
+			"texturescrollvar" "$basetexturetransform"
+			"texturescrollrate" 0.25
+			"texturescrollangle" 45.00
+		}
+		
+	}
+}

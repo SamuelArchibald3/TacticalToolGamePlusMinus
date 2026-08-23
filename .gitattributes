@@ -17,5 +17,9 @@
 *.png  binary
 *.vtf  binary
 *.mdl  binary
+*.vvd  binary
+*.vtx  binary
+*.phy  binary
+*.ztmp binary
 *.wav  binary
 *.mp3  binary

@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "tacticaltoolgame_mats/sphere01.vtf"
+	"$model" 1
+}

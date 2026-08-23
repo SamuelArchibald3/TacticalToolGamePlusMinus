@@ -1,0 +1,9 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "tacticaltoolgame_mats/barrier01.vtf"
+	"$translucent" 1
+	"%compilepassbullets" 1
+	"$surfaceprop" "chainlink"
+	"$nodecal" 1
+	"$nolod" 1
+}

@@ -28,6 +28,13 @@ dev/
 **/dev/
 
 
+# --- Engine-generated map data ----------------------------------------------
+# maps/graphs/*.ain are AI nodegraphs the engine writes out itself on first
+# load, and regenerates if missing. Every ttg_ one is a 16-byte empty stub,
+# because these maps have no AI nodes to path. Not authored, not needed.
+maps/graphs/
+
+
 # --- Editor / OS noise ------------------------------------------------------
 .vscode/
 *.code-workspace
