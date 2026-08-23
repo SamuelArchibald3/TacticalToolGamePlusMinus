@@ -1,6 +1,16 @@
 //called at the start of every new round, resets things, switches team roles
 function NextRound()
 
+	--Stop the last round's alive check BEFORE the flags are reset.
+	--
+	--It is a Think hook, and only WinningPhase ever ended it. A round decided by
+	--the last player dying, or by a capture, awards its point and schedules this
+	--function without going through WinningPhase at all, so the hook was still
+	--running. Harmless while G_WinAlreadyTriggered is set - which is the very
+	--thing the next line clears, with nobody respawned yet, leaving a live check
+	--staring at a team with no living players. It scored the round a second time.
+	End_TeamsAliveCheck()
+
 	ResetVarsBetweenRounds()
 	
 	--[[
