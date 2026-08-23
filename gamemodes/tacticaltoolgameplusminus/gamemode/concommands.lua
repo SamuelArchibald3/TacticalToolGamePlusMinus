@@ -472,11 +472,19 @@ concommand.Add( "ttg_givepurchase", fGiveTool )
 
 function fSwapAbilities( ply, command, arguments )
 
+	--Before the fighting only. Rearranging your keys is a setup decision, and
+	--allowing it mid firefight would make a fumbled ability a free do-over.
+	if G_CurrentPhase != "DefendersBuy" and G_CurrentPhase != "AttackersBuy"
+		and G_CurrentPhase != "Planning" and G_CurrentPhase != "Setup" then
+		ply:ChatPrint( "Ability keys can only be changed before combat starts" )
+		return
+	end
+
 	local first = tonumber( arguments[1] )
 	local second = tonumber( arguments[2] )
 
 	if first == nil or second == nil then
-		ply:ChatPrint( "Usage: ttg_swapabilities <slot> <slot>" )
+		ply:ChatPrint( "Usage: ttg_swapabilities <slot> <slot>  ( or just press F2 )" )
 		return
 	end
 

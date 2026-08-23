@@ -594,6 +594,9 @@ end
 
 function CombatPhase()
 	G_CurrentPhase = "Combat"
+
+	--keys are settled once the fighting starts
+	Close_AbilityKeysMenus()
 	
 	Start_CaptureCheck()
 	

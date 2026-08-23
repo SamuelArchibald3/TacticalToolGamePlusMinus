@@ -21,6 +21,7 @@ AddCSLuaFile( "cl_startscreenlogo.lua" )
 AddCSLuaFile( "cl_scoreboard.lua" )
 AddCSLuaFile( "cl_typecommands.lua" )
 AddCSLuaFile( "cl_helpmenu.lua" )
+AddCSLuaFile( "cl_abilitykeys.lua" )
 
 
 //all shared files

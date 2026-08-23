@@ -37,6 +37,7 @@ include("cl_hud_headbars.lua")
 include("cl_scoreboard.lua")
 include("cl_typecommands.lua")
 include("cl_helpmenu.lua")
+include("cl_abilitykeys.lua")
 include("lf_playermodel_selector.lua")
 
 AddCSLuaFile("lf_playermodel_selector.lua")

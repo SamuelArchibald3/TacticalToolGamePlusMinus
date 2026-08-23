@@ -137,7 +137,7 @@ function ShowHelpMenu()
 	HowToBuy:SetPos(600, 565) // Position
 	HowToBuy:SetColor(Color(255,255,255,255)) // Color
 	HowToBuy:SetFont("TheDefaultSettings5")
-	HowToBuy:SetText("(press F1 to close)") // Text
+	HowToBuy:SetText("(press F1 to close, F2 to rearrange your ability keys)") // Text
 	HowToBuy:SizeToContents()
 	
 -- hook.Add( "PlayerDeath", "GlobalDeathMessage", function( victim, inflictor, attacker )

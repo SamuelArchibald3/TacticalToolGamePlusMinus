@@ -404,6 +404,25 @@ function Close_BuyingMenus()
 	end
 end
 
+--Shuts the ability keys panel for one player, and remembers that it is shut.
+function Close_AbilityKeysForPly( ply )
+	umsg.Start("Close_AbilityKeysVgui", ply)
+	umsg.End()
+
+	ply.AbilityKeysMenuIsOpen = false
+end
+
+
+--Shuts it for everybody. Called when combat starts: the panel turns on the
+--screen clicker, so leaving it open would hand somebody a cursor instead of a
+--crosshair for the round.
+function Close_AbilityKeysMenus()
+	for k,ply in pairs(player.GetAll()) do
+		Close_AbilityKeysForPly( ply )
+	end
+end
+
+
 --this is if the player joins spec in the middle of a round, the menus need to close out
 function Close_BuyingMenusForPly( ply )
 	umsg.Start("Close_BuyingVgui", ply)
