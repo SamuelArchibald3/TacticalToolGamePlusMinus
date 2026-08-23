@@ -132,7 +132,8 @@ function ShowAttackersPurchasesMenu()
 	
 	
 	local function Close()
-		Panel:Close()
+		if IsValid( Panel ) then Panel:Close() end
+
 		hook.Remove( "Think", "Update_SpecPurchasesVgui_Attackers" )
 	end
 	usermessage.Hook( "Close_SpecPurchasesVgui_Attackers", Close )
@@ -289,7 +290,8 @@ function ShowDefendersPurchasesMenu()
 	
 	
 	local function Close()
-		Panel:Close()
+		if IsValid( Panel ) then Panel:Close() end
+
 		hook.Remove( "Tick", "Update_SpecPurchasesVgui_Defenders" )
 	end
 	usermessage.Hook( "Close_SpecPurchasesVgui_Defenders", Close )

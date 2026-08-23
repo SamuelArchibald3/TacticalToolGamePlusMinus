@@ -422,7 +422,16 @@ function ShowBuyingMenu()
 		Close
 	---------------------------------------------------------*/
 	local function Close()
-		DermaPanel:Close()
+		--The hook outlives the panel. It is registered in here, so it holds the
+		--DermaPanel from whichever round last opened one, and the server sends
+		--the close to everybody whether or not they were shown a menu. A player
+		--with no tokens - the tie breaker, once the no-tokens setting is on -
+		--never had one opened this round, so this would land on a panel that
+		--has already gone.
+		if IsValid( DermaPanel ) then
+			DermaPanel:Close()
+		end
+
 		hook.Remove( "Think", "UpdateBuyingVgui" )
 		gui.EnableScreenClicker(false)
 	end

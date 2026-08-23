@@ -322,8 +322,10 @@ function NewShowTeamPurchasesMenu()
 	
 	
 	local function Close()
-		PanelFriendly:Close()
-		PanelEnemy:Close()
+		--Same as the buy menu: the hook can outlive the panels it closes over
+		if IsValid( PanelFriendly ) then PanelFriendly:Close() end
+		if IsValid( PanelEnemy )    then PanelEnemy:Close()    end
+
 		StopTimer = true
 		//hook.Remove( "Tick", "Update_TeamPurchasesVgui" )
 	end
