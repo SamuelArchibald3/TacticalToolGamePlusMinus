@@ -135,7 +135,44 @@ function NewShowTeamPurchasesMenu()
 	
 	
 	
+	--What the two lists are currently showing.
+	--
+	--Rebuilding them destroys and recreates a DLabel per player and per tool,
+	--and SizeToContents measures the text on every one. That ran five times a
+	--second whether or not anything had changed, which is why everybody hitched
+	--while somebody was shopping. Nothing changes between most of those
+	--rebuilds, so the work is skipped unless this string moves.
+	local shown = nil
+
+	local function InventorySignature()
+		local parts = {}
+
+		for _,v in pairs(player.GetAll()) do
+			if v:Team() != TEAM_SPEC then
+				table.insert( parts, v:Name() )
+				table.insert( parts, tostring( v:Team() ) )
+				table.insert( parts, tostring( v:IsValidGamePlayer() ) )
+
+				local t_table = v:GetAllToolNamesAndAmmo()
+				for _,swep in pairs( t_table ) do
+					table.insert( parts, swep.name .. "," .. tostring( swep.ammo ) .. "," .. tostring( swep.numguns ) )
+				end
+			end
+		end
+
+		--roles are drawn as headers, and swap between rounds
+		table.insert( parts, tostring( GetTeamRole( TEAM_RED ) ) )
+		table.insert( parts, tostring( GetTeamRole( TEAM_BLUE ) ) )
+
+		return table.concat( parts, "|" )
+	end
+
+
 	local function Update()
+
+		local signature = InventorySignature()
+		if signature == shown then return end
+		shown = signature
 
 		--Friendly Vars--------------------------------------------------
 		local friendly_team = nil
