@@ -53,6 +53,18 @@ hook.Add("ShowHelp", "HelpGUI", HelpGUI)
 
 --F2 Key press. Free since the mid-game team join above was retired.
 function AbilityKeysGUI( ply )
+
+	--Same phases the swap itself allows. Without this the panel opened during
+	--combat, turned on the screen clicker in place of the crosshair, and then
+	--refused every click it was opened to make.
+	if G_CurrentPhase != "DefendersBuy" and G_CurrentPhase != "AttackersBuy"
+		and G_CurrentPhase != "Planning" and G_CurrentPhase != "Setup" then
+		if ply.AbilityKeysMenuIsOpen == true then
+			Close_AbilityKeysForPly( ply )
+		end
+		return
+	end
+
 	if ply.AbilityKeysMenuIsOpen != true then
 		umsg.Start("Open_AbilityKeysVgui", ply)
 		umsg.End()

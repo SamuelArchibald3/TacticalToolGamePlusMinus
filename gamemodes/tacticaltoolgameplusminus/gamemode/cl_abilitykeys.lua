@@ -82,7 +82,12 @@ local function ShowAbilityKeysMenu()
 		if not IsValid( ply ) then return end
 
 		SlotList:Clear( true )
+
+		--the pick is gone with the rows it referred to, so the prompt has to go
+		--with it or it keeps asking about a slot nobody chose
 		pending = nil
+		Status:SetText( "" )
+		Status:SizeToContents()
 
 		for i = 1, TTG_AbilitySlotCount() do
 			local bind = ABILITY_KEYS[ i ]

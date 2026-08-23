@@ -42,7 +42,9 @@ function TTGPlayer:ResetAbilityInfo()
 	end
 
 	--aim target stuff
-	self:SetNW2Entity("AimTarget", nil)
+	--NULL rather than nil. The typed NW2 setters expect a value of their type,
+	--and this is the only nil-valued write in the file.
+	self:SetNW2Entity("AimTarget", NULL)
 	self:SetNW2Bool("IsAimTarget", false)
 
 	self:SetNW2Int("AimTargetDist", 0)
@@ -185,8 +187,10 @@ function TTGPlayer:GetSwepToolInfo()
 			local swep_info =
 			{
 			name = slotname,
-			ammo = self:GetNW2Int( ToolSlotKey( i, "Ammo" ) ),
-			numguns = self:GetNW2Int( ToolSlotKey( i, "NumGuns" ) ),
+			--fallbacks kept explicit: GetNetworkedInt defaulted to 0, and a nil
+			--here reaches cl_purchasesmenu as ( name .. " x" .. ammo )
+			ammo = self:GetNW2Int( ToolSlotKey( i, "Ammo" ), 0 ),
+			numguns = self:GetNW2Int( ToolSlotKey( i, "NumGuns" ), 0 ),
 			}
 			table.insert( sweptool_table, swep_info )
 		end
