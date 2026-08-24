@@ -128,16 +128,36 @@ function GM:PlayerSelectSpawn( ply )
 	--If there are no spawn points availible, add any old kind of spawn to the table
 	local Count = table.Count( self.SpawnTable  )
 	if ( Count == 0 ) then
-		Msg("Error! Incorrect spawn points for:  ".. ConvertToTeamName(ply:Team()) .. "\n")
-		self.SpawnTable = table.Add( self.SpawnTable, ents.FindByClass( "info_player_terrorist" ) )
-		self.SpawnTable = table.Add( self.SpawnTable, ents.FindByClass( "info_player_start" ) )
-		self.SpawnTable = table.Add( self.SpawnTable, ents.FindByClass( "info_player_allies" ) )
-		self.SpawnTable = table.Add( self.SpawnTable, ents.FindByClass( "info_player_counterterrorist" ) )
-		self.SpawnTable = table.Add( self.SpawnTable, ents.FindByClass( "info_player_rebel" ) )
-		self.SpawnTable = table.Add( self.SpawnTable, ents.FindByClass( "info_player_combine" ) )
-		self.SpawnTable = table.Add( self.SpawnTable, ents.FindByClass( "info_player_deathmatch" ) )
+		for _, class in ipairs( {
+			"info_player_terrorist",
+			"info_player_start",
+			"info_player_allies",
+			"info_player_counterterrorist",
+			"info_player_rebel",
+			"info_player_combine",
+			"info_player_deathmatch",
+		} ) do
+			self.SpawnTable = table.Add( self.SpawnTable, ents.FindByClass( class ) )
+		end
+
+		--Recount, which is the whole point of the block above.
+		--
+		--This used to keep the count from before the fill - always 0, since that
+		--is what got us in here - so the pick below indexed SpawnTable[ 1 ] no
+		--matter how many fallbacks were found, and the seven searches changed
+		--nothing. The maps here have no info_player_start, so spectators took
+		--this path on every single spawn.
+		Count = table.Count( self.SpawnTable )
+
+		--Only worth saying out loud once the fallback has failed too. Before, it
+		--printed whenever the team's own list was empty, which on these maps
+		--meant a line of console for every spectator spawn even though a
+		--perfectly good spawn was found a moment later.
+		if ( Count == 0 ) then
+			Msg( "Error! No spawn points at all for: " .. ConvertToTeamName( ply:Team() ) .. "\n" )
+		return end
 	end
-	
+
 	local ChosenSpawnPoint = nil
 	ChosenSpawnPoint = self.SpawnTable[ math.random( 1, Count ) ]
 	
