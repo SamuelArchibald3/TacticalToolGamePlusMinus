@@ -58,7 +58,18 @@ function ChangeCapture()
 	local attacker_touching = false
 	local defender_touching = false
 	for _, ply in pairs(plylist) do
-		if ply:Team() != TEAM_SPEC then
+		--IsValidGamePlayer rather than a bare TEAM_SPEC check: it also rules out
+		--the dead.
+		--
+		--Nothing takes a dead player off this list. EndTouch fires when somebody
+		--walks out, and disconnecting is handled in server_disconnect.lua, but
+		--dying inside the zone leaves you on it - still on TEAM_RED or TEAM_BLUE,
+		--because death does not change your team. So a corpse went on holding the
+		--point, and a dead defender went on contesting one.
+		--
+		--IsValid first because the list can outlive an entity: it is only emptied
+		--between rounds, and indexing a NULL would take the whole Think hook down.
+		if IsValid( ply ) and ply:IsValidGamePlayer() then
 			if GetTeamRole(ply:Team()) == "Attacking" then
 				attacker_touching = true
 			elseif GetTeamRole(ply:Team()) == "Defending" then

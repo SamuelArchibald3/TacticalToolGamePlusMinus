@@ -328,67 +328,36 @@ hook.Add( "PlayerDeath", "GlobalDeathMessage", function( victim, inflictor, atta
 
 	WinningPhase( winners )
 end)
-hook.Add("PlayerDeath", "spectateOnDeath", function(victim, inflictor, attacker)
-    if victim:IsValid() and victim:IsPlayer() then
-        Reset_PlyAbilities(victim)
-        hook.Add("KeyPress", "SpectatorKeyPress", function(ply, key)
-            if ply == victim and key == IN_ATTACK then
- 
-                local players = player.GetAll()
-
-                for k, v in pairs(players) do
-                    if v == victim then table.remove(players, k) end
-                end
-
-                if #players > 0 then
-
-                    local currentTarget = ply:GetObserverTarget()
-
-                    if not IsValid(currentTarget) or not currentTarget:IsPlayer() or not table.HasValue(players, currentTarget) then
-                        currentTarget = players[1]
-                    else
-                        for i, player in ipairs(players) do
-                            if player == currentTarget then
-                                currentTarget = players[i + 1] or players[1]
-                                break
-                            end
-                        end
-                    end
-
-                    ply:Spectate(OBS_MODE_CHASE)
-                    ply:SpectateEntity(currentTarget)
-                end
-            end
-        end)
-    end
-end)
-
-hook.Add("PlayerSpawn", "removeSpectatorKeyPress", function(ply)
-    hook.Remove("KeyPress", "SpectatorKeyPress")
-end)
--- hook.Add("PlayerDeath", "spectateOnDeath", function(victim, inflictor, attacker)
-
--- victim:SpectateEntity (attacker)
--- victim:Spectate(OBS_MODE_DEATHCAM)
-
--- timer.Simple(0.75, function()
--- if not IsValid(victim) or not IsValid(attacker) then return end
--- victim: SetObserverMode(OBS_MODE_FREEZECAM)
-
--- timer.Simple(1.25, function()
--- if not IsValid(victim) or not IsValid(attacker) then return end
--- victim: SetObserverMode(OBS_MODE_CHASE)
--- end)
--- end)
--- end)
-	--A third copy of the round-setup player loop used to sit here, wrapped in
-	--timer.Simple( 99999999, ... ) - about 3.17 years, so it never ran. It sat
-	--among the commented-out spectateOnDeath experiments above, which is fairly
-	--clearly what it was: abandoned work on respawning.
-	--
-	--Removed because a copy that looks live but is not is worse than no copy:
-	--it was counted as one of the three round-setup blocks that had to be kept
-	--in step, and edits were made to it that could never have had any effect.
+--Spectating after you die lives in server_death.lua, and only there.
+--
+--A second implementation used to sit here: a "spectateOnDeath" PlayerDeath hook
+--that added a KeyPress hook under the fixed name "SpectatorKeyPress". Both ran
+--at once, and this one lost the game its own rule:
+--
+--  * it cycled player.GetAll() with no team filter, so pressing attack while
+--    dead could put you on an enemy - and DeathSpectateTick only re-targets when
+--    the current target is invalid, so it never took you back. The per-team
+--    target lists in server_death.lua were the intended behaviour and this
+--    quietly defeated them.
+--  * one fixed hook name meant only the most recently killed player could cycle
+--    at all; the previous corpse's hook had already been overwritten.
+--  * its PlayerSpawn partner removed that hook globally the moment ANY player
+--    spawned, so cycling stopped working for everyone as soon as one person
+--    respawned.
+--  * it called Reset_PlyAbilities a second time, after GM:PlayerDeath had
+--    already done it.
+--
+--It also shadowed the global player library with a loop variable, which is the
+--kind of thing that only bites later.
+--A third copy of the round-setup player loop used to sit here, wrapped in
+--timer.Simple( 99999999, ... ) - about 3.17 years, so it never ran. It sat among
+--a set of commented-out death-camera experiments, since removed along with the
+--spectateOnDeath hook they belonged to, which is fairly clearly what it was:
+--abandoned work on respawning.
+--
+--Removed because a copy that looks live but is not is worse than no copy: it was
+--counted as one of the three round-setup blocks that had to be kept in step, and
+--edits were made to it that could never have had any effect.
 
 
 function CombatPhase()

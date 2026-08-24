@@ -11,73 +11,84 @@ end
 
 
 
+//Move a dead player onto the next of their living teammates.
+local function ClickToDifTarget( ply, plyteamtable )
+	local prevply = ply.CurSpectateTarget
+	ply.CurSpectateTarget = table.FindNext( plyteamtable, prevply )
+
+	ply:Spectate( OBS_MODE_CHASE )
+	ply:SpectateEntity( ply.CurSpectateTarget )
+end
+
+
+//Who each side can currently be watched through: alive, and on that team.
+//
+//Built once per tick rather than once per dead player. It was the latter, inside
+//the loop below, which also left RedSpectateTargets and BlueSpectateTargets as
+//accidental globals.
+local function LivingTargetsByTeam()
+	local red, blue = {}, {}
+
+	for _, ply in pairs( player.GetAll() ) do
+		if ply:GetObserverMode( ) == OBS_MODE_NONE then
+			if ply:Team() == TEAM_RED then
+				table.insert( red, ply )
+			elseif ply:Team() == TEAM_BLUE then
+				table.insert( blue, ply )
+			end
+		end
+	end
+
+	return red, blue
+end
+
+
 //run every tick when a player is dead
+//
+//You watch your own team and nobody else. That is the whole point of splitting
+//the targets by team, and a second copy of this in ingame.lua used to undo it by
+//cycling every player on the server regardless of side.
 function DeathSpectateTick()
-	for k,v in pairs(player.GetAll()) do	
+	local redtargets, bluetargets = LivingTargetsByTeam()
+
+	for k,v in pairs(player.GetAll()) do
 		if v.DeathSpectate == true then
-			//print("death spectating for:", v)
-			
-			local function ClickToDifTarget(ply, plyteamtable)
-				//print("attemping to switch targets")
-				
-				local prevply = ply.CurSpectateTarget
-				ply.CurSpectateTarget = table.FindNext( plyteamtable, prevply )
-				
-				ply:Spectate( OBS_MODE_CHASE )
-				ply:SpectateEntity( ply.CurSpectateTarget )
-			end
-			
-			
-			RedSpectateTargets = {}
-			BlueSpectateTargets = {}
-			table.Empty( RedSpectateTargets )
-			table.Empty( BlueSpectateTargets )
-			
-			for i,living_ply in pairs(player.GetAll()) do	
-				if living_ply:Team() == TEAM_BLUE and living_ply:GetObserverMode( ) == OBS_MODE_NONE then
-					table.insert( BlueSpectateTargets, living_ply )
-				end
-			end
-			
-			for i,living_ply in pairs(player.GetAll()) do	
-				if living_ply:Team() == TEAM_RED and living_ply:GetObserverMode( ) == OBS_MODE_NONE then
-					table.insert( RedSpectateTargets, living_ply )
-				end
-			end
-			
+
 			local plyteamtable = {}
-			
+
 			if v:Team() == TEAM_BLUE then
-				plyteamtable = BlueSpectateTargets
+				plyteamtable = bluetargets
 			elseif v:Team() == TEAM_RED then
-				plyteamtable = RedSpectateTargets
+				plyteamtable = redtargets
 			end
-			
-			//print(table.ToString(plyteamtable, "Test") )
-			
-			if not IsValid(v.CurSpectateTarget) then 
+
+			if not IsValid(v.CurSpectateTarget) then
 				local Count = table.Count( plyteamtable  )
 				if Count == 0 then
-					//print("count 0")
+					//nobody left on your side to watch, so stop spectating
+					//
+					//continue, not return. This used to return, which abandoned
+					//every other dead player for that tick - so with two people
+					//dead on a wiped team, only the first was dealt with and the
+					//rest sat on a black screen until somebody respawned.
 					v.DeathSpectate = false
 					v:Spawn()
 					v:Spectate( OBS_MODE_ROAMING )
-					return
+				continue
 				end
-				
-				
+
+
 				v.CurSpectateTarget = plyteamtable[ math.random( 1, Count ) ]
 
 				v:Spectate( OBS_MODE_CHASE )
 				v:SpectateEntity( v.CurSpectateTarget )
 			end
-			
-		
+
+
 			if( v:KeyPressed( IN_ATTACK ) ) then
-				//Msg( "Switching specate targets" )
 				ClickToDifTarget(v, plyteamtable)
 			end
-		
+
 		end
 	end
 end
