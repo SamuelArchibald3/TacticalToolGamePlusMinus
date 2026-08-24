@@ -80,6 +80,12 @@ local function VoteSuccessCheck()
 				//print( map.name, map.votes ..">".. VotesMin)
 				finish = true
 				ChatPrintToAll( "Switching map to:  " .. map.name )
+
+				--Leave a note that this map change was asked for. Nothing in the
+				--gamemode reads it. The dev tooling does, to tell a map somebody
+				--voted for apart from a fresh server start.
+				file.Write( "ttg_mapchange.txt", os.date() )
+
 				timer.Simple( 3, function()
 					RunConsoleCommand( "changelevel", map.name )
 				end)
