@@ -165,7 +165,12 @@ function SWEP:Holster( wep )
 		//return true
 	//end
 	
-	if not self.Ref.class == "gun" then 
+	--!= rather than "not x == y", which is what this said. Lua binds not tighter
+	--than ==, so it read ( not self.Ref.class ) == "gun" - a boolean compared
+	--against a string, false every time. The early return never happened, so
+	--every item fell through to the SetNextPrimaryFire below and had its fire
+	--delay wiped by switching weapon and back. The correct form is on line 101.
+	if self.Ref.class != "gun" then
 		return true
 	end
 	
