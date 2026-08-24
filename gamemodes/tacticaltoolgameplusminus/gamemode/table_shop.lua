@@ -96,7 +96,9 @@ print_name = "Radar",
 class = "item",
 tool_name = "tool_revealer",
 pack_amount = 99,
-description = "Deploys a device that, while active, reveals all enemy players within its 1024 radius. \nThe enemy units become marked on your team's HUD as small X's \nDoes not reveal invisible units. \nGoes through walls",
+--900 to match ent_revealer.radius in table_ent.lua, which is what the drawing
+--code actually reads. This said 1024 and never had.
+description = "Deploys a device that, while active, reveals all enemy players within its 900 radius. \nThe enemy units become marked on your team's HUD as small X's \nDoes not reveal invisible units. \nGoes through walls",
 bind_primary = "Deploy radar building",
 }
 ,

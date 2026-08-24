@@ -140,16 +140,6 @@ function TTGEnt:GetIfInvisible()
 end
 
 
---[[
-function TTGEnt:SetIfMarked(bool)
-	:GetIfMarked()
-	self:SetNWBool("Marked", bool) 
-end
-
-function TTGEnt:GetIfMarked()
-	return self:GetNWBool("Marked", false) 
-end
-]]--
 
 
 --Obsolete

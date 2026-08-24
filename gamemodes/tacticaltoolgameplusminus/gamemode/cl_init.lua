@@ -442,33 +442,6 @@ function hud()
 	end
 	
 
-	--[[
-	--mark players
-	for k,ent in pairs( ents.GetAll() ) do
-		if ent:Get_RevealerMarkerNum() >= 1 then
-		
-			if ent:IsValidGamePlayer() then
-				if ent:Team() == TEAM_RED then
-					DrawMark( ent, "x", Color(255, 0, 0, 255) )
-				elseif ent:Team() == TEAM_BLUE then 
-					DrawMark( ent, "x", Color(0, 0, 255, 255) )
-				end
-
-			else
-				if ent:GetEntTeamForClient() == TEAM_RED then
-					DrawMark( ent, "x", Color(255, 0, 0, 255) )
-				elseif ent:GetEntTeamForClient() == TEAM_BLUE then
-					DrawMark( ent, "x", Color(0, 0, 255, 255) )
-				else
-					DrawMark( ent, "x", Color(255, 255, 255, 255) )
-				end
-
-			end
-			
-			
-		end
-	end
-	]]--
 	
 	
 	
