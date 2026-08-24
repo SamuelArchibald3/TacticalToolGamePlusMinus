@@ -52,5 +52,17 @@ function ENT:DoAbility()
 	--alongside it, so it shows as one thing on the hud and the figure is tunable
 	--in table_buff. The AddBuff( "Buff_SlowLow" ) that used to sit here
 	--commented out was the same idea, half done.
-	self.Owner:AddBuff( "Buff_Hunker", self.Ref.duration )
+	--
+	--No duration. You stay hunkered until you press it again, which is what a
+	--toggle should mean - it used to run out after eight seconds whether or not
+	--you were done with it, so the ability ended itself mid-fight and you had to
+	--notice. The slow is the price, and you decide how long to pay it.
+	--
+	--Nothing has to expire it for safety: RemoveAllBuffs clears every slot on
+	--death ( server_death.lua ) and between rounds ( ingame_functions.lua ), so
+	--this cannot outlive the round that started it.
+	--
+	--showtime false because there is no time left to show. The hud counter would
+	--otherwise sit on 0 for as long as you held it.
+	self.Owner:AddBuff( "Buff_Hunker", nil, false )
 end

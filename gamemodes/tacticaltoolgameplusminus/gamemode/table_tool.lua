@@ -823,7 +823,9 @@ class = "ability",
 cooldown = 0,			--no cooldown on hunker. Toggling it is the whole ability
 toggle_cooldown = 1,	--seconds you must wait between toggles, so it cannot be spammed
 gravity = 2,
-duration = 8,
+--no duration: hunker lasts until you toggle it off. It was 8 seconds, which
+--ended the ability for you mid-fight. Removed rather than left at 0, because a
+--setting that nothing reads is worse than no setting.
 sound_on = Sound( "weapons/buffed_on.wav" ),	--CHANGE THIS TO SOMETHING NOT FROM TF2
 sound_off = Sound( "weapons/buffed_off.wav" ),
 }
