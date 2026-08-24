@@ -416,33 +416,31 @@ end
 
 
 function CapturedByAttackers()
-if G_WinAlreadyTriggered == true then return end
+	if G_WinAlreadyTriggered == true then return end
+
 	G_CaptureTimeMoving = false
 	G_CurCaptureMode = "none"
 	End_CaptureCheck()
-	
+
 	local attackers = nil
 	if GetTeamRole(TEAM_RED) == "Attacking" then
 		attackers = TEAM_RED
 	elseif GetTeamRole(TEAM_BLUE) == "Attacking" then
 		attackers = TEAM_BLUE
 	end
-	
-	InitializeGCTime(3, NextRound)
-	if attackers == TEAM_RED then
-		team.AddScore(TEAM_RED, 1)
-		G_WinAlreadyTriggered = true
-		for i, ply in ipairs( player.GetAll() ) do
-			ply:PrintMessage(HUD_PRINTCENTER, "Team Red wins the round by capping!" )
-		end
-	end
-	if attackers == TEAM_BLUE then
-		team.AddScore(TEAM_BLUE, 1)
-		G_WinAlreadyTriggered = true
-		for i, ply in ipairs( player.GetAll() ) do
-			ply:PrintMessage(HUD_PRINTCENTER, "Team Blue wins the round by capping!" )
-		end
-	end
+
+	--no attacking team means no capture happened, and passing nil to
+	--WinningPhase would silently award the round to the defenders
+	if attackers == nil then return end
+
+	--how it was won, in chat. The centre of the screen belongs to the round
+	--win message WinningPhase prints, so this does not fight it for the space.
+	ChatPrintToAll( ConvertToTeamName( attackers ) .. " wins the round by capping!" )
+
+	--Everything else is WinningPhase's job: the point, the game-win check, the
+	--tie breaker check, disabling ents, the phase, the announcer and the next
+	--round. This used to do a third of that by hand and skip the rest.
+	WinningPhase( attackers )
 end
 
 
@@ -452,74 +450,41 @@ function CaptureHUDUpdate()
 	umsg.End()
 end
 
-local winners = nil
+--A team being wiped out ends the round, same as the timer running out or the
+--zone being capped. All three now go through WinningPhase.
+--
+--This branch used to award the point itself and schedule the next round, which
+--meant skipping everything else WinningPhase does. Three things came out of
+--that, beyond BUG-11:
+--
+--  * the phase was never set to "Winning", so clients still read COMBAT for the
+--    three seconds between the last death and the next round
+--  * the tie breaker check never ran, so a level game whose last round ended by
+--    a wipe went to the next round instead of a decider
+--  * the announcer block that belongs here was written at file scope below the
+--    hook rather than inside it. It ran once, at load, with no players and
+--    `winners` still nil - so a round won by a wipe played no sound at all
 hook.Add( "PlayerDeath", "GlobalDeathMessage", function( victim, inflictor, attacker )
-if G_WinAlreadyTriggered == true then return end
-	if victim:Team() == TEAM_RED then
-        for k, v in pairs(team.GetPlayers(TEAM_RED)) do
-            if v:Alive() then
-				
-                return
-            end
-        end
-        winners = TEAM_BLUE
-		G_WinAlreadyTriggered = true
-		team.AddScore(TEAM_BLUE, 1)
-		InitializeGCTime(3, NextRound)
+	if G_WinAlreadyTriggered == true then return end
 
-			print("TEAM BLUE WINS!")
+	local deadteam = victim:Team()
+	if deadteam != TEAM_RED and deadteam != TEAM_BLUE then return end
 
-			for i, ply in ipairs( player.GetAll() ) do
-				ply:PrintMessage(HUD_PRINTCENTER, "Team Blue wins the round!" )
+	--the round is only over if nobody on their side is still standing
+	for _, v in pairs( team.GetPlayers( deadteam ) ) do
+		if v:Alive() then return end
+	end
 
-			End_CaptureCheck()
-			TurnOffCapture()
-
-
-		end
-
-
-if G_WinAlreadyTriggered == true then return end
-    elseif victim:Team() == TEAM_BLUE then
-        for k, v in pairs(team.GetPlayers(TEAM_BLUE)) do
-            if v:Alive() then
-                return
-            end
-        end
+	local winners = TEAM_BLUE
+	if deadteam == TEAM_BLUE then
 		winners = TEAM_RED
-
-
-		G_WinAlreadyTriggered = true
-		team.AddScore(TEAM_RED, 1)
-		InitializeGCTime(3, NextRound)
-
-			print("TEAM RED WINS!")
-		for i, ply in ipairs( player.GetAll() ) do
-			ply:PrintMessage(HUD_PRINTCENTER, "Team Red wins the round!" )
-		
-		End_CaptureCheck()
-		TurnOffCapture()
-
-		end
 	end
 
+	--WinningPhase ends the capture check itself, but not the zone display
+	TurnOffCapture()
+
+	WinningPhase( winners )
 end)
-for k,v in pairs(player.GetAll()) do
-	if GetTeamRole(winners) == "Defending" then
-		if GetTeamRole(v:Team()) == "Defending" then
-			umsg.Start("Announcer_Success", v); umsg.End()
-		elseif GetTeamRole(v:Team()) == "Attacking" then
-			umsg.Start("Announcer_Failure", v); umsg.End()
-		end
-		
-	elseif GetTeamRole(winners) == "Attacking" then
-		if GetTeamRole(v:Team()) == "Defending" then
-			umsg.Start("Announcer_Failure", v); umsg.End()
-		elseif GetTeamRole(v:Team()) == "Attacking" then
-			umsg.Start("Announcer_Success", v); umsg.End()
-		end
-	end
-end
 hook.Add("PlayerDeath", "spectateOnDeath", function(victim, inflictor, attacker)
     if victim:IsValid() and victim:IsPlayer() then
         Reset_PlyAbilities(victim)
