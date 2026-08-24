@@ -234,14 +234,27 @@ end
 //Extra tool tokens for an outnumbered player. Applied through
 //TTG_RoundStartTokens(), so it lands wherever tokens are handed out.
 //
-//Floored rather than rounded: a token is a whole extra tool, so it should take
-//a real imbalance to earn one instead of arriving on a rounding boundary. At a
-//setting of 1 that means a 1v2 earns one and a 2v3 earns nothing.
+//Rounded, like the health lever above. This was floored, on the reasoning that a
+//token is a whole extra tool and should take a real imbalance to earn - but the
+//floor was throwing away most of a token it had already worked for, and in one
+//case a whole one it had:
+//
+//	( 4/3 ) - 1  is 0.33333333333333326, times 3 is 0.9999999999999998
+//
+//so a 3v4 earned nothing at all, a hair under the one token the arithmetic says
+//it is owed. Nobody chose that, and no setting can express it.
+//
+//At the shipped setting of 3 the rounding gives
+//	1v2  ->  3
+//	2v3  ->  2     was 1
+//	3v4  ->  1     was 0
+//	5v6  ->  1     was 0
+//which does mean a one-player gap is now worth a token at any team size.
 function TTG_HandicapTokens( ply )
 	if BALANCE_ENABLED != true then return 0 end
 	if BALANCE_TOKENS_OUTNUMBERED <= 0 then return 0 end
 
-	local bonus = math.floor( TTG_PlayerOutnumberedBy( ply ) * BALANCE_TOKENS_OUTNUMBERED )
+	local bonus = math.Round( TTG_PlayerOutnumberedBy( ply ) * BALANCE_TOKENS_OUTNUMBERED )
 
 	//A lopsided enough game scales past what the bought list can show: at a
 	//setting of 3, a 1v4 earns 9 on top of the usual 4, and only MAX_TOOL_SLOTS
