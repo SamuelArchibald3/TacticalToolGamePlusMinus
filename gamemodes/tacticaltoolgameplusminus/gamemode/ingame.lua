@@ -249,8 +249,48 @@ function SetupPhase()
 			v:SetBaseSpeed( PLAYER_BASE_SPEED_SETUP )
 			v:SetCrouchedWalkSpeed( PLAYER_BASE_CROUCHMULTIPLIER_SETUP )
 		end
---check if any players are alive on one team and end the round if not
-local CaptureTime = nil
+	end
+
+	--The tie breaker skips the setup phase and goes straight to fighting.
+	--
+	--It skips the WAIT, not the work: everything above this still runs, which
+	--is the point. Setup is where the buy menus are closed and where everyone
+	--is unfrozen, and CombatPhase does neither - wiring planning directly to
+	--combat would start the decider with everybody frozen and their buy menu
+	--still open. Defenders get their setup speed set just above and CombatPhase
+	--puts it straight back, which costs nothing and keeps one code path.
+	if TTG_IsTiebreakRound() then
+		CombatPhase()
+		return
+	end
+
+	SetGamePhase("Setup")
+
+	SetGlobalBool("CL_PlayTimerCountSounds", true)
+
+	InitializeGCTime(SETUPPHASE_TIME, CombatPhase)
+end
+
+
+
+/*---------------------------------------------------------
+	Everything below used to live inside the loop above
+---------------------------------------------------------*/
+--The for loop in SetupPhase opened at its top and did not close until the
+--end of the capture system, roughly three hundred lines down. Indentation
+--hid it: every definition below sits at column zero and reads as file scope.
+--
+--So none of this existed until a setup phase had run, and then all of it was
+--redefined once per player per setup phase - eight functions reassigned, four
+--hooks re-added, and the capture locals rebuilt underneath whatever capture
+--was in progress.
+--
+--It only worked because setup always precedes combat. CombatPhase calls
+--Start_CaptureCheck, which is defined down here, so anything that genuinely
+--skipped setup would have called a nil global. That is why the tie breaker
+--skips the wait rather than the phase.
+
+
 --global var which says what mode the capture timer is in
 G_CurCaptureMode = "none"
 			--"capturing"
@@ -546,32 +586,6 @@ end)
 	--Removed because a copy that looks live but is not is worse than no copy:
 	--it was counted as one of the three round-setup blocks that had to be kept
 	--in step, and edits were made to it that could never have had any effect.
-end
-
-
-
-
-
-
-	--The tie breaker skips the setup phase and goes straight to fighting.
-	--
-	--It skips the WAIT, not the work: everything above this still runs, which
-	--is the point. Setup is where the buy menus are closed and where everyone
-	--is unfrozen, and CombatPhase does neither - wiring planning directly to
-	--combat would start the decider with everybody frozen and their buy menu
-	--still open. Defenders get their setup speed set just above and CombatPhase
-	--puts it straight back, which costs nothing and keeps one code path.
-	if TTG_IsTiebreakRound() then
-		CombatPhase()
-		return
-	end
-
-	SetGamePhase("Setup")
-
-	SetGlobalBool("CL_PlayTimerCountSounds", true)
-
-	InitializeGCTime(SETUPPHASE_TIME, CombatPhase)
-end
 
 
 function CombatPhase()
