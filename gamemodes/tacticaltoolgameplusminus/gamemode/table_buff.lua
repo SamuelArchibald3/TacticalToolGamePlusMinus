@@ -57,6 +57,7 @@ display_head = "Hunkering",
 is_nerf = false,
 color = Color(124, 81, 50, 255),
 gravity = 2,
+amount = 120,	--speed taken off while hunkered. It was free before, so there was no reason not to hold it
 }
 ,
 
@@ -439,6 +440,7 @@ if SERVER then
 		local ref_Cripple = Buff_Reference( "Buff_Cripple" )
 		local ref_Snare = Buff_Reference( "Buff_Snare" )
 		local ref_Speed = Buff_Reference( "Buff_Speed" )
+		local ref_Hunker = Buff_Reference( "Buff_Hunker" )
 	
 		
 		for k,ply in pairs(player.GetAll()) do
@@ -466,11 +468,17 @@ if SERVER then
 				end
 				
 				local speedup = 0
-				if ply:HowManyOfThisBuff( "Buff_Speed" ) > 0 then 
+				if ply:HowManyOfThisBuff( "Buff_Speed" ) > 0 then
 					speedup = ref_Speed.amount
 				end
-				
-				local slow_total = ( ply:GetBaseSpeed() + speedup - reload_slow - high_slow - low_slow - cripple_slow )
+
+				--hunkering is meant to be a trade, not a free buff
+				local hunker_slow = 0
+				if ply:HowManyOfThisBuff( "Buff_Hunker" ) > 0 then
+					hunker_slow = ref_Hunker.amount
+				end
+
+				local slow_total = ( ply:GetBaseSpeed() + speedup - reload_slow - high_slow - low_slow - cripple_slow - hunker_slow )
 				
 				//if slow_total <= 0 then
 					//slow_total = 1

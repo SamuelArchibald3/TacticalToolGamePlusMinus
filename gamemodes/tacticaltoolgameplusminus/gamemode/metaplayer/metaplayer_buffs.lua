@@ -109,6 +109,22 @@ end
 
 
 
+--Takes off every instance of one buff, wherever it is sitting.
+--
+--Buffs live in seven named slots, and until something needed to end a buff
+--early there was only RemoveBuff_BySlot - which means knowing which slot it
+--landed in. Hunker being a toggle is the first thing that needs this.
+function TTGPlayer:RemoveBuff_ByName( buff_name )
+	for _, slot in ipairs( { "Buff_A", "Buff_B", "Buff_C", "Buff_D", "Buff_E", "Buff_F", "Buff_G" } ) do
+		if self:GetNetworkedString( slot, "none" ) == buff_name then
+			self:RemoveBuff_BySlot( slot )
+		end
+	end
+end
+
+
+
+
 function TTGPlayer:RemoveAllBuffs(  )
 	local function Remove_NetworkBuff( thisslot )
 		self:SetNetworkedString( thisslot, "none" )
