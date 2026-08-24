@@ -68,6 +68,29 @@ function ENT:CooldownSound()
 	umsg.End()
 end
 
+--An ability with single_use set is gone once it has fired.
+--
+--Removing it rather than parking it on a permanent cooldown, because OnRemove
+--below already does the right thing: clears the networked slot so the hud and
+--the buy menu counter stop showing it, and frees the slot entry - guarded so a
+--swap or a round reset cannot make it clear somebody else's.
+--
+--Spent is what actually stops a second press. Entity:Remove does not take effect
+--until the end of the tick, so the ent is still valid and still in the slot for
+--the rest of this one, and KeyPressed would happily call DoAbility again.
+function ENT:MarkSpentIfSingleUse()
+	if self.Ref.single_use != true then return end
+
+	self.Spent = true
+	self:Remove()
+end
+
+
+function ENT:IsSpent()
+	return self.Spent == true
+end
+
+
 function ENT:InitiateCooldown()
 	self.Cooldown = true
 	self.Time = self.Ref.cooldown

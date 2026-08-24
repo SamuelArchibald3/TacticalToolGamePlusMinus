@@ -9,9 +9,16 @@ if !SERVER then return end
 
 
 function ENT:DoAbility()
+	--Avia is single_use, so this is the press after the one that spent it. The
+	--ent is on its way out but is still valid until the end of the tick.
+	if self:IsSpent() then
+		self:CooldownSound()
+	return
+	end
+
 	if self.Cooldown == true then
 		self:CooldownSound()
-	return 
+	return
 	end
 	if GetTeamRole( self.Owner:Team() ) == "Attacking" then
 		if G_CurrentPhase == "GameSetup" then
@@ -35,7 +42,8 @@ function ENT:DoAbility()
 	//ability code
 	self.Owner:AddBuff( "Buff_Avia", self.Ref.duration )
 	//self.Owner:AddBuff( "Buff_SlowLow", self.Ref.duration )
-	
-	
-	self:InitiateCooldown()
+
+
+	--One use and it is gone for the round. Buy it again next round.
+	self:MarkSpentIfSingleUse()
 end
