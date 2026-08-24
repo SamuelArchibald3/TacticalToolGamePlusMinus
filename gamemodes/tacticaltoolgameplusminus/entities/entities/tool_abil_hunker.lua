@@ -27,12 +27,21 @@ function ENT:DoAbility()
 		end
 	end
 	
-	--Toggle. Pressing it used to be a decision you were then stuck with for the
-	--full duration, and refusing the second press was the only thing that
-	--happened. Now the second press stands you back up.
+	--A gap between toggles, not a cooldown on the ability.
 	--
-	--The cooldown still starts on the way in, not on the way out, so ending it
-	--early costs you the rest of the time rather than buying a fresh one.
+	--Hunker costs speed the whole time it is on, and that is the price. What it
+	--should not allow is flickering in and out fast enough to be hunkered for
+	--every incoming shot and mobile in between, so each toggle books the next
+	--one a moment later. toggle_cooldown in table_tool.lua is that moment.
+	if self.NextToggle != nil and CurTime() < self.NextToggle then
+		self:CooldownSound()
+	return
+	end
+
+	self.NextToggle = CurTime() + ( self.Ref.toggle_cooldown or 1 )
+
+	--Toggle. Pressing it used to be a decision you were then stuck with for the
+	--full duration, and refusing the second press was the only thing it did.
 	if self.Owner:HowManyOfThisBuff( "Buff_Hunker" ) > 0 then
 		self.Owner:RemoveBuff_ByName( "Buff_Hunker" )
 	return
@@ -44,7 +53,4 @@ function ENT:DoAbility()
 	--in table_buff. The AddBuff( "Buff_SlowLow" ) that used to sit here
 	--commented out was the same idea, half done.
 	self.Owner:AddBuff( "Buff_Hunker", self.Ref.duration )
-
-
-	self:InitiateCooldown()
 end
