@@ -105,9 +105,26 @@ end
 
 
 function GM:PlayerDeath( ply )
-	if ply:IsValidGamePlayer() == false then return end
-	
-	
+	--This used to guard on IsValidGamePlayer(), which requires Alive().
+	--PlayerDeath fires AFTER the player is dead, so that was false on every
+	--single death and the whole function returned on its first line. Measured on
+	--the server rather than reasoned about: in the hook, Alive() is false and
+	--IsValidGamePlayer() is false.
+	--
+	--So none of the below has ever run on a death: no chat line, no ability
+	--reset, no buff reset, no unfreeze, and no DeathSpectate - which is the flag
+	--DeathSpectateTick needs before it will put a camera on anybody.
+	--
+	--The death camera appeared to work regardless, because a second
+	--implementation in ingame.lua caught PlayerDeath with no such guard. Deleting
+	--that copy is what made this visible.
+	--
+	--What the guard was reaching for is "somebody who was playing", and being
+	--dead is the one thing that is always true here.
+	if not ply:IsPlayer() then return end
+	if ply:Team() != TEAM_RED and ply:Team() != TEAM_BLUE then return end
+
+
 	ply:ChatPrint("You died, wait till the round ends!")
 	
 	--Remove all the player's ability ents and buffs
