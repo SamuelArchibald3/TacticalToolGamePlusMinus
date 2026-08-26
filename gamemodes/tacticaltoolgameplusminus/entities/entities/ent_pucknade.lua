@@ -53,29 +53,6 @@ function ENT:Initialize()
 end
 
 
---Stop the nade being solid to players.
---
---It has to be solid to them while it is in the air, or it would fly through
---the enemy it is meant to stick to. Once it has hit something that job is
---done, and all it does from then on is stand in people's way - which is what
---it was doing, because it kept COLLISION_GROUP_NONE for its whole life while
---most other ents here use COLLISION_GROUP_WEAPON.
---
---Deferred by a frame on purpose. Changing collision rules inside a physics
---callback is what the engine warns about, and BUG-9 is the same mistake made
---elsewhere in this gamemode.
-function ENT:StopBlockingPlayers()
-	if self.NotBlockingPlayers == true then return end
-	self.NotBlockingPlayers = true
-
-	timer.Simple( 0, function()
-		if not IsValid( self ) then return end
-
-		self:SetCollisionGroup( COLLISION_GROUP_WEAPON )
-	end)
-end
-
-
 function ENT:PhysicsCollide(data, phys)
 	--once its collided with something
 	//self:SetOwner(nil)
@@ -93,9 +70,6 @@ function ENT:PhysicsCollide(data, phys)
 			phys:EnableMotion(false)
 		end
 	end
-
-	--landed, stuck, or bounced off a wall - either way it has arrived
-	self:StopBlockingPlayers()
 end
 
 function ENT:Fuse()
