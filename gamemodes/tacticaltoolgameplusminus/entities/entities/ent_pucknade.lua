@@ -34,16 +34,7 @@ function ENT:Initialize()
 	//local phys = self:GetPhysicsObject()
 		//self:SetMaterial("ice")
 	
-	--Never solid to players, on either team, for its whole life. It still
-	--collides with the world and with props - COLLISION_GROUP_WEAPON only
-	--excuses it from players.
-	--
-	--This used to be COLLISION_GROUP_NONE and was swapped to WEAPON once the
-	--nade landed, which fixed a nade on the floor being a wall but left one in
-	--flight able to stop dead against somebody. Blocking a teammate mid-throw is
-	--the same annoyance as blocking them on the ground, so it is simpler for the
-	--nade to never be in anybody's way at all.
-	self:ChangePhysicsModel( self.Ref.model, COLLISION_GROUP_WEAPON )
+	self:ChangePhysicsModel( self.Ref.model, COLLISION_GROUP_NONE )
 	
 	self:SetAngles( Angle(90, 0, 0))
 	
@@ -62,23 +53,50 @@ function ENT:Initialize()
 end
 
 
---There is no StopBlockingPlayers any more.
+--Stop the nade being solid to players.
 --
---It set COLLISION_GROUP_WEAPON a frame after the nade landed, deferred because
---changing collision rules inside a physics callback is what BUG-9 is about. The
---collision group is now set once in Initialize and never changed, so there is
---nothing to defer and nothing to guard against being called twice.
+--It has to be solid to them while it is in the air, or it would fly through
+--the enemy it is meant to stick to. Once it has hit something that job is
+--done, and all it does from then on is stand in people's way - which is what
+--it was doing, because it kept COLLISION_GROUP_NONE for its whole life while
+--most other ents here use COLLISION_GROUP_WEAPON.
+--
+--Deferred by a frame on purpose. Changing collision rules inside a physics
+--callback is what the engine warns about, and BUG-9 is the same mistake made
+--elsewhere in this gamemode.
+function ENT:StopBlockingPlayers()
+	if self.NotBlockingPlayers == true then return end
+	self.NotBlockingPlayers = true
+
+	timer.Simple( 0, function()
+		if not IsValid( self ) then return end
+
+		self:SetCollisionGroup( COLLISION_GROUP_WEAPON )
+	end)
+end
 
 
---There is no PhysicsCollide either.
---
---All it did was freeze the nade in mid air when it touched an enemy, with
---phys:EnableMotion( false ). That cannot happen now: the nade does not collide
---with players at all, so the callback would never be handed one.
---
---Worth knowing rather than mourning - a nade frozen at head height against
---somebody was itself a thing standing in the way. Nades now fly past players and
---land on whatever is behind them, and the fuse is what decides when they go off.
+function ENT:PhysicsCollide(data, phys)
+	--once its collided with something
+	//self:SetOwner(nil)
+	
+	//if data.HitEntity:IsPlayer() then
+		//if data.HitEntity:Team() != self.TTG_Team then
+			//self:StartEffect()
+		//end
+	//end
+	
+	
+	--this makes it so physics damage wont be taken
+	if data.HitEntity:IsPlayer() then
+		if data.HitEntity:Team() != self.TTG_Team then
+			phys:EnableMotion(false)
+		end
+	end
+
+	--landed, stuck, or bounced off a wall - either way it has arrived
+	self:StopBlockingPlayers()
+end
 
 function ENT:Fuse()
 	timer.Simple( self.Ref.fuse, function()
