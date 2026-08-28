@@ -4,6 +4,15 @@
 local TTGPlayer = FindMetaTable("Player")
 
 
+--What each player's two shop lists look like, as last told to us by the server.
+--Keyed by UserID rather than by the player entity, so a message that arrives
+--before the entity does is still usable.
+--
+--CLIENT only. The server reads the networked vars directly and never touches
+--this.
+local Lists = {}
+
+
 --Name of one field of a numbered ability slot, eg Ability_2_name.
 --
 --The slots used to be named A, B and C, spelled out in the buy logic, the
@@ -19,6 +28,25 @@ end
 --with a stale ability still showing on somebody's hud.
 local function AbilitySlotLimit()
 	return table.Count( ABILITY_KEYS )
+end
+
+
+--The ability names in a player's slots, read straight out of the networked
+--vars. What GetAbilityNames used to be, before other people's copies had to
+--come from somewhere else.
+local function ReadAbilityNames( ply )
+	local names = {}
+
+	for i = 1, AbilitySlotLimit() do
+		local name = ply:GetNW2String( AbilitySlotKey( i, "name" ), "none" )
+
+		--"none" is what an empty slot is set to
+		if name != "none" then
+			table.insert( names, name )
+		end
+	end
+
+	return names
 end
 
 
@@ -53,9 +81,15 @@ end
 
 --Networks one slot as empty
 function TTGPlayer:ClearAbilityInfo( slot )
+	local before = self:GetNW2String( AbilitySlotKey( slot, "name" ), "none" )
+
 	self:SetNW2String( AbilitySlotKey( slot, "name" ), "none" )
 	self:SetNW2Bool( AbilitySlotKey( slot, "cooldown" ), false )
 	self:SetNW2Int( AbilitySlotKey( slot, "time" ), 0 )
+
+	--only when the name actually moved, so clearing the empty slots at the top
+	--of a round sends nothing
+	if SERVER and before != "none" then TTG_SendPlayerLists( self ) end
 end
 
 
@@ -64,9 +98,16 @@ end
 function TTGPlayer:SetAbilityInfo( slot, name, cooldown, time )
 	if slot == nil then return end
 
+	local before = self:GetNW2String( AbilitySlotKey( slot, "name" ), "none" )
+
 	self:SetNW2String( AbilitySlotKey( slot, "name" ), name )
 	self:SetNW2Bool( AbilitySlotKey( slot, "cooldown" ), cooldown )
 	self:SetNW2Int( AbilitySlotKey( slot, "time" ), time )
+
+	--Name only. This is also the cooldown ticking, which runs every time an
+	--ability is used and would put a broadcast on the wire for a number nobody
+	--else's screen shows.
+	if SERVER and before != name then TTG_SendPlayerLists( self ) end
 end
 
 
@@ -98,19 +139,16 @@ end
 
 //returns a table of the names of the ability ents the player has
 function TTGPlayer:GetAbilityNames()
-	local abil_table = {}
+	--Somebody else's abilities come from the broadcast, not from their
+	--networked vars - see the note above TTG_SendPlayerLists. Your own still
+	--come from the vars, which are always current for you.
+	if CLIENT and self != LocalPlayer() then
+		local cached = Lists[ self:UserID() ]
 
-	for i = 1, AbilitySlotLimit() do
-		local name = self:GetAbilityInfo( i ).name
-
-		--"none" is what an empty slot is set to, and it was being returned as
-		--though it were an ability. GetSwepToolInfo already filters the same way.
-		if name != "none" then
-			table.insert( abil_table, name )
-		end
+		return cached and cached.abilities or {}
 	end
 
-	return abil_table
+	return ReadAbilityNames( self )
 end
 
 
@@ -161,12 +199,128 @@ local function ToolSlotKey( index, field )
 end
 
 
+--The tools in a player's slots, read straight out of the networked vars.
+local function ReadToolSlots( ply )
+	local tools = {}
+
+	for i = 1, MAX_TOOL_SLOTS do
+		local name = ply:GetNW2String( ToolSlotKey( i, "Name" ), "none" )
+
+		if name != "none" then
+			table.insert( tools, {
+				name = name,
+				--fallbacks kept explicit: GetNetworkedInt defaulted to 0, and a
+				--nil here reaches cl_purchasesmenu as ( name .. " x" .. ammo )
+				ammo    = ply:GetNW2Int( ToolSlotKey( i, "Ammo" ), 0 ),
+				numguns = ply:GetNW2Int( ToolSlotKey( i, "NumGuns" ), 0 ),
+			} )
+		end
+	end
+
+	return tools
+end
+
+
+--Getting a player's lists onto OTHER people's screens.
+--
+--A networked var only reaches a client while the entity carrying it is being
+--transmitted to that client, and through a buy phase the two teams sit in
+--separate rooms with nothing in each other's PVS. So the shop's list of what
+--everyone owns was showing whatever each client last saw of the other side, and
+--only caught up when that player came into view - which is why the delay
+--varied from a moment to most of a round.
+--
+--Your own list was never late, because your own player is always transmitted to
+--you. That difference is the whole diagnosis: the write was never slow, the
+--delivery was conditional.
+--
+--The same problem was met and solved once here already - TTG_TeamRoles and
+--TTG_GameState are net messages for this exact reason. This is that shape,
+--applied to the two lists the shop draws.
+--
+--The networked vars stay as they are. They are still what the server reads and
+--what your own client reads, and this is built from them rather than replacing
+--them.
+if SERVER then
+	util.AddNetworkString( "TTG_PlayerLists" )
+
+	--`to` is who receives it; nil means everybody.
+	function TTG_SendPlayerLists( ply, to )
+		if not IsValid( ply ) or not ply:IsPlayer() then return end
+
+		local tools = ReadToolSlots( ply )
+		local abils = ReadAbilityNames( ply )
+
+		net.Start( "TTG_PlayerLists" )
+			net.WriteUInt( ply:UserID(), 16 )
+
+			net.WriteUInt( #tools, 8 )
+			for _, tool in ipairs( tools ) do
+				net.WriteString( tool.name )
+				net.WriteUInt( math.Clamp( tool.ammo, 0, 65535 ), 16 )
+				net.WriteUInt( math.Clamp( tool.numguns, 0, 255 ), 8 )
+			end
+
+			net.WriteUInt( #abils, 8 )
+			for _, name in ipairs( abils ) do
+				net.WriteString( name )
+			end
+
+		if IsValid( to ) then
+			net.Send( to )
+		else
+			net.Broadcast()
+		end
+	end
+
+
+	--Somebody who joins mid-game has missed every broadcast so far, and the
+	--lists are only rebuilt at the top of a round. Deferred a second because a
+	--player in PlayerInitialSpawn is not ready to be sent anything yet.
+	hook.Add( "PlayerInitialSpawn", "TTG_SendAllPlayerLists", function( ply )
+		timer.Simple( 1, function()
+			if not IsValid( ply ) then return end
+
+			for _, other in ipairs( player.GetAll() ) do
+				TTG_SendPlayerLists( other, ply )
+			end
+		end )
+	end )
+end
+
+
+if CLIENT then
+	net.Receive( "TTG_PlayerLists", function()
+		local userid = net.ReadUInt( 16 )
+
+		local tools = {}
+		for i = 1, net.ReadUInt( 8 ) do
+			tools[ i ] = {
+				name    = net.ReadString(),
+				ammo    = net.ReadUInt( 16 ),
+				numguns = net.ReadUInt( 8 ),
+			}
+		end
+
+		local abils = {}
+		for i = 1, net.ReadUInt( 8 ) do
+			abils[ i ] = net.ReadString()
+		end
+
+		Lists[ userid ] = { tools = tools, abilities = abils }
+	end )
+end
+
+
 function TTGPlayer:ResetSwepToolInfo()
 	for i = 1, MAX_TOOL_SLOTS do
 		self:SetNW2String( ToolSlotKey( i, "Name" ), "none" )
 		self:SetNW2Int( ToolSlotKey( i, "Ammo" ), 0 )
 		self:SetNW2Int( ToolSlotKey( i, "NumGuns" ), 0 )
 	end
+
+	--once, after the whole list is cleared, rather than ten times through it
+	if SERVER then TTG_SendPlayerLists( self ) end
 end
 
 
@@ -177,23 +331,16 @@ end
 --returns a table of the player's networked swep ents
 --used because GetWeapons is broken and bad
 function TTGPlayer:GetSwepToolInfo()
-	local sweptool_table = {}
+	local sweptool_table
 
-	for i = 1, MAX_TOOL_SLOTS do
-		local slotname = self:GetNW2String( ToolSlotKey( i, "Name" ), "none" )
-
-		if slotname != "none" then
-			--was three globals named swep_a/b/c, which leaked into _G every call
-			local swep_info =
-			{
-			name = slotname,
-			--fallbacks kept explicit: GetNetworkedInt defaulted to 0, and a nil
-			--here reaches cl_purchasesmenu as ( name .. " x" .. ammo )
-			ammo = self:GetNW2Int( ToolSlotKey( i, "Ammo" ), 0 ),
-			numguns = self:GetNW2Int( ToolSlotKey( i, "NumGuns" ), 0 ),
-			}
-			table.insert( sweptool_table, swep_info )
-		end
+	--Somebody else's tools come from the broadcast; your own come from the
+	--networked vars, which are always current for you. See the note above
+	--TTG_SendPlayerLists.
+	if CLIENT and self != LocalPlayer() then
+		local cached = Lists[ self:UserID() ]
+		sweptool_table = cached and cached.tools or {}
+	else
+		sweptool_table = ReadToolSlots( self )
 	end
 
 	--callers check for false rather than an empty table, so keep that contract
@@ -220,6 +367,8 @@ function TTGPlayer:SetSwepToolInfo( swepname, ammo, numguns )
 		if slotname == swepname then
 			self:SetNW2Int( ToolSlotKey( i, "Ammo" ), ammo )
 			self:SetNW2Int( ToolSlotKey( i, "NumGuns" ), numguns )
+
+			if SERVER then TTG_SendPlayerLists( self ) end
 			return
 		end
 
@@ -240,4 +389,6 @@ function TTGPlayer:SetSwepToolInfo( swepname, ammo, numguns )
 	self:SetNW2String( ToolSlotKey( firstfree, "Name" ), swepname )
 	self:SetNW2Int( ToolSlotKey( firstfree, "Ammo" ), ammo )
 	self:SetNW2Int( ToolSlotKey( firstfree, "NumGuns" ), numguns )
+
+	if SERVER then TTG_SendPlayerLists( self ) end
 end
