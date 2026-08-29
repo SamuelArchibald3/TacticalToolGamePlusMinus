@@ -308,7 +308,18 @@ if CLIENT then
 		end
 
 		Lists[ userid ] = { tools = tools, abilities = abils }
+
+		--A count, so a dev command can answer "is anything arriving at all"
+		--without a second net.Receive - GMod keeps one receiver per message
+		--name, and registering another elsewhere would silently replace this.
+		TTG_PlayerListsReceived = ( TTG_PlayerListsReceived or 0 ) + 1
 	end )
+
+
+	--What this client currently believes everyone owns. Read by ttg_devlists.
+	function TTG_DebugLists()
+		return Lists
+	end
 end
 
 
