@@ -5,6 +5,9 @@ include( "table_tool.lua" )
 include( "table_ent.lua" )
 include( "table_shop.lua" )
 include( "table_buff.lua" )
+--after all four tables, because it reads every one of them - see the note at
+--the top of that file
+include( "shop_descriptions.lua" )
 include( "meta_ent.lua" )
 include( "meta_swep.lua" )
 include( "shared_settings.lua" )
