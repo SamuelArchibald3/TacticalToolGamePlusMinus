@@ -42,7 +42,7 @@ function ENT:PhysicsCollide(data, phys)
 	--this makes it so physics damage wont be taken
 	phys:EnableMotion(false)
 	
-	self:StartEffect(pos, true)
+	self:StartEffect( pos )
 
 	
 	
@@ -93,7 +93,25 @@ function ENT:KnockBackStuff()
 end
 
 //does the affect at the pos position
-function ENT:StartEffect( pos, hitply )
+--
+--Once, whatever happens.
+--
+--PhysicsCollide called this and then self:Remove(), but Remove does not take
+--effect until the end of the tick, and phys:EnableMotion( false ) inside a
+--physics callback is not guaranteed to stop the bomb there and then - that is
+--what BUG-9 is about. So a bomb that touched two things before it was really
+--gone arrived here twice and put two explosions on the same spot.
+--
+--A player is the case that made it happen: a wall is one contact, a player is a
+--body you clip and carry on past into the floor behind them. Which is why a
+--building took close to double damage from a bomb that hit somebody on the way
+--in. Measured at two explosions from two collisions before this guard, one
+--after - see explode_once.lua.
+--
+--The hitply argument this used to take was never read.
+function ENT:StartEffect( pos )
+	if self.Exploded == true then return end
+	self.Exploded = true
 
 	local explosion = ents.Create( "env_explosion" )		///create an explosion and delete the prop
 		explosion:SetPos( pos )
