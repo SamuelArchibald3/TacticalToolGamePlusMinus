@@ -54,7 +54,17 @@ end
 
 
 function ENT:StartEffect(  )
+	--Once, whatever happens. Same defect the building bomb had: PhysicsCollide
+	--calls this and then self:Remove(), but Remove waits for the end of the
+	--tick and EnableMotion( false ) inside a physics callback is not guaranteed
+	--to stop it there and then, so two contacts put two explosions on one spot.
+	--Clipping a player on the way in was the usual way to get it.
+	--
+	--Measured at two explosions from two collisions before this, one after -
+	--explode_once.lua counts them.
+	if self.Exploded == true then return end
 	self.Exploded = true
+
 
 	local explosion = ents.Create( "env_explosion" )		///create an explosion and delete the prop
 		explosion:SetPos( self:GetPos() )
