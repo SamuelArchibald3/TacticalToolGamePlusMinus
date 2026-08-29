@@ -54,17 +54,22 @@ function ENT:Think()
 	local orgin_ents = ents.FindInSphere( selfvector, self.Ref.radius )
 	
 	--heal any ents in the radius
+	--
+	--"Hurt" means below YOUR maximum, not below 100. A short handed team spawns
+	--with more than that ( TTG_HandicapHealth ), and this was the gate that
+	--stopped them picking one up at all: at 100 of 125 they were damaged, and
+	--the kit lay there refusing to be collected.
 	for k, ent in pairs( orgin_ents ) do
 		if ent:IsValidGamePlayer() then
 			if ent == self.Creator then
 				if self.CurCanHealCreator then
-					if ent:Health() < 100 then
+					if ent:Health() < ent:GetMaxHealth() then
 						self:Heal( ent )
 						break
 					end
 				end
 			else
-				if ent:Health() < 100 then
+				if ent:Health() < ent:GetMaxHealth() then
 					self:Heal( ent )
 					break
 				end
