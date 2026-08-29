@@ -80,13 +80,10 @@ end
 
 --heal a player
 function ENT:Heal( ply )
-	local newhealth = ply:Health() + self.Ref.heal_amount
-		
-	if newhealth <= 100 then
-		ply:SetHealth( newhealth )
-	else
-		ply:SetHealth( 100 )
-	end
+	--TTG_Heal clamps to the player's own max health. This used to clamp to a
+	--literal 100, which meant a handicapped player picking one up at 110 was
+	--set DOWN to 100 - see the note on TTG_Heal in ttg_player.lua.
+	ply:TTG_Heal( self.Ref.heal_amount )
 	
 	ply:EmitSound( self.Ref.sound_heal )
 	self:Remove()

@@ -107,6 +107,17 @@ end
 
 
 
+--Heal one allied player by this dispenser's amount, up to their own maximum.
+--
+--Pulled out of Think so the rule has somewhere to live and can be tested. The
+--old inline version gated on  health <= 100  and capped at 100, so a
+--handicapped player with 125 max got nothing from a dispenser until they had
+--taken 25 damage, and could never be topped back up past 100.
+function ENT:HealPlayer( ply )
+	ply:TTG_Heal( self.Ref.heal_amount )
+end
+
+
 function ENT:Think()
 
 	--when ready to build before building, wait until there are no players in the way to do it
@@ -131,15 +142,7 @@ function ENT:Think()
 		//if ent:IsValidGamePlayer() or CheckIfInEntTable( ent ) then
 		if ent:IsValidGamePlayer() then
 			if ent:IsPlayer() and ent:Team() == self.TTG_Team then
-				local health = ent:Health()
-				
-				if health <= 100 then
-					if (health + self.Ref.heal_amount) > 100 then
-						ent:SetHealth( 100 )
-					else
-						ent:SetHealth( health + self.Ref.heal_amount )
-					end
-				end
+				self:HealPlayer( ent )
 			elseif not ent:IsPlayer() then
 				--add code to heal buildings
 			end
