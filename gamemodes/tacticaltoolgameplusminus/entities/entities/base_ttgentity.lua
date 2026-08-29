@@ -78,6 +78,44 @@ end
 
 
 
+--Build one frame later, instead of inside the physics callback.
+--
+--This is BUG-9. PhysicsCollide runs inside the engine's own physics simulation,
+--and ObjToMachine rebuilds this entity's physics object from in there -
+--ChangeStaticModel and ChangePhysicsModel do SetModel, PhysicsInit, SetMoveType,
+--SetSolid and EnableMotion. Rebuilding a physics object from inside the callback
+--that is iterating it is the thing GMod tells you not to do, and deferring by a
+--frame is the supported way.
+--
+--It is not academic. The building bomb called EnableMotion( false ) in the same
+--place, the engine did not have to honour it there, and a bomb that was supposed
+--to stop on impact carried on into a second contact and exploded twice.
+--
+--The impact point is captured now and restored after the build, so the frame the
+--object spends still falling does not leave the finished building short of where
+--it actually hit. Angles are left alone on purpose: every ObjToMachine sets its
+--own, usually straightening the thing, and restoring them here would undo that.
+--
+--The HitSurface guard each buildable already sets stays where it is, on the
+--collision rather than on the build, so a second contact in the same tick still
+--cannot queue a second build.
+function ENT:BuildFromCollision( data, ... )
+	local args = { ... }
+	local count = select( "#", ... )
+	local pos = data.HitPos
+
+	timer.Simple( 0, function()
+		--the thing can be shot out of the air between hitting something and
+		--this running
+		if not IsValid( self ) then return end
+
+		self:ObjToMachine( unpack( args, 1, count ) )
+
+		if pos != nil then self:SetPos( pos ) end
+	end )
+end
+
+
 --changes the ents model, initilizing physics stuff as well
 --		model: the model you want it to change to
 --		collision: the kind of collision you want it to have
