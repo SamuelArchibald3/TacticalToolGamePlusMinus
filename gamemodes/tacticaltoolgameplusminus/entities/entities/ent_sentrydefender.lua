@@ -67,7 +67,7 @@ function ENT:PhysicsCollide(data, phys)
 		self:EmitSound(self.Ref.sound_a)
 		
 		local wallnormal = data.HitNormal
-		self:ObjToMachine(pos, wallnormal)
+		self:BuildFromCollision( data, pos, wallnormal )
 		
 		self.HitSurface = true
 		

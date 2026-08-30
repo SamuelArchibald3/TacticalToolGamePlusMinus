@@ -40,7 +40,7 @@ function ENT:PhysicsCollide(data, phys)
 	
 		local pos = data.HitPos
 		local world = data.HitEntity
-		self:ObjToMachine()
+		self:BuildFromCollision( data )
 		
 		self.HitSurface = true
 		self.WallNormal = data.HitNormal

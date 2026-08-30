@@ -68,7 +68,7 @@ function ENT:PhysicsCollide(data, phys)
 		end
 		
 		
-		self:ObjToMachine()
+		self:BuildFromCollision( data )
 		
 	end
 end

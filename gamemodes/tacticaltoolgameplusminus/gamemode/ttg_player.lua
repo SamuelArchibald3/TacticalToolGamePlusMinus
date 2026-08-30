@@ -300,6 +300,31 @@ function TTGPlayer:GetBaseHealth()
 end
 
 
+--Heal this player by amount, up to their OWN maximum.
+--
+--Every player heal used to compare against a literal 100. PLAYER_BASE_MAXHEALTH
+--is 100, but TTG_HandicapHealth adds to it for a short handed team - so the
+--players able to go above 100 are exactly the ones the handicap exists to help,
+--and none of them could be healed above it.
+--
+--First aid was the worst of it. It did not decline to heal someone above 100,
+--it called SetHealth( 100 ) - so picking one up at 110 health COST you ten.
+--
+--Buildings already did this properly: base_ttgentity.lua clamps to ref.health,
+--the entity's own maximum. This is that, for players.
+function TTGPlayer:TTG_Heal( amount )
+	if amount == nil or amount <= 0 then return end
+
+	local newhealth = math.min( self:Health() + amount, self:GetMaxHealth() )
+
+	--never downwards. Somebody already at or above their maximum has nothing to
+	--gain here, and trimming them to it is the bug this replaces.
+	if newhealth <= self:Health() then return end
+
+	self:SetHealth( newhealth )
+end
+
+
 
 
 --sets the player to have the tank passive vars

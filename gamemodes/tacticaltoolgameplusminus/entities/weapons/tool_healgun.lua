@@ -57,13 +57,14 @@ function SWEP:Heal()
 		--draw the cool tracer effect
 		self:DoShootEffect( heal_target:GetPos() )
 	
-		--heal the player
-		local newhealth = heal_target:Health() + self.Ref.heal_amount
-		
-		if newhealth <= 100 then
-			heal_target:SetHealth( newhealth )
-		else
-			heal_target:SetHealth( 100 )
+		--heal the player, up to THEIR max health rather than a literal 100
+		--
+		--Not currently sold - purchase_healgun is not in any shop table - but
+		--it had the same clamp as first aid, which healed a handicapped player
+		--downwards. Fixed alongside rather than left as a trap for whoever
+		--puts it back in the shop.
+		if heal_target:IsPlayer() then
+			heal_target:TTG_Heal( self.Ref.heal_amount )
 		end
 	end
 	

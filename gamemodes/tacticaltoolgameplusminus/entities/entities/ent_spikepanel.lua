@@ -43,7 +43,7 @@ function ENT:PhysicsCollide(data, phys)
 	if data.HitEntity:IsWorld() or data.HitEntity:GetClass() == "ent_stepbox" or data.HitEntity:GetClass() == "ent_stepbox_big" then
 		self:EmitSound(self.Ref.sound_a)
 		
-		self:ObjToMachine( data.HitNormal )
+		self:BuildFromCollision( data, data.HitNormal )
 		
 		self.HitSurface = true
 		
