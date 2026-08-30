@@ -52,7 +52,23 @@ end
 
 
 //does the affect at the pos position
+--
+--One contact, and only one.
+--
+--Nothing stopped this running twice. Hitting a player damages them and calls
+--self:Remove(), but Remove does not take effect until the end of the tick;
+--hitting the world calls SetNotSolid( true ), and that is set from inside a
+--physics callback, where the engine is not obliged to apply it there and then.
+--Either way the pellet is still around and still solid for the rest of the
+--tick, so a second contact came straight back in here and paid out again.
+--
+--The stick is unaffected: whichever contact arrives first is the one that
+--resolves, so a pellet that meets terrain still freezes, goes non solid and
+--removes itself after time_stick. It just cannot damage anybody afterwards.
 function ENT:DamageEnt( hitent )
+	if self.Spent == true then return end
+	self.Spent = true
+
 	local function HitWorld()
 		self:EmitSound( self.Ref.sound_hitworld )
 		
