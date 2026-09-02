@@ -90,11 +90,10 @@ local function ShowAbilityKeysMenu()
 		Status:SizeToContents()
 
 		for i = 1, TTG_AbilitySlotCount() do
-			local bind = ABILITY_KEYS[ i ]
 			local info = ply:GetAbilityInfo( i )
 
-			local label = "?"
-			if bind != nil then label = bind.label end
+			--the key this player actually has, not the one the table names
+			local label = TTG_AbilityKeyLabel( i )
 
 			local name = "( empty )"
 			if info.name != "none" then name = ConvertToPrintName( info.name ) end
@@ -161,3 +160,52 @@ local function ShowAbilityKeysMenu()
 
 end
 usermessage.Hook( "Open_AbilityKeysVgui", ShowAbilityKeysMenu )
+
+
+/*---------------------------------------------------------
+	Telling the server which key a bound action sits on
+---------------------------------------------------------*/
+
+--Some ability slots are triggered by a console command with no bit in the
+--usercmd and no hook behind it - phys_swap, the Gravity Gun row in the options
+--menu, is the one that made this necessary. The server cannot see that key at
+--all, so the client looks up what the action is bound to and says so.
+--
+--Sent on spawn and then re-checked, because a player can rebind mid game and
+--the server would otherwise keep watching the key they stopped using.
+
+local reported = {}
+
+
+local function ReportAbilityBindings()
+	if not IsValid( LocalPlayer() ) then return end
+
+	for slot, bind in ipairs( ABILITY_KEYS ) do
+		if bind.trigger == "binding" then
+			local key = input.LookupBinding( bind.command )
+
+			--0 means nothing is bound to it, which the server takes as "stop
+			--watching for this one"
+			local code = 0
+			if key != nil and key != "" then
+				code = input.GetKeyCode( key ) or 0
+			end
+
+			if reported[ slot ] != code then
+				reported[ slot ] = code
+
+				net.Start( "TTG_AbilityBinding" )
+					net.WriteUInt( slot, 4 )
+					net.WriteUInt( code, 10 )
+				net.SendToServer()
+			end
+		end
+	end
+end
+
+
+hook.Add( "InitPostEntity", "TTG_ReportAbilityBindings", ReportAbilityBindings )
+
+--Rebinding is rare, so this is cheap and never needs to be prompt. Only a
+--change is actually sent - see `reported` above.
+timer.Create( "TTG_ReportAbilityBindings", 5, 0, ReportAbilityBindings )

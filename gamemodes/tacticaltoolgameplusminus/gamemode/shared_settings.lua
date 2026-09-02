@@ -83,11 +83,38 @@ MAX_TOOL_SLOTS = 10
 --six files, so adding or moving one meant finding every copy.
 --
 --label is what the hud draws next to the ability.
+--How each ability slot is triggered.
+--
+--`trigger` says how the server hears the key, because the three actions added
+--for slots 4 to 6 are not all the same kind of thing:
+--
+--    button      a bit in the usercmd, seen by the KeyPress hook
+--    flashlight  impulse 100, which has no bit - GM:PlayerSwitchFlashlight
+--    binding     no bit and no hook, so the client reports which key the
+--                command is bound to and the server watches for that key
+--
+--`command` is the console command behind the action, and it is what the hud and
+--the F2 panel look the label up from - so a player who moves an action to
+--another key in Options is told THEIR key, not ours. `label` is only the
+--fallback for when nothing is bound.
+--
+--All six are actions the options menu lists, which is the point: nobody has to
+--type a bind, and whatever they choose follows them between servers.
 ABILITY_KEYS =
 {
-	{ key = IN_SPEED, label = "SHIFT" },
-	{ key = IN_USE,   label = "USE" },
-	{ key = IN_WALK,  label = "ALT" },
+	{ trigger = "button", key = IN_SPEED, command = "+speed", label = "SHIFT" },
+	{ trigger = "button", key = IN_USE,   command = "+use",   label = "USE" },
+	{ trigger = "button", key = IN_WALK,  command = "+walk",  label = "ALT" },
+
+	--Suit Zoom. The only one of the three additions with a usercmd bit, so it
+	--rides the same path as the originals.
+	{ trigger = "button", key = IN_ZOOM,  command = "+zoom",  label = "ZOOM" },
+
+	--Flashlight.
+	{ trigger = "flashlight", command = "impulse 100", label = "FLASHLIGHT" },
+
+	--Gravity Gun.
+	{ trigger = "binding", command = "phys_swap", label = "GRAVITY GUN" },
 }
 
 --How many abilities a player can carry at once. Never more than there are keys

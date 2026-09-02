@@ -493,12 +493,12 @@ function fSwapAbilities( ply, command, arguments )
 		return
 	end
 
-	--name the keys rather than the slot numbers, since the keys are what the
-	--player actually pressed
-	local firstkey = ABILITY_KEYS[ math.floor( first ) ]
-	local secondkey = ABILITY_KEYS[ math.floor( second ) ]
-
-	ply:ChatPrint( "Swapped " .. firstkey.label .. " and " .. secondkey.label )
+	--Slots, not keys. This runs on the server, where the input library does not
+	--exist and a player's bindings are unknowable - naming keys from here meant
+	--telling somebody who had rebound the action to press a key they no longer
+	--use. The F2 panel can see the real bindings and names them there.
+	ply:ChatPrint( "Swapped ability slots " .. math.floor( first ) ..
+		" and " .. math.floor( second ) )
 end
 concommand.Add( "ttg_swapabilities", fSwapAbilities )
 

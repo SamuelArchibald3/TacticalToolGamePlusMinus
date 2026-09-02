@@ -208,6 +208,29 @@ function TTG_AbilitySlotCount()
 end
 
 
+--What key this player has for an ability slot, as they would recognise it.
+--
+--The labels in ABILITY_KEYS used to be printed straight onto the hud, so
+--somebody who moved +speed off shift in the options menu was still told to press
+--shift. This asks the client's own binding instead, and only falls back to the
+--table when there is nothing bound at all - which is the honest answer for the
+--two additions that ship unbound.
+--
+--CLIENT only: the input library does not exist on the server, which is also why
+--the swap command names slots rather than keys.
+if CLIENT then
+	function TTG_AbilityKeyLabel( slot )
+		local entry = ABILITY_KEYS[ slot ]
+		if entry == nil then return "?" end
+
+		local bound = input.LookupBinding( entry.command )
+		if bound != nil and bound != "" then return string.upper( bound ) end
+
+		return "UNBOUND"
+	end
+end
+
+
 
 
 /*---------------------------------------------------------
