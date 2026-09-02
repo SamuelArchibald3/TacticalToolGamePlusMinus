@@ -106,9 +106,10 @@ ABILITY_KEYS =
 	{ trigger = "button", key = IN_USE,   command = "+use",   label = "USE" },
 	{ trigger = "button", key = IN_WALK,  command = "+walk",  label = "ALT" },
 
-	--Suit Zoom. The only one of the three additions with a usercmd bit, so it
-	--rides the same path as the originals.
-	{ trigger = "button", key = IN_ZOOM,  command = "+zoom",  label = "ZOOM" },
+	--Suit Zoom. It has a usercmd bit, but the engine also does something with
+	--it - the suit zoom - so `suppress` takes the bit back off the command once
+	--the ability has been fired. See the StartCommand route.
+	{ trigger = "button", suppress = true, key = IN_ZOOM, command = "+zoom", label = "ZOOM" },
 
 	--Flashlight.
 	{ trigger = "flashlight", command = "impulse 100", label = "FLASHLIGHT" },

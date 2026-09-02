@@ -62,9 +62,54 @@ function KeyPressed( Ply, key )
 	local slot = SlotFor( "button", key )
 	if slot == nil then return end
 
+	--Suppressed keys never reach here: StartCommand strips the bit before
+	--movement runs, so KeyPress is not raised for them. Skipped explicitly all
+	--the same, because a route that fires an ability twice is not a thing to
+	--leave resting on somebody else's ordering.
+	if ABILITY_KEYS[ slot ].suppress == true then return end
+
 	TTG_FireAbilitySlot( Ply, slot )
 end
 hook.Add( "KeyPress", "KeyPressedHook", KeyPressed )
+
+
+/*---------------------------------------------------------
+	Route 1b: buttons the engine also wants
+---------------------------------------------------------*/
+
+--Suit Zoom fires the ability AND zooms the suit in, because IN_ZOOM is the
+--engine's own. Taking the bit off the command in StartCommand, which runs
+--before movement is processed, means the engine never sees the press - so the
+--ability goes off and the screen stays where it was.
+--
+--Firing has to happen here too: with the bit gone, KeyPress is never raised for
+--it. That means finding the press ourselves, which is what the held table is
+--for - a usercmd says the key is DOWN on every command while it is held, and an
+--ability should go off once per press.
+function TTG_SuppressedAbilityCommand( ply, cmd )
+	if not IsValid( ply ) then return end
+
+	for slot, bind in ipairs( ABILITY_KEYS ) do
+		if bind.trigger == "button" and bind.suppress == true then
+			local down = cmd:KeyDown( bind.key )
+
+			ply.TTG_HeldAbilityKeys = ply.TTG_HeldAbilityKeys or {}
+			local was = ply.TTG_HeldAbilityKeys[ slot ] == true
+
+			if down and not was then
+				TTG_FireAbilitySlot( ply, slot )
+			end
+
+			ply.TTG_HeldAbilityKeys[ slot ] = down
+
+			--off the command whether or not an ability fired: the key belongs to
+			--the gamemode now, and half-suppressing it would zoom for anyone
+			--who has not bought that slot
+			if down then cmd:RemoveKey( bind.key ) end
+		end
+	end
+end
+hook.Add( "StartCommand", "TTG_SuppressedAbilityCommand", TTG_SuppressedAbilityCommand )
 
 
 /*---------------------------------------------------------
