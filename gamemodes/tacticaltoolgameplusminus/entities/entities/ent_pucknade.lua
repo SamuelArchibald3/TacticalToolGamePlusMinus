@@ -34,7 +34,18 @@ function ENT:Initialize()
 	//local phys = self:GetPhysicsObject()
 		//self:SetMaterial("ice")
 	
-	self:ChangePhysicsModel( self.Ref.model, COLLISION_GROUP_NONE )
+	--NADE_BLOCKS_PLAYERS is the server setting, read here so it applies to nades
+	--thrown after a change rather than to ones already in the air.
+	--
+	--COLLISION_GROUP_NONE is solid to players: a nade can stop dead against
+	--somebody, which is what PhysicsCollide freezes it for, and is also what
+	--leaves it standing in a teammate's way. WEAPON keeps the world and props
+	--and excuses it from players only, so it flies past everybody and lands on
+	--whatever is behind them.
+	local group = COLLISION_GROUP_WEAPON
+	if NADE_BLOCKS_PLAYERS != false then group = COLLISION_GROUP_NONE end
+
+	self:ChangePhysicsModel( self.Ref.model, group )
 	
 	self:SetAngles( Angle(90, 0, 0))
 	

@@ -123,6 +123,18 @@ ABILITY_KEYS =
 MAX_ABILITY_SLOTS = 3
 
 
+--Whether a nade is solid to players.
+--
+--On, a nade can stop dead against somebody and stick to them, which is what
+--PhysicsCollide freezes it for - and also what leaves it standing in a
+--teammate's way. Off, it flies past everybody and lands on whatever is behind
+--them, with the fuse deciding when it goes off.
+--
+--Read when a nade spawns, so a change applies to nades thrown after it rather
+--than to ones already in the air.
+NADE_BLOCKS_PLAYERS = true
+
+
 
 --Makes it so teams dont have to be full for the game to start, the player just has to press the ready button
 MUST_HAVE_FULL_TEAMS = false
@@ -369,6 +381,33 @@ if SERVER then
 		end
 	end
 	cvars.AddChangeCallback( "ttg_var_abilityslots", Callback_AbilitySlots, "ttg_var_abilityslots_setting" )
+
+
+
+
+	--Nades Block Players
+	--Whether a nade is solid to the people around it. Read by ent_pucknade when
+	--one spawns, so it applies to nades thrown after the change and not to any
+	--already in the air.
+	if not ConVarExists( "ttg_var_nadecollision" ) then
+		CreateConVar( "ttg_var_nadecollision", "1", FCVAR_NOTIFY, "Nades are solid to players, and can stick to the enemy they hit" )
+	end
+
+	NADE_BLOCKS_PLAYERS = GetConVarNumber( "ttg_var_nadecollision" ) > 0
+
+	local function Callback_NadeCollision( CVar, PreviousValue, NewValue )
+		local newvalue = tonumber( NewValue )
+		if newvalue == nil then return end
+
+		NADE_BLOCKS_PLAYERS = newvalue > 0
+
+		if NADE_BLOCKS_PLAYERS then
+			ChatPrintToAll( "Nades are solid to players again, and can stick to the enemy they hit" )
+		else
+			ChatPrintToAll( "Nades now fly past players and land on whatever is behind them" )
+		end
+	end
+	cvars.AddChangeCallback( "ttg_var_nadecollision", Callback_NadeCollision, "ttg_var_nadecollision_setting" )
 
 end
 

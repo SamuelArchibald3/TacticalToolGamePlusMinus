@@ -96,5 +96,15 @@
 			"type"		"Numeric"
 			"default"	"3"
 		}
+
+
+		10
+		{
+			"name"		"ttg_var_nadecollision"
+			"text"		"Nades Block Players"
+			"help"		"Nades are solid to players, so one can stop dead against somebody and stick to them. Turn off and nades fly past everybody, landing on whatever is behind them (applies to nades thrown after the change)"
+			"type"		"CheckBox"
+			"default"	"1"
+		}
 	}
 }
