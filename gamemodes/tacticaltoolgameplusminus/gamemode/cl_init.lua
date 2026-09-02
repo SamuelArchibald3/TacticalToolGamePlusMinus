@@ -656,7 +656,7 @@ end )
 
 			draw.RoundedBox(8, 85, boxy + 5, 190, 35, Color(50,50,50,180))			--2nd background box
 
-			draw.SimpleText( bind.label, "TheDefaultSettings2", 52, boxy + 10, Color(255,255,255,255), TEXT_ALIGN_CENTER)
+			draw.SimpleText( TTG_AbilityKeyLabel( slot ), "TheDefaultSettings2", 52, boxy + 10, Color(255,255,255,255), TEXT_ALIGN_CENTER)
 			if info.cooldown == true then
 				draw.SimpleText( ConvertToPrintName(info.name), "TheDefaultSettings6", 100, boxy + 5, Color(255,100,100,255))
 				draw.SimpleText( info.time, "TheDefaultSettings2", 260, boxy + 10, Color(255,100,100,255), TEXT_ALIGN_CENTER)
