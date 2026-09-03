@@ -199,12 +199,29 @@ function TTG_Choose( n, k )
 end
 
 
---Fisher-Yates, in place.
-function TTG_ShufflePlaying( playing )
-	for i = table.Count( playing ), 2, -1 do
-		local j = math.random( i )
-		playing[ i ], playing[ j ] = playing[ j ], playing[ i ]
+--Everyone the shuffle is going to deal, in a fixed order.
+--
+--Sorted by key rather than left in whatever order player.GetAll() gave, because
+--the pool below is a set of positions - position 3 has to mean the same player
+--from one shuffle to the next or the remembered arrangements stop matching.
+--
+--Only players who actually pressed Join Spectators are left out. Everyone else
+--gets a side, including people sitting on spectators because they have not
+--picked yet, which is when the button is most useful.
+local function Participants()
+	local playing = {}
+
+	for _, ply in pairs( player.GetAll() ) do
+		if ply.TTG_ChoseSpectator != true then
+			table.insert( playing, ply )
+		end
 	end
+
+	table.sort( playing, function( a, b )
+		return TTG_PlayerShuffleKey( a ) < TTG_PlayerShuffleKey( b )
+	end )
+
+	return playing
 end
 
 
@@ -215,64 +232,70 @@ local function RosterKey( playing )
 		table.insert( keys, TTG_PlayerShuffleKey( ply ) )
 	end
 
-	table.sort( keys )
 	return table.concat( keys, "," )
 end
 
 
---What a dealt shuffle came out as, as a string.
+--Every way this many players can be split into two sides.
 --
---Order within a side does not matter, and neither does which side is which:
---the same two groups of people with the colours swapped is the same
---arrangement. So both sides are sorted and then put in a fixed order, which
---gives one name to a pairing however it was dealt.
+--An arrangement is the set of positions that go red; blue is whatever is left,
+--so there is nothing to store for it.
 --
---Sit-outs are part of it, since who is left out is part of the arrangement.
-local function SplitKey( playing, maxplaying )
-	local red, blue, out = {}, {}, {}
+--With an even lobby the first player is always put on red. That is what stops
+--the mirror being counted twice: { A B } against { C D } is the same pairing
+--whichever side wears which colour, and pinning one player to a side names each
+--pairing exactly once. With an odd lobby the sides are different sizes and red
+--always takes the bigger one, so the mirror never comes up and every set counts.
+local function Arrangements( count )
+	local red = math.ceil( count / 2 )
+	local even = count % 2 == 0
 
-	for i, ply in ipairs( playing ) do
-		local key = TTG_PlayerShuffleKey( ply )
+	local out = {}
+	local current = {}
 
-		if i > maxplaying then
-			table.insert( out, key )
-		elseif i % 2 == 1 then
-			table.insert( red, key )
-		else
-			table.insert( blue, key )
+	local function step( from )
+		if table.Count( current ) == red then
+			table.insert( out, table.Copy( current ) )
+			return
+		end
+
+		for i = from, count do
+			--stop when there are not enough players left to finish a side
+			if count - i + 1 < red - table.Count( current ) then break end
+
+			table.insert( current, i )
+			step( i + 1 )
+			table.remove( current )
 		end
 	end
 
-	table.sort( red )
-	table.sort( blue )
-	table.sort( out )
+	if even and count > 0 then
+		table.insert( current, 1 )
+		step( 2 )
+	else
+		step( 1 )
+	end
 
-	--the mirror folds onto the same name here
-	local first, second = table.concat( red, "," ), table.concat( blue, "," )
-	if second < first then first, second = second, first end
-
-	return first .. "/" .. second .. "|" .. table.concat( out, "," )
+	return out
 end
 
 
---How many different shuffles this lobby has in it.
+--How many different arrangements a lobby of this size has.
 --
---Who sits out, times how many ways the rest pair off. The deal alternates, so
---one side takes the odd positions - ceil( m / 2 ) of them.
---
---Halved when that leaves two sides of the same size, because choosing which
---half is red counts every pairing twice and the two are the same arrangement.
---With an odd number the sides are different sizes and the bigger one is always
---red, so each pairing only comes up the once.
-function TTG_ShuffleArrangements( total, maxplaying )
-	local sitting = total - maxplaying
-	local ways = TTG_Choose( total, sitting ) * TTG_Choose( maxplaying, math.ceil( maxplaying / 2 ) )
+--Exposed so the sums can be checked directly: getting them wrong means the pool
+--is refilled at the wrong moment, which brings repeats back quietly.
+function TTG_ShuffleArrangements( count )
+	if count < 2 then return 1 end
 
-	if maxplaying > 0 and maxplaying % 2 == 0 then
-		ways = ways / 2
+	local red = math.ceil( count / 2 )
+
+	--the even case pins the first player to red, which is the same as choosing
+	--the rest of that side from everybody else
+	if count % 2 == 0 then
+		return TTG_Choose( count - 1, red - 1 )
 	end
 
-	return ways
+	return TTG_Choose( count, red )
 end
 
 
@@ -283,87 +306,58 @@ end
 --actually pressed Join Spectators are left where they are.
 --
 --The same teams do not come up twice until every arrangement has been used.
---Shuffling at random means the same split can land two or three times in a row,
---which reads as the button not working - so each result is remembered and a
---repeat is re-rolled until the lobby runs out of arrangements, at which point
---the memory is cleared and they are all available again.
+--Every arrangement is worked out up front and they are drawn from a bag: the
+--one that comes out is removed, and when the bag is empty it is refilled. That
+--is instead of rolling and re-rolling until something unused turns up, which
+--needed a cap to avoid hanging and could therefore hand out a repeat while
+--arrangements were still going spare.
 --
---The memory belongs to a particular set of players. Somebody joining or leaving
---makes a different lobby with different arrangements in it, so the history
---starts again rather than carrying over something that no longer applies.
+--Twelve players is the most this game has, which is 462 arrangements. Building
+--that is nothing; it is only the number of players sitting out that would make
+--the maths explode, and nobody sits out any more.
+--
+--The bag belongs to a set of players. Somebody joining or leaving makes a
+--different lobby with different arrangements in it, so it is built again rather
+--than carrying over something that no longer applies.
 function RandomizeTeams()
 
-	--work out who is taking part
-	local playing = {}
-	for k,v in pairs(player.GetAll()) do
-		if v.TTG_ChoseSpectator != true then
-			table.insert( playing, v )
-		end
-	end
+	local playing = Participants()
+	local count = table.Count( playing )
 
-	--How many of them can actually play. Without the cap everybody gets a side;
-	--with it the two sides fill up and whoever is left over sits this one out.
-	local maxplaying = table.Count( playing )
-	if RESTRICT_PLAYERS_PER_TEAM == true then
-		maxplaying = math.min( maxplaying, PLAYERS_PER_TEAM * 2 )
-	end
-
-	--a lobby this small has nothing to remember
-	if table.Count( playing ) > 1 then
+	if count > 0 then
 		local roster = RosterKey( playing )
 
-		if G_ShuffleRoster != roster then
+		if G_ShuffleRoster != roster or G_ShufflePool == nil then
 			G_ShuffleRoster = roster
-			G_ShuffleSeen   = {}
-			G_ShuffleSeenCount = 0
+			G_ShufflePool = Arrangements( count )
 		end
-
-		local combinations = TTG_ShuffleArrangements( table.Count( playing ), maxplaying )
 
 		--everything has been used, so let it all round again
-		if G_ShuffleSeenCount >= combinations then
-			G_ShuffleSeen = {}
-			G_ShuffleSeenCount = 0
+		if table.Count( G_ShufflePool ) == 0 then
+			G_ShufflePool = Arrangements( count )
 		end
 
-		--Re-roll until something unused comes up. Rejection sampling rather
-		--than listing every arrangement: the lists get big quickly and the last
-		--few draws are the only slow ones, which is a handful of shuffles of a
-		--table this size.
-		--
-		--The cap is a backstop, not the plan. Reaching it means taking a repeat
-		--rather than hanging, which is the better of the two.
-		for attempt = 1, 500 do
-			TTG_ShufflePlaying( playing )
+		local pick = math.random( table.Count( G_ShufflePool ) )
+		local reds = G_ShufflePool[ pick ]
+		table.remove( G_ShufflePool, pick )
 
-			if G_ShuffleSeen[ SplitKey( playing, maxplaying ) ] != true then break end
+		local isred = {}
+		for _, position in ipairs( reds ) do
+			isred[ position ] = true
 		end
 
-		local key = SplitKey( playing, maxplaying )
-		if G_ShuffleSeen[ key ] != true then
-			G_ShuffleSeen[ key ] = true
-			G_ShuffleSeenCount = G_ShuffleSeenCount + 1
-		end
-	else
-		TTG_ShufflePlaying( playing )
-	end
+		for i, v in ipairs( playing ) do
+			if isred[ i ] then
+				v:SetTeam( TEAM_RED )
+			else
+				v:SetTeam( TEAM_BLUE )
+			end
 
-	--deal out alternately, so the two sides differ by at most one player
-	for i,v in ipairs( playing ) do
-		if i > maxplaying then
-			--no room left. Not marked as choosing to spectate, so the next
-			--shuffle deals them in like anyone else
-			v:SetTeam( TEAM_SPEC )
-		elseif i % 2 == 0 then
-			v:SetTeam( TEAM_BLUE )
-		else
-			v:SetTeam( TEAM_RED )
+			--Clear ready, so nobody gets counted down into a game on a side they
+			--have not seen. ReadyChecker runs on Think, so it cancels a countdown
+			--already in progress by itself.
+			v:SetReady( false )
 		end
-
-		--Clear ready, so nobody gets counted down into a game on a side they
-		--have not seen. ReadyChecker runs on Think, so it cancels a countdown
-		--already in progress by itself.
-		v:SetReady( false )
 	end
 end
 
