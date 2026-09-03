@@ -1,7 +1,6 @@
 /*---------------------------------------------------------
 	Game Time Stuff
 ---------------------------------------------------------*/
-G_Overtime = false	--global var that says whether or not we're in overtime right now
 
 local GameTimeOn = false
 local EventAtZero = nil
@@ -41,11 +40,9 @@ end
 
 --called on think when it becomes overtime, (when timer is at 0 but the capture time is still in flux)
 function CheckOvertime()
-	if G_CaptureTimeMoving == false then --end itself if the 
-		G_Overtime = false
-		
+	if G_CaptureTimeMoving == false then --end itself if the
 		SetGlobalBool("CL_DrawOvertime", false)
-		
+
 		End_CheckOvertime()
 	end
 end
@@ -61,18 +58,17 @@ function GCTime()
 		
 		if GameTime <= 0 then
 		
-			--if the capture timer thing is still active in the combat phase, 
+			--if the capture timer thing is still active in the combat phase,
 			--the game is not over so dont do a zero event.
 			if G_CaptureTimeMoving == true and G_CurrentPhase == "Combat" then
 				SetGlobalBool("CL_DrawOvertime", true)
-				
+
 				Start_CheckOvertime()
-				
+
 				--play overtime sound
 				//umsg.Start("Announcer_Overtime", v)
 				//umsg.End()
-				
-				G_Overtime = false
+
 			return end
 			ZeroEvent(EventAtZero)
 		end
@@ -86,8 +82,7 @@ function Clear_Timer()
 	GameTime = 0
 	EventAtZero = nil
 	GameTimeOn = false
-	G_Overtime = false
-	
+
 	UpdateHUDTime()
 end
 

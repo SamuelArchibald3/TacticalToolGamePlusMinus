@@ -171,6 +171,17 @@ end
 hook.Add("Think", "CaptureZoneTime", CaptureZoneTime)
 
 
+--Turns the capture zone off, without deciding a winner.
+--
+--A successful overtime defense used to try to award the round to the
+--defenders from here, gated on G_Overtime - a flag nothing ever set to true,
+--so the branch never ran. It was not needed: the moment this sets
+--G_CaptureTimeMoving false, the next Think re-enters GCTime's zero check in
+--timer.lua, finds the capture no longer moving, and falls through to
+--ZeroEvent( WinningPhase ) - called with no winner, which WinningPhase already
+--resolves to the defending team. That is the same rule every ordinary
+--timeout uses, one Think tick later than the dead branch would have fired.
+--DEBT-9, confirmed in play.
 function TurnOffCapture()
 	G_CaptureTimeMoving = false
 	G_CurCaptureMode = "none"
@@ -178,17 +189,6 @@ function TurnOffCapture()
 	umsg.Start( "IfCaptureOn" )
     umsg.Bool( G_CaptureTimeMoving )
 	umsg.End()
-
-	if G_Overtime == true then
-		local defenders = nil
-		if GetTeamRole(TEAM_RED) == "Defending" then
-			defenders = TEAM_RED
-		elseif GetTeamRole(TEAM_BLUE) == "Defending" then
-			defenders = TEAM_BLUE
-		end
-
-		WinningPhase( defenders )
-	end
 end
 
 

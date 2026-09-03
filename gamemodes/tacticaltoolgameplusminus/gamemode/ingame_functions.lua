@@ -624,7 +624,6 @@ end
 function ResetVarsBetweenRounds()
 	--global vars to be reset between rounds
 	G_CaptureTimeMoving = false
-	G_Overtime = false
 	G_CurCaptureMode = "none"
 	G_WinAlreadyTriggered = false
 	
