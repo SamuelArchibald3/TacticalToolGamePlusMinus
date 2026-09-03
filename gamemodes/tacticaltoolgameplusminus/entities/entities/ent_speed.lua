@@ -133,7 +133,11 @@ function ENT:Think()
 
 			
 	if ( IsValid( tr.Entity )) and tr.Entity:IsPlayer() then
-		if (tr.Entity:Team() == TEAM_SPEC) or (tr.Entity:Team() == TEAM_RED_SPEC) or (tr.Entity:Team() == TEAM_BLUE_SPEC) then
+		--TEAM_RED_SPEC and TEAM_BLUE_SPEC used to be tested for here as well.
+		--Neither was ever defined - shared.lua only sets up TEAM_RED, TEAM_BLUE
+		--and TEAM_SPEC - so both comparisons were Team() == nil, always false.
+		--DEBT-8.
+		if (tr.Entity:Team() == TEAM_SPEC) then
 		return end
 		
 		self:GiveBuff(tr.Entity)
