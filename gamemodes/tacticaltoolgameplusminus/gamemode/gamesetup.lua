@@ -174,11 +174,104 @@ end
 
 
 
+--Something to tell one player from another for the shuffle history.
+--
+--Every bot answers "BOT" to SteamID, so they would all look like the same
+--player and a lobby of them would have one arrangement in it.
+function TTG_PlayerShuffleKey( ply )
+	if ply:IsBot() then return "bot" .. ply:UserID() end
+
+	return ply:SteamID() or ( "uid" .. ply:UserID() )
+end
+
+
+--n choose k, for counting how many arrangements a lobby has.
+function TTG_Choose( n, k )
+	if k < 0 or k > n then return 0 end
+	if k == 0 or k == n then return 1 end
+
+	local result = 1
+	for i = 1, k do
+		result = result * ( n - k + i ) / i
+	end
+
+	return math.Round( result )
+end
+
+
+--Fisher-Yates, in place.
+function TTG_ShufflePlaying( playing )
+	for i = table.Count( playing ), 2, -1 do
+		local j = math.random( i )
+		playing[ i ], playing[ j ] = playing[ j ], playing[ i ]
+	end
+end
+
+
+--Who is in the lobby, as a string, so a change of roster can be noticed.
+local function RosterKey( playing )
+	local keys = {}
+	for _, ply in ipairs( playing ) do
+		table.insert( keys, TTG_PlayerShuffleKey( ply ) )
+	end
+
+	table.sort( keys )
+	return table.concat( keys, "," )
+end
+
+
+--What a dealt shuffle came out as, as a string.
+--
+--Order within a side does not matter and neither does the order of the deal, so
+--this is the sorted red side and the sorted sit-outs. Blue is whatever is left,
+--which makes it implied rather than worth writing down.
+--
+--Red and blue are treated as different: being put on the other side is a
+--different shuffle to the player it happens to, whatever the maths says about
+--set partitions.
+local function SplitKey( playing, maxplaying )
+	local red, out = {}, {}
+
+	for i, ply in ipairs( playing ) do
+		if i > maxplaying then
+			table.insert( out, TTG_PlayerShuffleKey( ply ) )
+		elseif i % 2 == 1 then
+			table.insert( red, TTG_PlayerShuffleKey( ply ) )
+		end
+	end
+
+	table.sort( red )
+	table.sort( out )
+
+	return table.concat( red, "," ) .. "|" .. table.concat( out, "," )
+end
+
+
+--How many different shuffles this lobby has in it.
+--
+--Who sits out, times who goes red among the rest. The deal alternates, so red
+--always takes the odd positions - ceil( m / 2 ) of them.
+local function SplitCount( total, maxplaying )
+	local sitting = total - maxplaying
+	return TTG_Choose( total, sitting ) * TTG_Choose( maxplaying, math.ceil( maxplaying / 2 ) )
+end
+
+
 --Shuffles the lobby across red and blue.
 --Everyone lands on spectators when they connect without having picked anything,
 --so those players get dealt a side as well - otherwise the button does nothing
 --in a fresh lobby, which is exactly when it is most useful. Only players who
 --actually pressed Join Spectators are left where they are.
+--
+--The same teams do not come up twice until every arrangement has been used.
+--Shuffling at random means the same split can land two or three times in a row,
+--which reads as the button not working - so each result is remembered and a
+--repeat is re-rolled until the lobby runs out of arrangements, at which point
+--the memory is cleared and they are all available again.
+--
+--The memory belongs to a particular set of players. Somebody joining or leaving
+--makes a different lobby with different arrangements in it, so the history
+--starts again rather than carrying over something that no longer applies.
 function RandomizeTeams()
 
 	--work out who is taking part
@@ -189,17 +282,51 @@ function RandomizeTeams()
 		end
 	end
 
-	--Fisher-Yates shuffle
-	for i = table.Count( playing ), 2, -1 do
-		local j = math.random( i )
-		playing[ i ], playing[ j ] = playing[ j ], playing[ i ]
-	end
-
 	--How many of them can actually play. Without the cap everybody gets a side;
 	--with it the two sides fill up and whoever is left over sits this one out.
 	local maxplaying = table.Count( playing )
 	if RESTRICT_PLAYERS_PER_TEAM == true then
 		maxplaying = math.min( maxplaying, PLAYERS_PER_TEAM * 2 )
+	end
+
+	--a lobby this small has nothing to remember
+	if table.Count( playing ) > 1 then
+		local roster = RosterKey( playing )
+
+		if G_ShuffleRoster != roster then
+			G_ShuffleRoster = roster
+			G_ShuffleSeen   = {}
+			G_ShuffleSeenCount = 0
+		end
+
+		local combinations = SplitCount( table.Count( playing ), maxplaying )
+
+		--everything has been used, so let it all round again
+		if G_ShuffleSeenCount >= combinations then
+			G_ShuffleSeen = {}
+			G_ShuffleSeenCount = 0
+		end
+
+		--Re-roll until something unused comes up. Rejection sampling rather
+		--than listing every arrangement: the lists get big quickly and the last
+		--few draws are the only slow ones, which is a handful of shuffles of a
+		--table this size.
+		--
+		--The cap is a backstop, not the plan. Reaching it means taking a repeat
+		--rather than hanging, which is the better of the two.
+		for attempt = 1, 500 do
+			TTG_ShufflePlaying( playing )
+
+			if G_ShuffleSeen[ SplitKey( playing, maxplaying ) ] != true then break end
+		end
+
+		local key = SplitKey( playing, maxplaying )
+		if G_ShuffleSeen[ key ] != true then
+			G_ShuffleSeen[ key ] = true
+			G_ShuffleSeenCount = G_ShuffleSeenCount + 1
+		end
+	else
+		TTG_ShufflePlaying( playing )
 	end
 
 	--deal out alternately, so the two sides differ by at most one player
