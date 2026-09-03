@@ -222,38 +222,57 @@ end
 
 --What a dealt shuffle came out as, as a string.
 --
---Order within a side does not matter and neither does the order of the deal, so
---this is the sorted red side and the sorted sit-outs. Blue is whatever is left,
---which makes it implied rather than worth writing down.
+--Order within a side does not matter, and neither does which side is which:
+--the same two groups of people with the colours swapped is the same
+--arrangement. So both sides are sorted and then put in a fixed order, which
+--gives one name to a pairing however it was dealt.
 --
---Red and blue are treated as different: being put on the other side is a
---different shuffle to the player it happens to, whatever the maths says about
---set partitions.
+--Sit-outs are part of it, since who is left out is part of the arrangement.
 local function SplitKey( playing, maxplaying )
-	local red, out = {}, {}
+	local red, blue, out = {}, {}, {}
 
 	for i, ply in ipairs( playing ) do
+		local key = TTG_PlayerShuffleKey( ply )
+
 		if i > maxplaying then
-			table.insert( out, TTG_PlayerShuffleKey( ply ) )
+			table.insert( out, key )
 		elseif i % 2 == 1 then
-			table.insert( red, TTG_PlayerShuffleKey( ply ) )
+			table.insert( red, key )
+		else
+			table.insert( blue, key )
 		end
 	end
 
 	table.sort( red )
+	table.sort( blue )
 	table.sort( out )
 
-	return table.concat( red, "," ) .. "|" .. table.concat( out, "," )
+	--the mirror folds onto the same name here
+	local first, second = table.concat( red, "," ), table.concat( blue, "," )
+	if second < first then first, second = second, first end
+
+	return first .. "/" .. second .. "|" .. table.concat( out, "," )
 end
 
 
 --How many different shuffles this lobby has in it.
 --
---Who sits out, times who goes red among the rest. The deal alternates, so red
---always takes the odd positions - ceil( m / 2 ) of them.
-local function SplitCount( total, maxplaying )
+--Who sits out, times how many ways the rest pair off. The deal alternates, so
+--one side takes the odd positions - ceil( m / 2 ) of them.
+--
+--Halved when that leaves two sides of the same size, because choosing which
+--half is red counts every pairing twice and the two are the same arrangement.
+--With an odd number the sides are different sizes and the bigger one is always
+--red, so each pairing only comes up the once.
+function TTG_ShuffleArrangements( total, maxplaying )
 	local sitting = total - maxplaying
-	return TTG_Choose( total, sitting ) * TTG_Choose( maxplaying, math.ceil( maxplaying / 2 ) )
+	local ways = TTG_Choose( total, sitting ) * TTG_Choose( maxplaying, math.ceil( maxplaying / 2 ) )
+
+	if maxplaying > 0 and maxplaying % 2 == 0 then
+		ways = ways / 2
+	end
+
+	return ways
 end
 
 
@@ -299,7 +318,7 @@ function RandomizeTeams()
 			G_ShuffleSeenCount = 0
 		end
 
-		local combinations = SplitCount( table.Count( playing ), maxplaying )
+		local combinations = TTG_ShuffleArrangements( table.Count( playing ), maxplaying )
 
 		--everything has been used, so let it all round again
 		if G_ShuffleSeenCount >= combinations then
