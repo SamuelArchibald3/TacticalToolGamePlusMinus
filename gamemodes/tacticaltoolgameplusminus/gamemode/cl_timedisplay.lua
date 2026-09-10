@@ -45,7 +45,7 @@ end
 	--this should be fixed cause it spams overtime
 	local overtime = GetGlobalBool("CL_DrawOvertime")
 		if overtime == true then
-			surface.PlaySound( "vo/announcer_overtime.wav" )
+			surface.PlaySound( "vo/announcer_overtime.mp3" )
 			//surface.PlaySound( "Weapon_Mortar.Single" )
 			//surface.PlaySound( "Weapon_Shotgun.Single" )
 			//surface.PlaySound( "vo/announcer_begins_2sec.wav" )

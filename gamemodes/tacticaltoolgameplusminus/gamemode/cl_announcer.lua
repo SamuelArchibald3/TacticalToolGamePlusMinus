@@ -24,7 +24,9 @@ usermessage.Hook("Announcer_Failure", Announcer_Failure)
 
 
 local function  Announcer_Overtime()
-	surface.PlaySound( "vo/announcer_overtime.wav" )
+	--The only one of these shipped as .mp3 rather than .wav - that is how it
+	--exists in TF2's own VPKs, so it is kept as-is rather than transcoded.
+	surface.PlaySound( "vo/announcer_overtime.mp3" )
 end
 usermessage.Hook("Announcer_Overtime", Announcer_Overtime)
 
