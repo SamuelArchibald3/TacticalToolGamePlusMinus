@@ -92,7 +92,9 @@ hook.Add("Think", "GCTime", GCTime)
 function TTG_RewindGameTime( seconds )
 	if GameTimeOn != true then return end
 
-	GameTime = math.min( GameTime + seconds, COMBATPHASE_TIME )
+	--rounded because the clock counts in whole seconds and the display formats
+	--it as one: a fractional GameTime would show up as "01:50.6"
+	GameTime = math.min( GameTime + math.Round( seconds ), COMBATPHASE_TIME )
 
 	if GameTime > 0 and GetGlobalBool( "CL_DrawOvertime", false ) then
 		SetGlobalBool( "CL_DrawOvertime", false )

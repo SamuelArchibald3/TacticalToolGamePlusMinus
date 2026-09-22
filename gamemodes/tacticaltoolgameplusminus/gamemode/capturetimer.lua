@@ -226,3 +226,36 @@ function CaptureHUDUpdate()
     umsg.String( CaptureTime )
 	umsg.End()
 end
+
+
+--How far along the capture is, for the Rewind ability to record and put back.
+--
+--CaptureTime is file local and stays that way; these two are the only way in
+--or out. G_CurCaptureMode is deliberately not part of it: ChangeCapture works
+--the mode out again from the zone's touch list every Think, and a rewind
+--rebuilds that list from where people actually ended up, so the mode corrects
+--itself a tick later rather than being restored to something that may no
+--longer match who is standing there.
+function TTG_CaptureProgress()
+	return { time = CaptureTime, moving = G_CaptureTimeMoving == true }
+end
+
+
+function TTG_RestoreCaptureProgress( was )
+	if was == nil then return end
+
+	CaptureTime = was.time
+	G_CaptureTimeMoving = was.moving
+
+	--re-based rather than resumed part way through a second, so the number
+	--that was just put back is not taken off again immediately
+	NextAddTime = CurTime() + 1
+
+	umsg.Start( "IfCaptureOn" )
+	umsg.Bool( G_CaptureTimeMoving )
+	umsg.End()
+
+	--nil means no capture had started yet, and the hud update writes the
+	--number straight into a usermessage
+	if CaptureTime != nil then CaptureHUDUpdate() end
+end

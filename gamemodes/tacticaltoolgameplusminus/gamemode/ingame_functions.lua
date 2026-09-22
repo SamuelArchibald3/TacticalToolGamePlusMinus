@@ -658,7 +658,11 @@ local function RewindWorldPush()
 	local size = TTG_RewindBufferSize()
 	local head = ( RewindWorldHead % size ) + 1
 
-	RewindWorld[ head ] = { t = CurTime(), ents = TTG_RewindWorldSnapshot() }
+	RewindWorld[ head ] = {
+		t = CurTime(),
+		ents = TTG_RewindWorldSnapshot(),
+		capture = TTG_CaptureProgress(),
+	}
 	RewindWorldHead = head
 
 	if RewindWorldCount < size then
@@ -753,6 +757,11 @@ end
 
 function TTG_RewindRestoreWorld( snapshot )
 	if snapshot == nil then return end
+
+	--How far along the point was. Without this the clock going back while the
+	--capture stayed where it was would hand the defenders time and the
+	--attackers nothing, which is the opposite of what a rewind is for.
+	TTG_RestoreCaptureProgress( snapshot.capture )
 
 	local standing = {}
 
@@ -989,11 +998,14 @@ function TTG_RewindFinish()
 	TTG_RewindRestoreWorld( RewindWorldAt( playback.cutoff ) )
 
 	--The round gets its time back too, or a rewind hands everybody their
-	--position and health back while quietly costing the attackers ten seconds
-	--of the clock they need to use them in.
+	--position and health back while quietly costing the attackers the seconds
+	--of clock they need to use them in.
 	--
-	--The playback itself is not given back: that second was spent watching it.
-	TTG_RewindGameTime( TOOL_TABLE.tool_abil_rewind.duration )
+	--The playback is included. It is the ability showing its work rather than
+	--time anybody got to play in - everyone is frozen throughout it - so
+	--charging the round for it would be charging for the animation.
+	local ref = TOOL_TABLE.tool_abil_rewind
+	TTG_RewindGameTime( ref.duration + ref.playback_time )
 
 	--the zone tracks who is on it with StartTouch and EndTouch, and neither
 	--fires reliably when a player is teleported. Left alone, a defender rewound
