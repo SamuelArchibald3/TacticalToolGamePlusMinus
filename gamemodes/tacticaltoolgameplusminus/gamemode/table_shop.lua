@@ -661,7 +661,7 @@ tool_name = "tool_abil_rewind",
 --can declare this - see TTG_PurchaseBlocked in shared.lua - and nothing there
 --or in the buy menu names a particular item.
 team_limit = 1,
-description = "Sends every living player on both teams - including you and your own team - back along the path they walked, to where they stood {tool.duration} seconds ago. \nHealth, ammo and ability cooldowns go back with them, and anything thrown in that time is taken back off the map. \nSo it undoes your team's damage as much as theirs. \nAnybody killed in that time gets up and is rewound with everyone else, carrying what they died with. \nBuildings are repaired, ones that were destroyed go back up, and the round clock and the capture both go back to where they were. \nBuffs do not come back, and Rewind does not refund its own cooldown. \nOne per team. \nDoes nothing in the first {tool.duration} seconds of a round. \n{tool.cooldown} second cooldown.",
+description = "Sends every living player on both teams - including you and your own team - back along the path they walked, to where they stood {tool.duration} seconds ago. \nHealth, ammo and ability cooldowns go back with them, and anything thrown in that time is taken back off the map. \nSo it undoes your team's damage as much as theirs. \nAnybody killed in that time gets up and is rewound with everyone else, carrying what they died with. \nBuildings are repaired, ones that were destroyed go back up, and the round clock and the capture both go back to where they were. \nBuffs go back to what they were, down to how long each had left. \nRewind does not refund its own cooldown. \nOne per team. \nDoes nothing in the first {tool.duration} seconds of a round. \n{tool.cooldown} second cooldown.",
 }
 ,
 

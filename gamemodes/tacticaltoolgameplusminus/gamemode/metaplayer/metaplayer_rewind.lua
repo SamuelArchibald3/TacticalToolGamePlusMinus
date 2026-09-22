@@ -63,6 +63,7 @@ function TTGPlayer:RewindSampleNow()
 		health = self:Health(),
 		ammo = self:RewindAmmoSnapshot(),
 		abilities = self:RewindAbilitySnapshot(),
+		buffs = self:BuffSnapshot(),
 		t = CurTime(),
 	}
 end
@@ -280,6 +281,11 @@ function TTGPlayer:RewindFinishPlayback()
 		self:RewindRestoreAmmo( dest.ammo )
 
 		self:RewindRestoreCooldowns( dest.abilities, self.RewindWasRevived == true )
+
+		--last of the four, and the only one whose effects land a tick later
+		--rather than now: gravity, jump, freeze and god mode all come off
+		--BuffEffectJunction's edge detection, and speed off SlowJunction
+		self:RestoreBuffs( dest.buffs )
 	end
 
 	if self:GetMoveType() == MOVETYPE_LADDER then
@@ -430,9 +436,9 @@ end
 
 --Hand back what they were carrying when they died.
 --
---Buffs are deliberately not in here. Death cleared them, and a rewind does not
---restore buffs for anybody, so a revived player comes back on the same terms
---as everybody else rather than better ones.
+--Buffs are not in here, but only because they are put back at the end of the
+--playback along with everybody else's - death cleared them, and by then this
+--player is an ordinary living one again.
 function TTGPlayer:RewindReequip( sample )
 	for class, had in pairs( sample.ammo or {} ) do
 		local wep = self:Give( class )
