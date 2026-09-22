@@ -449,45 +449,49 @@ function hud()
 	
 	
 	--mark enemy players
+	--
+	--Map-wide now: whether a radar exists on viewingTeam is still per-entity
+	--(ent:GetClass() == "ent_revealer" and it belongs to that team), but once
+	--one is found the candidates checked are every player, not just whoever is
+	--near it. TTG_RevealerCanSee (shared.lua) is the per-candidate decision;
+	--it used to be inlined here twice, identically apart from how viewingTeam
+	--was worked out, which is the only thing still different between the two
+	--branches below.
 	if LocalPlayer():Team() != TEAM_SPEC then
+		local viewingTeam = LocalPlayer():Team()
+
 		for k,ent in pairs( ents.GetAll() ) do
-			if ent:GetClass() == "ent_revealer" and ent:GetEntTeamForClient() == LocalPlayer():Team() then
-				local ref = EntReference( ent:GetClass() )
-				local orgin_ents = ents.FindInSphere( ent:GetPos(), ref.radius )
-			
-				--mark all enemy players in the origin of the radar, (except if theyre invisible)
-				for k, in_ent in pairs( orgin_ents ) do
-					if in_ent:IsValidGamePlayer() and not in_ent:GetIfInvisible() and in_ent:HowManyOfThisBuff( "Buff_BarrelDisguise" ) == 0 and in_ent:Team() != LocalPlayer():Team() then
+			if ent:GetClass() == "ent_revealer" and ent:GetEntTeamForClient() == viewingTeam then
+				for k, in_ent in pairs( player.GetAll() ) do
+					if TTG_RevealerCanSee( in_ent, viewingTeam ) then
 						local color = Color(255, 255, 255, 255)
 						if in_ent:Team() == TEAM_BLUE then
 							color = Color(0, 0, 255, 255)
 						elseif in_ent:Team() == TEAM_RED then
 							color = Color(255, 0, 0, 255)
 						end
-						
+
 						DrawMark( in_ent, "x", color )
 					end
 				end
 			end
 		end
-	
+
 	--mark playets for spectators so they know who sees who on radar
 	elseif LocalPlayer():Team() == TEAM_SPEC then
 		for k,ent in pairs( ents.GetAll() ) do
 			if ent:GetClass() == "ent_revealer" then
-				local ref = EntReference( ent:GetClass() )
-				local orgin_ents = ents.FindInSphere( ent:GetPos(), ref.radius )
-			
-				--mark all enemy players in the origin of the radar, (except if theyre invisible)
-				for k, in_ent in pairs( orgin_ents ) do
-					if in_ent:IsValidGamePlayer() and not in_ent:GetIfInvisible() and in_ent:HowManyOfThisBuff( "Buff_BarrelDisguise" ) == 0 and in_ent:Team() != ent:GetEntTeamForClient() then
+				local viewingTeam = ent:GetEntTeamForClient()
+
+				for k, in_ent in pairs( player.GetAll() ) do
+					if TTG_RevealerCanSee( in_ent, viewingTeam ) then
 						local color = Color(255, 255, 255, 255)
 						if in_ent:Team() == TEAM_BLUE then
 							color = Color(0, 0, 255, 255)
 						elseif in_ent:Team() == TEAM_RED then
 							color = Color(255, 0, 0, 255)
 						end
-						
+
 						DrawMark( in_ent, "x", color )
 					end
 				end

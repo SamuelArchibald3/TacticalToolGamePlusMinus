@@ -231,6 +231,25 @@ if CLIENT then
 end
 
 
+--Whether the Radar should mark this candidate on viewingTeam's hud.
+--
+--Pulled out of cl_init.lua's two nearly-identical reveal loops (your own
+--team's view and the spectator view, which only ever differed in how
+--viewingTeam was worked out) so the decision has one shape and can be tested
+--from here rather than only from the draw loop that calls it.
+--
+--Distance used to be part of this - a candidate only counted within
+--ent_revealer.radius of the device. The Radar is map-wide now, so there is no
+--position check left: this is purely about the candidate, not where any
+--revealer happens to be standing.
+function TTG_RevealerCanSee( candidate, viewingTeam )
+	return candidate:IsValidGamePlayer()
+		and not candidate:GetIfInvisible()
+		and candidate:HowManyOfThisBuff( "Buff_BarrelDisguise" ) == 0
+		and candidate:Team() != viewingTeam
+end
+
+
 
 
 /*---------------------------------------------------------

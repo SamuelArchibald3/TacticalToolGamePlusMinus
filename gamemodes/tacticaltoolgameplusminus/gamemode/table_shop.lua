@@ -95,10 +95,11 @@ name = "purchase_revealer",
 print_name = "Radar",
 class = "item",
 tool_name = "tool_revealer",
-pack_amount = 99,
---900 to match ent_revealer.radius in table_ent.lua, which is what the drawing
---code actually reads. This said 1024 and never had.
-description = "Deploys a device that, while active, reveals all enemy players within its {ent.radius} radius. \nThe enemy units become marked on your team's HUD as small X's \nDoes not reveal invisible units. \nGoes through walls",
+--One charge. Used to be 99 - effectively unlimited redeploys rather than the
+--scarce item it was meant to be - and the reveal it buys is now map-wide
+--rather than a local radius, so one is a lot more than it used to be.
+pack_amount = 1,
+description = "Deploys a device that, while active, reveals every enemy player anywhere on the map. \nThe enemy units become marked on your team's HUD as small X's \nDoes not reveal invisible units. \nOne per purchase. \nGoes through walls",
 bind_primary = "Deploy radar building",
 }
 ,
