@@ -988,6 +988,13 @@ function TTG_RewindFinish()
 	--deployed since - anything older than that is what this puts back
 	TTG_RewindRestoreWorld( RewindWorldAt( playback.cutoff ) )
 
+	--The round gets its time back too, or a rewind hands everybody their
+	--position and health back while quietly costing the attackers ten seconds
+	--of the clock they need to use them in.
+	--
+	--The playback itself is not given back: that second was spent watching it.
+	TTG_RewindGameTime( TOOL_TABLE.tool_abil_rewind.duration )
+
 	--the zone tracks who is on it with StartTouch and EndTouch, and neither
 	--fires reliably when a player is teleported. Left alone, a defender rewound
 	--off the point keeps contesting it forever and the attackers can never cap.
