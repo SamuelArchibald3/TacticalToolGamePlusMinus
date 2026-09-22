@@ -811,9 +811,34 @@ function RewindSampler()
 end
 
 
+--Nothing to record for if nobody bought one.
+--
+--Asked server side, from the ability entities themselves, rather than through
+--the networked view - this decides whether the recording runs at all, so it
+--should not depend on anything having reached a client.
+function TTG_AnybodyHasRewind()
+	for _, ply in pairs( player.GetAll() ) do
+		for _, abil in pairs( ply:GetAbilitySlots() ) do
+			if IsValid( abil ) and abil:GetClass() == "tool_abil_rewind" then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
+
+--Asked once here rather than every tick, because it cannot change underneath
+--us: buying only happens in the buy phases, and those are over before Combat
+--starts. The one thing that can change it mid-round is somebody dying and
+--losing theirs, which is not worth tearing the recording down for while their
+--team mates still hold one.
 function Start_RewindSampler()
 	RewindNextSample = 0
 	TTG_RewindWorldReset()
+
+	if not TTG_AnybodyHasRewind() then return end
 
 	hook.Add( "Think", "TTG_RewindSampler", RewindSampler )
 end
