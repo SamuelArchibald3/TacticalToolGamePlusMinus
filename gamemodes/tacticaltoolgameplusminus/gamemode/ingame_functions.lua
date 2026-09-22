@@ -644,7 +644,7 @@ function TTG_RewindWorldSnapshot()
 			built = ent:IsBuilt(),
 			team = ent.TTG_Team,
 			creator = ent.Creator,
-			thrownat = ent.TTG_ThrownAt,
+			createdat = ent:CreatedAt(),
 			buildargs = ent.TTG_BuildArgs,
 			buildcount = ent.TTG_BuildArgCount,
 		}
@@ -725,7 +725,10 @@ local function RebuildEnt( was )
 
 	ent.TTG_Team = was.team
 	ent.Creator = was.creator
-	ent.TTG_ThrownAt = was.thrownat
+
+	--it answers for the age of the thing it replaces, not its own, or the next
+	--rewind would take it back off as something built since
+	ent.TTG_RewoundCreation = was.createdat
 
 	if IsValid( was.creator ) then ent:SetOwner( was.creator ) end
 

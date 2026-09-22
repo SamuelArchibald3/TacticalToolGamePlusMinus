@@ -216,11 +216,6 @@ function SWEP:ThrowEnt()
 		obj.TTG_Team = self.Owner:Team()
 		obj.Creator = self.Owner
 		obj.CreatorSwep = self
-
-		--when the charge that made this was spent. The Rewind ability gives
-		--ammo back, and anything thrown since the point it rewinds to has to go
-		--with it or the charge has been duplicated - see RewindUnthrow.
-		obj.TTG_ThrownAt = CurTime()
 		
 		obj:SetOwner(self.Owner)
 		obj:SetAngles( self.Owner:EyeAngles() )

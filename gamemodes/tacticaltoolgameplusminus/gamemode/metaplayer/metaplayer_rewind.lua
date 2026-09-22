@@ -476,9 +476,13 @@ end
 --Un-throw whatever this player threw since then.
 --
 --Without this, restoring the ammo would be a duplicator: the charge comes back
---while what it deployed is still standing there. Only things thrown count -
---TTG_ThrownAt is set in base_ttgtool's ThrowEnt, which is the one path that
---spends a charge.
+--while what it deployed is still standing there.
+--
+--Anything of this player's that did not exist yet at that point, rather than
+--anything thrown. Those are the same set - every one of these is put down by
+--spending something - but asking when the entity came into being is a question
+--only the entity can get wrong, and asking when it was thrown was a question
+--fourteen separate creation sites each had to remember to answer.
 --
 --It cannot un-explode anything. A bomb thrown and detonated inside the window
 --gives its charge back with the damage already dealt, because there is no
@@ -486,7 +490,8 @@ end
 function TTGPlayer:RewindUnthrow( since )
 	for _, ent in pairs( ents.GetAll() ) do
 		if ent.Creator != self then continue end
-		if ent.TTG_ThrownAt == nil or ent.TTG_ThrownAt < since then continue end
+		if ENT_TABLE[ ent:GetClass() ] == nil then continue end
+		if ent:CreatedAt() < since then continue end
 
 		ent:Remove()
 	end

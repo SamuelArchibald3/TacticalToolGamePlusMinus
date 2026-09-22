@@ -19,6 +19,39 @@ function TTGEnt:GetAbilityRef()
 	return ToolReference(self:GetClass())
 end
 
+--Stamp every entity with the moment it appeared.
+--
+--There are fourteen places that create one of the gamemode's entities, each
+--carrying its own copy of the same few lines, and the stamp this replaces only
+--ever lived in the shared ThrowEnt - so a box from tool_stepbox, which creates
+--its own because it picks between two sizes, survived rewinds that should have
+--taken it off the map. This hook is the only place that sees all of them, and
+--the fifteenth caller cannot forget it.
+--
+--GetCreationTime is what this looked like first. It returns a number, so it
+--went unnoticed, but not one that means anything next to CurTime - everything
+--read as older than any rewind could reach and nothing was ever taken back.
+if SERVER then
+	hook.Add( "OnEntityCreated", "TTG_StampCreationTime", function( ent )
+		ent.TTG_CreatedAt = CurTime()
+	end )
+end
+
+
+--When this entity came into being, for deciding whether a rewind reaches far
+--enough back to take it off the map again.
+--
+--TTG_RewoundCreation is set on something a rewind rebuilt, which is younger
+--than the thing it replaces and would otherwise be judged by when it was put
+--back rather than when it was first built.
+--
+--Zero for anything that predates the hook, which is the map's own entities:
+--as old as the round, so no rewind reaches them.
+function TTGEnt:CreatedAt()
+	return self.TTG_RewoundCreation or self.TTG_CreatedAt or 0
+end
+
+
 //returns true if the ent is in its built form
 function TTGEnt:IsBuilt()
 	if self.Built == true then
