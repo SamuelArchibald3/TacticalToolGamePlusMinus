@@ -29,6 +29,7 @@ function TTGPlayer:RewindBufferReset()
 	self.RewindFrom = nil
 	self.RewindTo = nil
 	self.RewindWasFrozen = nil
+	self.RewindWasRevived = nil
 end
 
 
@@ -43,7 +44,7 @@ function TTGPlayer:RewindSampleNow()
 		vel = self:GetVelocity(),
 		health = self:Health(),
 		ammo = self:RewindAmmoSnapshot(),
-		cooldowns = self:RewindCooldownSnapshot(),
+		abilities = self:RewindAbilitySnapshot(),
 		t = CurTime(),
 	}
 end
@@ -51,25 +52,36 @@ end
 
 --What is loaded, by weapon class. Guns are in here too - rewinding a clip
 --undoes the shots the same way rewinding health undoes what they hit.
+--
+--The gun count comes along because somebody who is revived has to be handed
+--the weapon back from nothing, and a double gun that returns single is a
+--purchase quietly lost.
 function TTGPlayer:RewindAmmoSnapshot()
 	local out = {}
 
 	for _, wep in pairs( self:GetWeapons() ) do
-		out[ wep:GetClass() ] = wep:Clip1()
+		out[ wep:GetClass() ] = { clip = wep:Clip1(), guns = wep:GetNumGuns() }
 	end
 
 	return out
 end
 
 
---What is cooling down, by ability class. Keyed by class rather than by slot
---because abilities can be moved between slots while this is being recorded.
-function TTGPlayer:RewindCooldownSnapshot()
+--What abilities are held and what they are doing, by class.
+--
+--Keyed by class rather than by slot because abilities can be moved between
+--slots, but the slot is carried along - a revived player needs their abilities
+--rebuilt into the keys they were already using.
+function TTGPlayer:RewindAbilitySnapshot()
 	local out = {}
 
-	for _, abil in pairs( self:GetAbilitySlots() ) do
+	for slot, abil in pairs( self:GetAbilitySlots() ) do
 		if IsValid( abil ) then
-			out[ abil:GetClass() ] = { on = abil.Cooldown == true, time = abil.Time or 0 }
+			out[ abil:GetClass() ] = {
+				on = abil.Cooldown == true,
+				time = abil.Time or 0,
+				slot = slot,
+			}
 		end
 	end
 
@@ -249,7 +261,7 @@ function TTGPlayer:RewindFinishPlayback()
 		self:RewindUnthrow( dest.t )
 		self:RewindRestoreAmmo( dest.ammo )
 
-		self:RewindRestoreCooldowns( dest.cooldowns )
+		self:RewindRestoreCooldowns( dest.abilities, self.RewindWasRevived == true )
 	end
 
 	if self:GetMoveType() == MOVETYPE_LADDER then
@@ -295,15 +307,15 @@ function TTGPlayer:RewindRestoreAmmo( recorded )
 	local listed = self:GetSwepToolInfo() or {}
 
 	for _, wep in pairs( self:GetWeapons() ) do
-		local clip = recorded[ wep:GetClass() ]
-		if clip == nil then continue end
+		local had = recorded[ wep:GetClass() ]
+		if had == nil then continue end
 
-		wep:SetClip1( clip )
-		wep:SetTTGAmmo( clip )
+		wep:SetClip1( had.clip )
+		wep:SetTTGAmmo( had.clip )
 
 		for _, tool in pairs( listed ) do
 			if tool.name == wep:GetClass() then
-				self:SetSwepToolInfo( tool.name, clip, tool.numguns )
+				self:SetSwepToolInfo( tool.name, had.clip, tool.numguns )
 			end
 		end
 	end
@@ -311,17 +323,22 @@ end
 
 
 --Put the cooldowns back where they were.
-function TTGPlayer:RewindRestoreCooldowns( recorded )
+function TTGPlayer:RewindRestoreCooldowns( recorded, revived )
 	if recorded == nil then return end
 
 	for _, abil in pairs( self:GetAbilitySlots() ) do
 		if not IsValid( abil ) then continue end
 
-		--Rewind never hands itself back. Three seconds ago it had not been
-		--fired, so restoring its own cooldown makes it free - and it would do
-		--that for everybody else holding one at the same time, not just for
-		--whoever pressed it.
-		if abil:GetClass() == "tool_abil_rewind" then continue end
+		--Rewind never hands a living player their own cooldown back. Three
+		--seconds ago it had not been fired, so restoring it makes it free - and
+		--for everybody else holding one at that moment, not only for whoever
+		--pressed it.
+		--
+		--Somebody revived is the exception, and it is not a loophole: whoever
+		--fired is alive by definition, so a dead player's recorded cooldown is
+		--genuinely theirs. Skipping them would hand back a Rewind they died
+		--with half spent.
+		if abil:GetClass() == "tool_abil_rewind" and not revived then continue end
 
 		local was = recorded[ abil:GetClass() ]
 
@@ -337,6 +354,97 @@ function TTGPlayer:RewindRestoreCooldowns( recorded )
 		--think left to count this restored one down with. Without re-arming it
 		--the number sits on the hud forever and the ability never comes back.
 		if was.on then abil:NextThink( CurTime() + 1 ) end
+	end
+end
+
+
+--Whether this player died recently enough for a rewind to reach them.
+--
+--No death timestamp is needed for this. Sampling stops the moment
+--IsValidGamePlayer goes false, so the newest entry a dead player has is the
+--last tick they were alive - if that is inside the window, so was their death.
+--
+--Somebody who died four seconds ago is not revived: their newest sample is
+--already older than the destination, and bringing them back would be reaching
+--further into the past for them than for everybody else.
+function TTGPlayer:RewindDiedWithin( cutoff )
+	if self:Alive() then return false end
+	if self:Team() == TEAM_SPEC then return false end
+	if self.RewindBuffer == nil or self.RewindCount == 0 then return false end
+
+	local newest = self.RewindBuffer[ self.RewindHead ]
+
+	return newest != nil and newest.t >= cutoff
+end
+
+
+--Put them back on their feet, ready to be rewound like anybody else.
+--
+--Called at the start of the playback rather than the end, so a revived player
+--gets up where they fell and walks their own path back with everyone else
+--instead of appearing at the destination.
+--
+--Note this can only ever run while a teammate is still alive. A team losing
+--its last player ends the round through CheckIfTeamsAlive, and a round that
+--has ended is not in Combat, which is what the ability checks before firing.
+function TTGPlayer:RewindRevive( sample )
+	--DeathSpectateTick re-attaches the spectate every tick while this is set,
+	--so it has to be cleared before the spawn rather than after, or they are
+	--put straight back into it
+	self.DeathSpectate = false
+	self.CurSpectateTarget = nil
+	self.SpectateTargets = nil
+
+	self:StripWeapons()
+	self:UnSpectate()
+	self:Spawn()
+
+	--model, team colour, speed, jump and a fresh melee. It also sets them to
+	--full health at a spawn point, both of which the playback overwrites within
+	--the tick.
+	SetSpawnStuff( self )
+
+	self.RewindWasRevived = true
+
+	self:RewindReequip( sample )
+end
+
+
+--Hand back what they were carrying when they died.
+--
+--Buffs are deliberately not in here. Death cleared them, and a rewind does not
+--restore buffs for anybody, so a revived player comes back on the same terms
+--as everybody else rather than better ones.
+function TTGPlayer:RewindReequip( sample )
+	for class, had in pairs( sample.ammo or {} ) do
+		local wep = self:Give( class )
+		if not IsValid( wep ) then continue end
+
+		--replayed rather than assumed, so a double gun does not come back
+		--single. AddOneGun only touches the weapon's own stats.
+		for _ = 2, ( had.guns or 1 ) do
+			wep:AddOneGun()
+		end
+
+		wep:SetClip1( had.clip )
+		wep:SetTTGAmmo( had.clip )
+		self:SetSwepToolInfo( class, had.clip, had.guns or 1 )
+	end
+
+	local slots = self:GetAbilitySlots()
+
+	for class, had in pairs( sample.abilities or {} ) do
+		if IsValid( slots[ had.slot ] ) then continue end
+
+		local abil = ents.Create( class )
+		if not IsValid( abil ) then continue end
+
+		--same order fGiveTool builds one in: owner, slot on both sides, then
+		--spawn, or the hud has an ability it cannot name
+		abil:SetOwner( self )
+		slots[ had.slot ] = abil
+		abil:SetAbilitySlot( had.slot )
+		abil:Spawn()
 	end
 end
 
@@ -382,4 +490,5 @@ function TTGPlayer:RewindAbandonPlayback()
 	self.RewindFrom = nil
 	self.RewindTo = nil
 	self.RewindWasFrozen = nil
+	self.RewindWasRevived = nil
 end

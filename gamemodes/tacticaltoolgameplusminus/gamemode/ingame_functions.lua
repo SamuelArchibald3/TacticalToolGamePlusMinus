@@ -651,7 +651,12 @@ function TTG_RewindTargets()
 	local targets = {}
 
 	for _, ply in pairs( player.GetAll() ) do
-		if ply:IsValidGamePlayer() then
+		--Anybody killed inside the window comes back with everybody else. They
+		--stopped being sampled the moment they died, so their buffer already
+		--holds exactly the living state to put them back into.
+		local revive = ply:RewindDiedWithin( cutoff )
+
+		if ply:IsValidGamePlayer() or revive then
 			local index, sample = ply:RewindSampleAt( cutoff )
 			if index == nil then return nil end
 
@@ -666,7 +671,7 @@ function TTG_RewindTargets()
 				index, sample = newer_index, newer
 			end
 
-			table.insert( targets, { ply = ply, index = index } )
+			table.insert( targets, { ply = ply, index = index, revive = revive } )
 		end
 	end
 
@@ -687,6 +692,13 @@ function TTG_RewindAllPlayers( instigator )
 	if targets == nil then return false end
 
 	for _, target in pairs( targets ) do
+		--on their feet before the playback rather than at the end of it, so a
+		--revived player gets up where they fell and walks the same path back as
+		--everybody else instead of appearing at the destination
+		if target.revive then
+			target.ply:RewindRevive( target.ply.RewindBuffer[ target.index ] )
+		end
+
 		target.ply:RewindBeginPlayback( target.index )
 	end
 
