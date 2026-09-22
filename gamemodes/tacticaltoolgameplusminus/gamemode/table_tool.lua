@@ -1055,6 +1055,32 @@ duration = 8,
 }
 ,
 
+--Every number the Rewind uses lives here, including the ones the sampler reads
+--rather than the ability - metaplayer_rewind.lua and the sampler in
+--ingame_functions.lua both come back to this entry, so the shop description
+--cannot drift away from what the thing actually does.
+--
+--buffer_size is a full second longer than duration / sample_interval needs. The
+--slack absorbs the drift in the CurTime() gate the sampler runs on, and gives
+--the blocked-destination walk somewhere to walk.
+--
+--cooldown 60 sits between quickport's 50 and avia's 120. Rewind is strictly
+--stronger than quickport, but 120 against a 180 second combat phase is one use
+--a round, which is not enough for anybody to learn what it does.
+tool_abil_rewind =
+{
+name = "tool_abil_rewind",
+print_name = "Rewind",
+class = "ability",
+cooldown = 60,
+duration = 3,
+playback_time = .6,
+sample_interval = .1,
+buffer_size = 40,
+sound_rewind = Sound("npc/scanner/cbot_energyexplosion1.wav"),
+}
+,
+
 }
 
 

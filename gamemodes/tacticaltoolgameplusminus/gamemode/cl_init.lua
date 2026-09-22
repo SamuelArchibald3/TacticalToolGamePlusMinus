@@ -20,6 +20,7 @@ include( 'metaplayer/metaplayer_freeze.lua' )
 include( 'metaplayer/metaplayer_invis.lua' )
 include( 'metaplayer/metaplayer_invuln.lua' )
 include( 'metaplayer/metaplayer_limbo.lua' )
+include( 'metaplayer/metaplayer_rewind.lua' )
 include( 'metaplayer/metaplayer_buffs.lua' )
 
 //all client files go here

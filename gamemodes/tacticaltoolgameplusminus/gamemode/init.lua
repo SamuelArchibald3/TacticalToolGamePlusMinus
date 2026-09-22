@@ -44,6 +44,7 @@ AddCSLuaFile( 'metaplayer/metaplayer_freeze.lua' )
 AddCSLuaFile( 'metaplayer/metaplayer_invis.lua' )
 AddCSLuaFile( 'metaplayer/metaplayer_invuln.lua' )
 AddCSLuaFile( 'metaplayer/metaplayer_limbo.lua' )
+AddCSLuaFile( 'metaplayer/metaplayer_rewind.lua' )
 AddCSLuaFile( 'metaplayer/metaplayer_buffs.lua' )
 
 
@@ -83,6 +84,7 @@ include( 'metaplayer/metaplayer_freeze.lua' )
 include( 'metaplayer/metaplayer_invis.lua' )
 include( 'metaplayer/metaplayer_invuln.lua' )
 include( 'metaplayer/metaplayer_limbo.lua' )
+include( 'metaplayer/metaplayer_rewind.lua' )
 include( 'metaplayer/metaplayer_buffs.lua' )
 
 

@@ -645,6 +645,21 @@ description = "Amplifies the rate of fire of your melee weapon's Zap attack by {
 }
 ,
 
+
+--Says "including you and your own team" out loud because that is the part
+--people otherwise find out by using it, and says what does not come back for
+--the same reason - a rewound player who still sees the point half captured
+--would otherwise read it as a bug.
+purchase_rewind =
+{
+name = "purchase_rewind",
+print_name = "Rewind",
+class = "ability",
+tool_name = "tool_abil_rewind",
+description = "Sends every living player on both teams - including you and your own team - back along the path they walked, to where they stood {tool.duration} seconds ago. \nHealth goes back with them, so it undoes your team's damage as well as theirs. \nBuffs and capture progress do not come back. \nDoes nothing in the first {tool.duration} seconds of a round. \n{tool.cooldown} second cooldown.",
+}
+,
+
 }
 
 

@@ -574,6 +574,183 @@ end
 
 
 
+/*---------------------------------------------------------
+	Rewind
+---------------------------------------------------------*/
+
+--The Rewind ability sends every living player back along the path they walked,
+--to where they were three seconds ago. The buffer that makes that possible
+--lives on the players themselves (metaplayer_rewind.lua); this is the hook that
+--fills it and the playback that empties it.
+--
+--Combat only. An always-on sampler would be recording positions inside the buy
+--rooms and behind spawn doors, and a stored history of those is one guard bug
+--away from teleporting somebody through the map.
+
+--{ start, targets = { { ply, index }, ... } } while a rewind is playing back.
+G_RewindPlayback = nil
+
+local RewindNextSample = 0
+
+
+--One hook, two modes. Sampling has to stop while a playback runs or the rewind
+--records itself as history, and a branch here is easier to keep honest than a
+--second hook to add and remove in step with this one.
+function RewindSampler()
+	if G_RewindPlayback != nil then
+		return StepRewindPlayback()
+	end
+
+	if CurTime() < RewindNextSample then return end
+	RewindNextSample = CurTime() + TOOL_TABLE.tool_abil_rewind.sample_interval
+
+	for _, ply in pairs( player.GetAll() ) do
+		if ply:IsValidGamePlayer() then
+			ply:RewindPush( ply:GetPos(), ply:Health(), CurTime() )
+		end
+	end
+end
+
+
+function Start_RewindSampler()
+	RewindNextSample = 0
+
+	hook.Add( "Think", "TTG_RewindSampler", RewindSampler )
+end
+
+
+function End_RewindSampler()
+	hook.Remove( "Think", "TTG_RewindSampler" )
+
+	--a playback in flight has everybody frozen. Dropping the hook without
+	--unfreezing them leaves the whole server stuck mid-rewind.
+	if G_RewindPlayback == nil then return end
+
+	for _, target in pairs( G_RewindPlayback.targets ) do
+		if IsValid( target.ply ) then target.ply:RewindAbandonPlayback() end
+	end
+
+	G_RewindPlayback = nil
+end
+
+
+--Where everybody is going, decided in one pass before anything moves.
+--
+--nil means refuse the whole ability rather than move some of them. Partial
+--application produces states a rewind should never produce - B left standing
+--inside where A used to be - and a rewind that covers 0.4 seconds one time and
+--3 the next reads as broken rather than as a rule.
+--
+--In practice the only thing that returns nil is the first few seconds of
+--Combat, uniformly for everyone: PUB_MODE is off and SetSpawnStuff is only
+--called from NextRound, so nobody spawns alive mid-round and everybody's buffer
+--is exactly as deep as the round is old. If mid-round joining is ever wired up,
+--this is one of the places that assumes it cannot happen.
+function TTG_RewindTargets()
+	local cutoff = CurTime() - TOOL_TABLE.tool_abil_rewind.duration
+	local targets = {}
+
+	for _, ply in pairs( player.GetAll() ) do
+		if ply:IsValidGamePlayer() then
+			local index, sample = ply:RewindSampleAt( cutoff )
+			if index == nil then return nil end
+
+			--walk back toward the present until the destination is somewhere
+			--they actually fit. Terminates at the head, which is roughly where
+			--they are standing now, so the worst case is that one player does
+			--not move.
+			while not ply:RewindCanFit( sample.pos ) do
+				local newer_index, newer = ply:RewindSampleNewer( index )
+				if newer == nil then break end
+
+				index, sample = newer_index, newer
+			end
+
+			table.insert( targets, { ply = ply, index = index } )
+		end
+	end
+
+	if #targets == 0 then return nil end
+
+	return targets
+end
+
+
+--true if the rewind started. false is a refusal, and the ability charges no
+--cooldown for one.
+function TTG_RewindAllPlayers( instigator )
+	--two playbacks at once would be lerping the same players toward different
+	--destinations on the same Think
+	if G_RewindPlayback != nil then return false end
+
+	local targets = TTG_RewindTargets()
+	if targets == nil then return false end
+
+	for _, target in pairs( targets ) do
+		target.ply:RewindBeginPlayback( target.index )
+	end
+
+	G_RewindPlayback = { start = CurTime(), targets = targets }
+
+	--the animation shows what happened, but only a chat line says who did it
+	if IsValid( instigator ) then
+		ChatPrintToAll( instigator:Name() .. " rewound time!" )
+	end
+
+	umsg.Start( "Sound_Rewind" )
+	umsg.End()
+
+	return true
+end
+
+
+function StepRewindPlayback()
+	local playback = G_RewindPlayback
+	local progress = ( CurTime() - playback.start ) / TOOL_TABLE.tool_abil_rewind.playback_time
+
+	if progress >= 1 then
+		return TTG_RewindFinish()
+	end
+
+	for _, target in pairs( playback.targets ) do
+		if IsValid( target.ply ) then
+			target.ply:RewindStepPlayback( progress )
+		end
+	end
+end
+
+
+function TTG_RewindFinish()
+	local playback = G_RewindPlayback
+	if playback == nil then return end
+
+	G_RewindPlayback = nil
+
+	for _, target in pairs( playback.targets ) do
+		local ply = target.ply
+		if not IsValid( ply ) then continue end
+
+		--somebody shot them during the playback. They are not invulnerable
+		--through it, deliberately - leave them where they fell rather than
+		--teleporting and healing a corpse.
+		if ply:IsValidGamePlayer() then
+			ply:RewindFinishPlayback()
+		else
+			ply:RewindAbandonPlayback()
+		end
+	end
+
+	--the zone tracks who is on it with StartTouch and EndTouch, and neither
+	--fires reliably when a player is teleported. Left alone, a defender rewound
+	--off the point keeps contesting it forever and the attackers can never cap.
+	if IsValid( G_CurAttackZone ) then
+		G_CurAttackZone:RebuildTouchList()
+	end
+end
+
+
+
+
 
 
 
@@ -670,7 +847,11 @@ function ResetVarsBetweenRounds()
 		
 		//Reset the information the player carries about his buffs, as well as the buffs themselves if they were on
 		Reset_PlyBuffs( v )
-		
+
+		//forget where they walked last round, so a Rewind early next round
+		//cannot send anybody back to a position from before the reset
+		v:RewindBufferReset()
+
 		//reset the player's spawn for the round
 		v.CurRoundSpawn = nil
 	end

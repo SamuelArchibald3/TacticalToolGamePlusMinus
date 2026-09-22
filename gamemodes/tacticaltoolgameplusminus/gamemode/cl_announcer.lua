@@ -71,6 +71,17 @@ usermessage.Hook("Sound_OnCooldown", Sound_OnCooldown)
 
 
 
+--Broadcast, not sent to one player: everybody is being rewound, so everybody
+--needs the cue. Quickport's teleport sound, because it already means "somebody
+--just moved without walking" in this game.
+local function  Sound_Rewind()
+	surface.PlaySound( "npc/scanner/cbot_energyexplosion1.wav" )
+end
+usermessage.Hook("Sound_Rewind", Sound_Rewind)
+
+
+
+
 
 local function  Sound_LimboKill()
 	surface.PlaySound( "physics/flesh/flesh_squishy_impact_hard3.wav" )
