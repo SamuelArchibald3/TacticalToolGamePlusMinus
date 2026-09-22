@@ -606,7 +606,7 @@ function RewindSampler()
 
 	for _, ply in pairs( player.GetAll() ) do
 		if ply:IsValidGamePlayer() then
-			ply:RewindPush( ply:GetPos(), ply:Health(), CurTime() )
+			ply:RewindPush( ply:GetPos(), ply:GetVelocity(), ply:Health(), CurTime() )
 		end
 	end
 end

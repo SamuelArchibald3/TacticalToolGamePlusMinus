@@ -32,13 +32,16 @@ function TTGPlayer:RewindBufferReset()
 end
 
 
-function TTGPlayer:RewindPush( pos, health, time )
+--Velocity is recorded along with the position because a destination can be in
+--mid-air: somebody three seconds into a jump across a gap is over the gap, not
+--on either side of it. Putting them there at rest drops them straight down it.
+function TTGPlayer:RewindPush( pos, vel, health, time )
 	if self.RewindBuffer == nil then self:RewindBufferReset() end
 
 	local size = Ref().buffer_size
 	local head = ( self.RewindHead % size ) + 1
 
-	self.RewindBuffer[ head ] = { pos = pos, health = health, t = time }
+	self.RewindBuffer[ head ] = { pos = pos, vel = vel, health = health, t = time }
 	self.RewindHead = head
 
 	if self.RewindCount < size then
@@ -182,7 +185,8 @@ function TTGPlayer:RewindFinishPlayback()
 	end
 
 	--before the SetPos, because DetachJump both restores the movetype and
-	--applies a launch velocity that the zeroing below then has to cancel
+	--applies a launch velocity of its own, which the velocity set at the bottom
+	--of this function then replaces
 	self:RewindDetachWallgrab()
 
 	if dest != nil then
@@ -199,17 +203,42 @@ function TTGPlayer:RewindFinishPlayback()
 		self:SetHealth( math.Clamp( dest.health, 1, self:GetMaxHealth() ) )
 	end
 
-	--SetPos leaves velocity alone, so without this somebody rewound out of a
-	--dash or a fall simply carries on the instant they unfreeze. SetVelocity
-	--adds for players rather than setting, hence the negate - same idiom as
-	--default_melee and ent_airblastmachine.
-	self:SetVelocity( -self:GetVelocity() )
-
 	if self:GetMoveType() == MOVETYPE_LADDER then
 		self:SetMoveType( MOVETYPE_WALK )
 	end
 
+	--unfrozen before the velocity goes on rather than after, because a frozen
+	--player is not going anywhere and the momentum would have to survive the
+	--unfreeze to mean anything
 	self:RewindAbandonPlayback()
+
+	if dest == nil then return end
+
+	--The velocity they had at that moment. Not the one they have now, and not
+	--nothing.
+	--
+	--Not the one they have now, or somebody rewound out of a dash keeps the
+	--dash and is back where they started within a second - the rewind visibly
+	--fails to stick.
+	--
+	--And not nothing, which is what this did at first. A destination is only
+	--checked for whether a player fits in it, and mid-air fits: three seconds
+	--into a jump across a gap is over the gap rather than on either side of it,
+	--and put there at rest they drop straight down it. Handing back the jump
+	--means the jump finishes the way it was going to.
+	--
+	self:RewindSetVelocity( dest.vel )
+end
+
+
+--Set a player's velocity to exactly this, rather than adding to it.
+--
+--SetVelocity adds where players are concerned, which is why default_melee and
+--ent_airblastmachine cancel the current velocity by adding its negation. Same
+--idiom, just named, because the interesting part at the call site is which
+--velocity is being chosen and not the arithmetic of getting it there.
+function TTGPlayer:RewindSetVelocity( vel )
+	self:SetVelocity( vel - self:GetVelocity() )
 end
 
 
