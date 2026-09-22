@@ -19,6 +19,24 @@ local function Ref()
 end
 
 
+--How many samples the ring holds: enough to cover the window it serves, plus
+--the slack past it.
+--
+--Worked out rather than written down, so duration is the only number anybody
+--has to change. A ring shorter than its own window is not a smaller rewind, it
+--is a broken one - nothing in it would ever be old enough to reach for, so
+--every rewind would refuse. Leaving those two numbers to be kept in step by
+--hand is leaving that trap lying around.
+--
+--The world's ring in ingame_functions.lua is the same length for the same
+--reasons, and asks here rather than working it out again.
+function TTG_RewindBufferSize()
+	local ref = Ref()
+
+	return math.ceil( ( ref.duration + ref.buffer_slack ) / ref.sample_interval )
+end
+
+
 --Nothing recorded, and no playback in flight. Called between rounds, and
 --lazily the first time a player is sampled.
 function TTGPlayer:RewindBufferReset()
@@ -92,7 +110,7 @@ end
 function TTGPlayer:RewindPush( sample )
 	if self.RewindBuffer == nil then self:RewindBufferReset() end
 
-	local size = Ref().buffer_size
+	local size = TTG_RewindBufferSize()
 	local head = ( self.RewindHead % size ) + 1
 
 	self.RewindBuffer[ head ] = sample
@@ -112,7 +130,7 @@ end
 function TTGPlayer:RewindSampleAt( time )
 	if self.RewindCount == nil or self.RewindCount == 0 then return nil end
 
-	local size = Ref().buffer_size
+	local size = TTG_RewindBufferSize()
 
 	for step = 0, self.RewindCount - 1 do
 		local index = ( ( self.RewindHead - step - 1 ) % size ) + 1
@@ -131,7 +149,7 @@ function TTGPlayer:RewindSampleNewer( index )
 	if self.RewindBuffer == nil then return nil end
 	if index == self.RewindHead then return nil end
 
-	local newer = ( index % Ref().buffer_size ) + 1
+	local newer = ( index % TTG_RewindBufferSize() ) + 1
 
 	return newer, self.RewindBuffer[ newer ]
 end
@@ -199,7 +217,7 @@ end
 function TTGPlayer:RewindSpan()
 	if self.RewindFrom == nil or self.RewindTo == nil then return 0 end
 
-	return ( self.RewindFrom - self.RewindTo ) % Ref().buffer_size
+	return ( self.RewindFrom - self.RewindTo ) % TTG_RewindBufferSize()
 end
 
 
@@ -210,7 +228,7 @@ function TTGPlayer:RewindStepPlayback( progress )
 	local span = self:RewindSpan()
 	if span == 0 then return end
 
-	local size = Ref().buffer_size
+	local size = TTG_RewindBufferSize()
 	local travelled = span * math.Clamp( progress, 0, 1 )
 	local whole = math.floor( travelled )
 

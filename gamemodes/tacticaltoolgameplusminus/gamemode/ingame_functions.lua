@@ -655,7 +655,7 @@ end
 
 
 local function RewindWorldPush()
-	local size = TOOL_TABLE.tool_abil_rewind.buffer_size
+	local size = TTG_RewindBufferSize()
 	local head = ( RewindWorldHead % size ) + 1
 
 	RewindWorld[ head ] = { t = CurTime(), ents = TTG_RewindWorldSnapshot() }
@@ -670,7 +670,7 @@ end
 --Same shape as the players' RewindSampleAt, and nil for the same reason: the
 --buffer does not reach that far back yet.
 local function RewindWorldAt( time )
-	local size = TOOL_TABLE.tool_abil_rewind.buffer_size
+	local size = TTG_RewindBufferSize()
 
 	for step = 0, RewindWorldCount - 1 do
 		local index = ( ( RewindWorldHead - step - 1 ) % size ) + 1
