@@ -587,10 +587,201 @@ end
 --rooms and behind spawn doors, and a stored history of those is one guard bug
 --away from teleporting somebody through the map.
 
---{ start, targets = { { ply, index }, ... } } while a rewind is playing back.
+--{ start, cutoff, targets = { { ply, index }, ... } } while a rewind is
+--playing back.
 G_RewindPlayback = nil
 
 local RewindNextSample = 0
+
+
+/*---------------------------------------------------------
+	What the map looked like
+---------------------------------------------------------*/
+
+--The buildings are world state rather than anybody's state, so they get their
+--own ring rather than riding along in each player's. It is read once per
+--rewind, not once per player.
+--
+--Recorded per entity: where it was, how hurt it was, and enough to build it
+--again from nothing if it has since been destroyed.
+local RewindWorld = {}
+local RewindWorldHead = 0
+local RewindWorldCount = 0
+
+
+function TTG_RewindWorldReset()
+	RewindWorld = {}
+	RewindWorldHead = 0
+	RewindWorldCount = 0
+end
+
+
+function TTG_RewindWorldSnapshot()
+	local out = {}
+
+	for _, ent in pairs( ents.GetAll() ) do
+		if not IsValid( ent ) then continue end
+		if not CheckIfInEntTable( ent ) then continue end
+
+		--an unbuilt one is a projectile still in the air, so it is carrying a
+		--throw that has to come back with it
+		local vel = nil
+		local phys = ent:GetPhysicsObject()
+		if IsValid( phys ) then vel = phys:GetVelocity() end
+
+		out[ ent:EntIndex() ] = {
+			class = ent:GetClass(),
+			pos = ent:GetPos(),
+			ang = ent:GetAngles(),
+			vel = vel,
+			health = ent:Health(),
+			built = ent:IsBuilt(),
+			team = ent.TTG_Team,
+			creator = ent.Creator,
+			thrownat = ent.TTG_ThrownAt,
+			buildargs = ent.TTG_BuildArgs,
+			buildcount = ent.TTG_BuildArgCount,
+		}
+	end
+
+	return out
+end
+
+
+local function RewindWorldPush()
+	local size = TOOL_TABLE.tool_abil_rewind.buffer_size
+	local head = ( RewindWorldHead % size ) + 1
+
+	RewindWorld[ head ] = { t = CurTime(), ents = TTG_RewindWorldSnapshot() }
+	RewindWorldHead = head
+
+	if RewindWorldCount < size then
+		RewindWorldCount = RewindWorldCount + 1
+	end
+end
+
+
+--Same shape as the players' RewindSampleAt, and nil for the same reason: the
+--buffer does not reach that far back yet.
+local function RewindWorldAt( time )
+	local size = TOOL_TABLE.tool_abil_rewind.buffer_size
+
+	for step = 0, RewindWorldCount - 1 do
+		local index = ( ( RewindWorldHead - step - 1 ) % size ) + 1
+		local snap = RewindWorld[ index ]
+
+		if snap != nil and snap.t <= time then return snap end
+	end
+
+	return nil
+end
+
+
+--Damage on these reads as the entity going darker, and that colour is only
+--recomputed when damage lands - so healing one without this leaves a building
+--at full health still looking wrecked.
+local function PutEntBack( ent, was )
+	ent:SetPos( was.pos )
+	ent:SetAngles( was.ang )
+
+	--the throw it was carrying, not a standstill. Zeroing it would leave
+	--something that was mid-air three seconds ago hanging there and then
+	--dropping straight down instead of finishing its arc.
+	local phys = ent:GetPhysicsObject()
+	if IsValid( phys ) then
+		phys:SetVelocity( was.vel or vector_origin )
+	end
+
+	if ent:Health() != was.health then
+		ent:SetHealth( was.health )
+		ent:InitializeColor()
+	end
+end
+
+
+--Build one again from nothing, for something destroyed inside the window.
+--
+--Same order a thrown entity is created in, then the build is replayed through
+--ObjToMachine with the arguments the original collision passed it. What is not
+--reconstructed is whatever the entity was privately doing - a sentry's current
+--target, a quickport's partner, a countdown part way through. It comes back
+--built, where it was, as hurt as it was.
+local function RebuildEnt( was )
+	local ent = ents.Create( was.class )
+	if not IsValid( ent ) then return end
+
+	ent:SetPos( was.pos )
+	ent:SetAngles( was.ang )
+
+	ent.TTG_Team = was.team
+	ent.Creator = was.creator
+	ent.TTG_ThrownAt = was.thrownat
+
+	if IsValid( was.creator ) then ent:SetOwner( was.creator ) end
+
+	ent:Spawn()
+	ent:SetEntTeamForClient()
+
+	if was.built == true then
+		if was.buildargs != nil then
+			ent:ObjToMachine( unpack( was.buildargs, 1, was.buildcount or 0 ) )
+		else
+			ent:ObjToMachine()
+		end
+
+		--ObjToMachine sets its own position, the same way BuildFromCollision
+		--puts the impact point back afterwards
+		ent:SetPos( was.pos )
+
+	elseif was.vel != nil then
+		--still a projectile at that point, so it goes back in the air carrying
+		--the throw rather than being dropped on the spot
+		local phys = ent:GetPhysicsObject()
+		if IsValid( phys ) then phys:SetVelocity( was.vel ) end
+	end
+
+	ent:SetHealth( was.health )
+	ent:InitializeColor()
+end
+
+
+function TTG_RewindRestoreWorld( snapshot )
+	if snapshot == nil then return end
+
+	local standing = {}
+
+	for _, ent in pairs( ents.GetAll() ) do
+		if IsValid( ent ) and CheckIfInEntTable( ent ) then
+			standing[ ent:EntIndex() ] = ent
+		end
+	end
+
+	for index, was in pairs( snapshot.ents ) do
+		local ent = standing[ index ]
+
+		--The index alone is not enough: the engine reuses them, so something
+		--else may be sitting on it by now.
+		--
+		--Nor is the class. Something that was still a projectile in the air
+		--three seconds ago and has landed and built since cannot be patched
+		--back into a projectile - there is no undoing ObjToMachine - so it is
+		--taken down and thrown again from the snapshot. Otherwise a finished
+		--building teleports back to a point in mid-air and stays built, which
+		--is the one thing this can do that looks like a glitch rather than a
+		--rewind.
+		local matches = IsValid( ent )
+			and ent:GetClass() == was.class
+			and ent:IsBuilt() == ( was.built == true )
+
+		if matches then
+			PutEntBack( ent, was )
+		else
+			if IsValid( ent ) then ent:Remove() end
+
+			RebuildEnt( was )
+		end
+	end
+end
 
 
 --One hook, two modes. Sampling has to stop while a playback runs or the rewind
@@ -609,11 +800,14 @@ function RewindSampler()
 			ply:RewindPush( ply:RewindSampleNow() )
 		end
 	end
+
+	RewindWorldPush()
 end
 
 
 function Start_RewindSampler()
 	RewindNextSample = 0
+	TTG_RewindWorldReset()
 
 	hook.Add( "Think", "TTG_RewindSampler", RewindSampler )
 end
@@ -621,6 +815,7 @@ end
 
 function End_RewindSampler()
 	hook.Remove( "Think", "TTG_RewindSampler" )
+	TTG_RewindWorldReset()
 
 	--a playback in flight has everybody frozen. Dropping the hook without
 	--unfreezing them leaves the whole server stuck mid-rewind.
@@ -702,7 +897,13 @@ function TTG_RewindAllPlayers( instigator )
 		target.ply:RewindBeginPlayback( target.index )
 	end
 
-	G_RewindPlayback = { start = CurTime(), targets = targets }
+	--the cutoff is kept rather than recomputed at the end, so the buildings go
+	--back to the same moment the players do rather than to 0.6 seconds later
+	G_RewindPlayback = {
+		start = CurTime(),
+		cutoff = CurTime() - TOOL_TABLE.tool_abil_rewind.duration,
+		targets = targets,
+	}
 
 	--the animation shows what happened, but only a chat line says who did it
 	if IsValid( instigator ) then
@@ -751,6 +952,10 @@ function TTG_RewindFinish()
 			ply:RewindAbandonPlayback()
 		end
 	end
+
+	--after the players, because their own un-throwing takes back what they
+	--deployed since - anything older than that is what this puts back
+	TTG_RewindRestoreWorld( RewindWorldAt( playback.cutoff ) )
 
 	--the zone tracks who is on it with StartTouch and EndTouch, and neither
 	--fires reliably when a player is teleported. Left alone, a defender rewound
