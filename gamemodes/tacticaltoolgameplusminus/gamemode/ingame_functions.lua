@@ -644,6 +644,8 @@ function TTG_RewindWorldSnapshot()
 			built = ent:IsBuilt(),
 			team = ent.TTG_Team,
 			creator = ent.Creator,
+			swep = ent.CreatorSwep,
+			thrownangles = ent.TTG_Angles,
 			createdat = ent:CreatedAt(),
 			buildargs = ent.TTG_BuildArgs,
 			buildcount = ent.TTG_BuildArgCount,
@@ -725,6 +727,7 @@ local function RebuildEnt( was )
 
 	ent.TTG_Team = was.team
 	ent.Creator = was.creator
+	ent.CreatorSwep = was.swep
 
 	--it answers for the age of the thing it replaces, not its own, or the next
 	--rewind would take it back off as something built since
@@ -734,6 +737,15 @@ local function RebuildEnt( was )
 
 	ent:Spawn()
 	ent:SetEntTeamForClient()
+
+	--After Spawn, which is where every one of the fourteen creation sites puts
+	--it. ent_barrier reads it inside ObjToMachine, so a rebuilt one without it
+	--errors on its way to being built and lies there as a grenade for the rest
+	--of the round - which is what this looked like in play.
+	--
+	--Falls back to the angles it was sitting at, so a snapshot without them
+	--builds crooked rather than not at all.
+	ent.TTG_Angles = was.thrownangles or was.ang
 
 	if was.built == true then
 		if was.buildargs != nil then
