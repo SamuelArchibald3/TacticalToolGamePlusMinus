@@ -166,7 +166,9 @@ sound_beep = "hl1/fvox/beep.wav",
 takes_damage = true,
 health = 100,
 build_time = 1,
-radius = 900,
+--radius used to gate the reveal to a 900-unit bubble around the device.
+--The reveal is map-wide now, so nothing reads this any more - removed rather
+--than left as a number nobody reads.
 beep_delay = 2,
 }
 ,
