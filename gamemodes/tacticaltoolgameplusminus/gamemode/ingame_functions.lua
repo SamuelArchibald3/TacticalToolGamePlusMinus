@@ -1028,6 +1028,17 @@ function TTG_RewindFinish()
 	if IsValid( G_CurAttackZone ) then
 		G_CurAttackZone:RebuildTouchList()
 	end
+
+	--Last, so an ability working out what it should be now is looking at a
+	--world that has already been put back: its buff restored, its port either
+	--still standing or taken off the map. Most have nothing to do here - it is
+	--the ones holding a step or a flag of their own that a rewind can leave
+	--pointing at something that is no longer there.
+	for _, ply in pairs( player.GetAll() ) do
+		for _, abil in pairs( ply:GetAbilitySlots() ) do
+			if IsValid( abil ) then abil:RewindReset() end
+		end
+	end
 end
 
 

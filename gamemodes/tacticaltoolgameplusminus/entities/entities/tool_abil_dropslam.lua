@@ -60,6 +60,20 @@ function ENT:DoEffect(  )
 end
 
 
+--Primed is the flag this ability runs on; Buff_DropSlamPrime is the half of it
+--the player can see. A rewind puts the buff back, so the flag follows the buff
+--rather than being restored separately and disagreeing with it.
+function ENT:RewindReset()
+	if not IsValid( self.Owner ) then return end
+
+	self.Primed = self.Owner:HowManyOfThisBuff( "Buff_DropSlamPrime" ) > 0
+
+	--the slot that buff was in is gone with it, and the one it is in now was
+	--handed out by the restore
+	if not self.Primed then self.BuffSlot = nil end
+end
+
+
 function ENT:DropSlam( fallspeed )
 	self.Owner:EmitSound( self.Ref.sound_explosion )
 	

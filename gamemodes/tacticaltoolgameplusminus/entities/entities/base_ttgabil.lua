@@ -63,6 +63,21 @@ function ENT:Think()
 	end
 end
 
+--What to put right after a rewind has finished.
+--
+--Most abilities are only a cooldown, and that is restored from the snapshot
+--already, so they have nothing to do here. This is for the ones holding a step
+--or a flag of their own, which a rewind can leave pointing at something that
+--is no longer there - a quickport still believing its port is out after the
+--port has just been taken off the map.
+--
+--Called once everything else is back: the buffs, the buildings, the clock. An
+--override can work out what it should be from those rather than from a
+--snapshot of itself, which is both simpler and harder to get wrong.
+function ENT:RewindReset()
+end
+
+
 function ENT:CooldownSound()
 	umsg.Start("Sound_OnCooldown", self.Owner)
 	umsg.End()

@@ -13,6 +13,18 @@ ENT.Step = 1
 
 
 
+--Step 2 means a port is out and the next press teleports to it.
+--
+--A rewind can take that port off the map - it is an entity like any other, so
+--one thrown inside the window is un-thrown with everything else. Left on step
+--2 the ability is a dead key: DoAbility takes the teleport branch, finds
+--nothing valid to port to, and returns without ever letting another port be
+--thrown.
+function ENT:RewindReset()
+	self.Step = IsValid( self.PreviousEnt ) and 2 or 1
+end
+
+
 function ENT:DoAbility()
 	if self.Cooldown == true then
 		self:CooldownSound()

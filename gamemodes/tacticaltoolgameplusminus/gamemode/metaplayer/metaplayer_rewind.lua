@@ -194,7 +194,14 @@ function TTGPlayer:RewindDetachWallgrab()
 	for _, abil in pairs( self:GetAbilitySlots() ) do
 		if IsValid( abil ) and abil:GetClass() == "tool_abil_wallgrab" and abil.Step == 2 then
 			abil:DetachJump()
+
+			--every flag the grab set, not only the step. DetachJump is the
+			--normal way off a wall and leaves Attached alone, which is fine
+			--when the next press is what set it - less so when nothing pressed
+			--anything and the ability has to look untouched.
 			abil.Step = 1
+			abil.Attached = false
+			abil.SnareSlot = nil
 		end
 	end
 end
