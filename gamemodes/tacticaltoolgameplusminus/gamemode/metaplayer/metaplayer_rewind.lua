@@ -32,16 +32,58 @@ function TTGPlayer:RewindBufferReset()
 end
 
 
---Velocity is recorded along with the position because a destination can be in
---mid-air: somebody three seconds into a jump across a gap is over the gap, not
---on either side of it. Putting them there at rest drops them straight down it.
-function TTGPlayer:RewindPush( pos, vel, health, time )
+--Everything about this player that a rewind puts back.
+--
+--Velocity is in here because a destination can be in mid-air: somebody three
+--seconds into a jump across a gap is over the gap, not on either side of it,
+--and putting them there at rest drops them straight down it.
+function TTGPlayer:RewindSampleNow()
+	return {
+		pos = self:GetPos(),
+		vel = self:GetVelocity(),
+		health = self:Health(),
+		ammo = self:RewindAmmoSnapshot(),
+		cooldowns = self:RewindCooldownSnapshot(),
+		t = CurTime(),
+	}
+end
+
+
+--What is loaded, by weapon class. Guns are in here too - rewinding a clip
+--undoes the shots the same way rewinding health undoes what they hit.
+function TTGPlayer:RewindAmmoSnapshot()
+	local out = {}
+
+	for _, wep in pairs( self:GetWeapons() ) do
+		out[ wep:GetClass() ] = wep:Clip1()
+	end
+
+	return out
+end
+
+
+--What is cooling down, by ability class. Keyed by class rather than by slot
+--because abilities can be moved between slots while this is being recorded.
+function TTGPlayer:RewindCooldownSnapshot()
+	local out = {}
+
+	for _, abil in pairs( self:GetAbilitySlots() ) do
+		if IsValid( abil ) then
+			out[ abil:GetClass() ] = { on = abil.Cooldown == true, time = abil.Time or 0 }
+		end
+	end
+
+	return out
+end
+
+
+function TTGPlayer:RewindPush( sample )
 	if self.RewindBuffer == nil then self:RewindBufferReset() end
 
 	local size = Ref().buffer_size
 	local head = ( self.RewindHead % size ) + 1
 
-	self.RewindBuffer[ head ] = { pos = pos, vel = vel, health = health, t = time }
+	self.RewindBuffer[ head ] = sample
 	self.RewindHead = head
 
 	if self.RewindCount < size then
@@ -201,6 +243,13 @@ function TTGPlayer:RewindFinishPlayback()
 		--TTG_HandicapHealth, so it has to be read now rather than assumed.
 		--Clamping the bottom to 1 is what stops a rewind ever killing anybody.
 		self:SetHealth( math.Clamp( dest.health, 1, self:GetMaxHealth() ) )
+
+		--ammo and the things it threw go back together, or one of them is a
+		--duplicator on its own
+		self:RewindUnthrow( dest.t )
+		self:RewindRestoreAmmo( dest.ammo )
+
+		self:RewindRestoreCooldowns( dest.cooldowns )
 	end
 
 	if self:GetMoveType() == MOVETYPE_LADDER then
@@ -228,6 +277,87 @@ function TTGPlayer:RewindFinishPlayback()
 	--means the jump finishes the way it was going to.
 	--
 	self:RewindSetVelocity( dest.vel )
+end
+
+
+--Put the clips back where they were.
+--
+--Only for weapons they are still holding. Something bought inside the window
+--is not un-bought - the token was spent, and refunding purchases is a much
+--larger idea than putting a clip back.
+--
+--Three numbers per weapon rather than one: the clip itself, the networked copy
+--the client reads because Clip1 does not survive the trip, and the tool list
+--the hud draws.
+function TTGPlayer:RewindRestoreAmmo( recorded )
+	if recorded == nil then return end
+
+	local listed = self:GetSwepToolInfo() or {}
+
+	for _, wep in pairs( self:GetWeapons() ) do
+		local clip = recorded[ wep:GetClass() ]
+		if clip == nil then continue end
+
+		wep:SetClip1( clip )
+		wep:SetTTGAmmo( clip )
+
+		for _, tool in pairs( listed ) do
+			if tool.name == wep:GetClass() then
+				self:SetSwepToolInfo( tool.name, clip, tool.numguns )
+			end
+		end
+	end
+end
+
+
+--Put the cooldowns back where they were.
+function TTGPlayer:RewindRestoreCooldowns( recorded )
+	if recorded == nil then return end
+
+	for _, abil in pairs( self:GetAbilitySlots() ) do
+		if not IsValid( abil ) then continue end
+
+		--Rewind never hands itself back. Three seconds ago it had not been
+		--fired, so restoring its own cooldown makes it free - and it would do
+		--that for everybody else holding one at the same time, not just for
+		--whoever pressed it.
+		if abil:GetClass() == "tool_abil_rewind" then continue end
+
+		local was = recorded[ abil:GetClass() ]
+
+		--bought since; there is no earlier state to put it in
+		if was == nil then continue end
+
+		abil.Cooldown = was.on
+		abil.Time = was.time
+		abil:UpdateNetworkedVars( was.on, was.time )
+
+		--base_ttgabil's Think stops rescheduling itself the moment a cooldown
+		--reaches zero, so an ability that had finished cooling has no pending
+		--think left to count this restored one down with. Without re-arming it
+		--the number sits on the hud forever and the ability never comes back.
+		if was.on then abil:NextThink( CurTime() + 1 ) end
+	end
+end
+
+
+--Un-throw whatever this player threw since then.
+--
+--Without this, restoring the ammo would be a duplicator: the charge comes back
+--while what it deployed is still standing there. Only things thrown count -
+--TTG_ThrownAt is set in base_ttgtool's ThrowEnt, which is the one path that
+--spends a charge.
+--
+--It cannot un-explode anything. A bomb thrown and detonated inside the window
+--gives its charge back with the damage already dealt, because there is no
+--entity left to remove.
+function TTGPlayer:RewindUnthrow( since )
+	for _, ent in pairs( ents.GetAll() ) do
+		if ent.Creator != self then continue end
+		if ent.TTG_ThrownAt == nil or ent.TTG_ThrownAt < since then continue end
+
+		ent:Remove()
+	end
 end
 
 

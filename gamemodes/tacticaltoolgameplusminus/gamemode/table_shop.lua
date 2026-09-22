@@ -656,7 +656,7 @@ name = "purchase_rewind",
 print_name = "Rewind",
 class = "ability",
 tool_name = "tool_abil_rewind",
-description = "Sends every living player on both teams - including you and your own team - back along the path they walked, to where they stood {tool.duration} seconds ago. \nHealth goes back with them, so it undoes your team's damage as well as theirs. \nBuffs and capture progress do not come back. \nDoes nothing in the first {tool.duration} seconds of a round. \n{tool.cooldown} second cooldown.",
+description = "Sends every living player on both teams - including you and your own team - back along the path they walked, to where they stood {tool.duration} seconds ago. \nHealth, ammo and ability cooldowns go back with them, and anything thrown in that time is taken back off the map. \nSo it undoes your team's damage as much as theirs. \nBuffs, capture progress and the dead do not come back, and Rewind does not refund its own cooldown. \nDoes nothing in the first {tool.duration} seconds of a round. \n{tool.cooldown} second cooldown.",
 }
 ,
 
