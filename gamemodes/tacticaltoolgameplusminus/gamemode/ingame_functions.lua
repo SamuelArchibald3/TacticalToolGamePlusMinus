@@ -621,7 +621,13 @@ function TTG_RewindWorldSnapshot()
 
 	for _, ent in pairs( ents.GetAll() ) do
 		if not IsValid( ent ) then continue end
-		if not CheckIfInEntTable( ent ) then continue end
+
+		--ENT_TABLE is keyed by class, so this is the same question
+		--CheckIfInEntTable answers but as one lookup rather than a scan of all
+		--29 entries. It is asked of every entity on the map ten times a second,
+		--which is the only part of the recording big enough to be worth caring
+		--about - everything else in here runs once per snapshot.
+		if ENT_TABLE[ ent:GetClass() ] == nil then continue end
 
 		--an unbuilt one is a projectile still in the air, so it is carrying a
 		--throw that has to come back with it
@@ -751,7 +757,7 @@ function TTG_RewindRestoreWorld( snapshot )
 	local standing = {}
 
 	for _, ent in pairs( ents.GetAll() ) do
-		if IsValid( ent ) and CheckIfInEntTable( ent ) then
+		if IsValid( ent ) and ENT_TABLE[ ent:GetClass() ] != nil then
 			standing[ ent:EntIndex() ] = ent
 		end
 	end
