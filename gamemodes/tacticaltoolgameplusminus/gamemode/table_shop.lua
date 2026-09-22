@@ -656,7 +656,12 @@ name = "purchase_rewind",
 print_name = "Rewind",
 class = "ability",
 tool_name = "tool_abil_rewind",
-description = "Sends every living player on both teams - including you and your own team - back along the path they walked, to where they stood {tool.duration} seconds ago. \nHealth, ammo and ability cooldowns go back with them, and anything thrown in that time is taken back off the map. \nSo it undoes your team's damage as much as theirs. \nAnybody killed in that time gets up and is rewound with everyone else, carrying what they died with. \nBuildings are repaired, and ones that were destroyed go back up. \nBuffs and capture progress do not come back, and Rewind does not refund its own cooldown. \nDoes nothing in the first {tool.duration} seconds of a round. \n{tool.cooldown} second cooldown.",
+--One between the whole team. It undoes an entire engagement for everybody on
+--the map, so a side holding three of them could keep doing that. Any purchase
+--can declare this - see TTG_PurchaseBlocked in shared.lua - and nothing there
+--or in the buy menu names a particular item.
+team_limit = 1,
+description = "Sends every living player on both teams - including you and your own team - back along the path they walked, to where they stood {tool.duration} seconds ago. \nHealth, ammo and ability cooldowns go back with them, and anything thrown in that time is taken back off the map. \nSo it undoes your team's damage as much as theirs. \nAnybody killed in that time gets up and is rewound with everyone else, carrying what they died with. \nBuildings are repaired, and ones that were destroyed go back up. \nBuffs and capture progress do not come back, and Rewind does not refund its own cooldown. \nOne per team. \nDoes nothing in the first {tool.duration} seconds of a round. \n{tool.cooldown} second cooldown.",
 }
 ,
 

@@ -266,11 +266,16 @@ function fGiveTool( player, command, arguments )
 	end
 
 
-	//the team with more players can be locked out of First Aid when the teams
-	//are uneven. The buy menu already leaves it out of the list, so this catches
-	//a console purchase, or a menu that was built before the flag reached the client
-	if TTG_PurchaseBlocked( player, purchase ) then
-		player:ChatPrint("Your team has the extra players, so First Aid is not available")
+	//Something can be withheld from a team - First Aid when the teams are
+	//uneven, or anything that has hit its team_limit. The buy menu already
+	//leaves those out of the list, so this catches a console purchase, or a
+	//menu that was built before the last change reached the client.
+	//
+	//TTG_PurchaseBlocked says why, rather than the reason being written out
+	//here, so a new rule does not mean editing this.
+	local blocked, why = TTG_PurchaseBlocked( player, purchase )
+	if blocked then
+		player:ChatPrint( why )
 		BuyFailedSound()
 		return
 	end

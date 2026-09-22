@@ -256,18 +256,76 @@ end
 	Purchases withheld from a team
 ---------------------------------------------------------*/
 
---First Aid can be withheld from whichever team has the extra players, as one of
---the uneven team handicaps. The server decides per player and networks it,
---because the client cannot read the setting itself. TTG_HandicapNoFirstAid()
---in ingame_functions.lua is where the decision is made.
+--How many of this purchase a team already has between them.
 --
---Shared because both ends need it: the buy menu leaves a withheld purchase out
+--Counted from what the players are actually carrying rather than from a tally
+--of what was bought. Nothing has to be reset between rounds that way - tools
+--and abilities are cleared along with everything else, so the count falls back
+--to zero on its own - and it self-corrects if somebody disconnects.
+--
+--Both accessors read the broadcast copy for other players rather than their
+--networked vars, so the buy menu can ask exactly the same question the server
+--does. See the note above TTG_SendPlayerLists for why that distinction exists.
+function TTG_TeamPurchaseCount( teamid, purchasename )
+	local purchase = Shop_Reference( purchasename )
+	if purchase == nil then return 0 end
+
+	local count = 0
+
+	for _, ply in pairs( player.GetAll() ) do
+		if ply:Team() != teamid then continue end
+
+		if purchase.class == "ability" then
+			for _, name in pairs( ply:GetAbilityNames() ) do
+				if name == purchase.tool_name then count = count + 1 end
+			end
+		else
+			for _, tool in pairs( ply:GetSwepToolInfo() or {} ) do
+				if tool.name == purchase.tool_name then count = count + 1 end
+			end
+		end
+	end
+
+	return count
+end
+
+
+--Whether this purchase is off limits to this player right now, and why.
+--
+--Returns the reason as a second value so a new rule does not mean editing the
+--message at the call site. Callers that only want the yes or no can carry on
+--reading it as a plain boolean.
+--
+--Shared because both ends need it: the buy menu leaves a blocked purchase out
 --of its list, and fGiveTool refuses it if the click gets through anyway.
+--
+--Two rules so far.
+--
+--First Aid can be withheld from whichever team has the extra players, as one
+--of the uneven team handicaps. The server decides per player and networks it,
+--because the client cannot read the setting itself. TTG_HandicapNoFirstAid()
+--in ingame_functions.lua is where that decision is made.
+--
+--And any purchase can cap how many one team may hold at once by declaring
+--team_limit in table_shop.lua. That is the whole of opting in - nothing here
+--or in the buy menu names a particular purchase.
 function TTG_PurchaseBlocked( ply, purchasename )
 	if not IsValid( ply ) then return false end
-	if purchasename != "purchase_firstaid" then return false end
 
-	return ply:GetNW2Bool( "TTG_NoFirstAid", false )
+	if purchasename == "purchase_firstaid" and ply:GetNW2Bool( "TTG_NoFirstAid", false ) then
+		return true, "Your team has the extra players, so First Aid is not available"
+	end
+
+	local purchase = Shop_Reference( purchasename )
+
+	if purchase != nil and purchase.team_limit != nil then
+		if TTG_TeamPurchaseCount( ply:Team(), purchasename ) >= purchase.team_limit then
+			return true, "Your team is limited to " .. purchase.team_limit .. " " ..
+				purchase.print_name .. " and already has that many"
+		end
+	end
+
+	return false
 end
 
 function GetTotalRounds()
