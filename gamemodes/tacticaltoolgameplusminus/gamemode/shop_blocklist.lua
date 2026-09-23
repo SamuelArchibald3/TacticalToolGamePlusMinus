@@ -5,29 +5,26 @@
 --A blocklist rather than an allowlist, so a tool is on sale the moment it is
 --written rather than only once somebody remembers to add it to a list.
 --
---One purchase name per line in data/ttg_shop_blocked.txt. Blank lines are
---skipped and anything after a # is ignored, so the file can say why something
---is off. ttg_shop_reload picks up an edit without a map change.
+--One purchase name per line. Blank lines are skipped and anything after a # is
+--ignored, so the file can say why something is off. ttg_shop_reload picks up
+--an edit without a map change.
 --
 --A file rather than a convar because a convar holds one string, and twenty
 --purchase names inside a single console command is not something anybody wants
 --to edit. The cost is this loader and telling the client, which a convar would
 --have needed anyway.
+--
+--Two files, and the split matters. The one that gets read lives in data/,
+--which is per install and survives updating the gamemode - so a server's own
+--choices are not thrown away by a git pull. The one that seeds it ships with
+--the gamemode and is version controlled, so a fresh server starts from
+--something that explains itself rather than from an empty file.
 
 local BLOCKLIST_FILE = "ttg_shop_blocked.txt"
 
---Written out the first time if there is nothing there, so the file exists to
---be opened and explains itself rather than having to be guessed at.
-local BLOCKLIST_TEMPLATE = [[
-# Purchases to leave out of the shop, one per line.
-#
-# Names are the purchase_* ones from table_shop.lua, for example:
-#   purchase_sniper
-#   purchase_c4
-#
-# Anything after a # is ignored, so say why while you are here.
-# Changes need  ttg_shop_reload  in the server console, or a map change.
-]]
+--Hardcoded rather than asked for: the folder name is fixed, and the gamemode
+--is already halfway through loading when this runs.
+local DEFAULT_FILE = "gamemodes/tacticaltoolgameplusminus/shop_blocked.txt"
 
 --Kept as a set on both realms: the server reads the file, the client is told,
 --because the buy menu has to leave these out and cannot read data/ itself.
@@ -77,8 +74,10 @@ if SERVER then
 	function TTG_LoadShopBlocklist()
 		Blocked = {}
 
+		--seeded from the gamemode's own copy the first time, and never again:
+		--once it is there it belongs to whoever runs the server
 		if not file.Exists( BLOCKLIST_FILE, "DATA" ) then
-			file.Write( BLOCKLIST_FILE, BLOCKLIST_TEMPLATE )
+			file.Write( BLOCKLIST_FILE, file.Read( DEFAULT_FILE, "GAME" ) or "" )
 		end
 
 		local body = file.Read( BLOCKLIST_FILE, "DATA" ) or ""
