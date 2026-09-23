@@ -77,6 +77,20 @@ ROUND_TOKENS = 4	//cant decide between 3 or 4
 MAX_TOOL_SLOTS = 10
 
 
+--How many DIFFERENT tools a player may carry.
+--
+--Not the same limit as the one above, and much lower. Each bought tool takes a
+--bucket of its own in the weapon selector, numbered from one, and the selector
+--only answers to slot1 through slot6 - anything past that is a tool with no
+--key that can reach it, findable only by scrolling. So the buy refuses a
+--seventh different tool rather than selling somebody something they cannot
+--press.
+--
+--Buying more of a tool already carried is always allowed: that is ammo going
+--into a bucket that already exists, not a new key to find.
+MAX_TOOL_KEYS = 6
+
+
 --The button each ability slot answers to, in order: slot 1 is the first entry.
 --This list is the only place the mapping lives. It used to be spelled out as
 --three named fields ( Ability_A / _B / _C ) wired to three fixed keys across
@@ -381,6 +395,38 @@ if SERVER then
 		end
 	end
 	cvars.AddChangeCallback( "ttg_var_abilityslots", Callback_AbilitySlots, "ttg_var_abilityslots_setting" )
+
+
+	--Different Tools
+	--How many tools a player may carry at once, as opposed to how many are
+	--listed. Capped at MAX_TOOL_SLOTS, because a tool the bought list cannot
+	--show is barely better than one no key can reach.
+	--Applies immediately: it is checked at the moment of buying.
+	if not ConVarExists( "ttg_var_toolkeys" ) then
+		CreateConVar( "ttg_var_toolkeys", tostring( MAX_TOOL_KEYS ), FCVAR_NOTIFY, "How many different tools a player can carry at once" )
+	end
+
+	local set_toolkeys = GetConVarNumber( "ttg_var_toolkeys" )
+	if set_toolkeys != nil and set_toolkeys >= 1 then
+		MAX_TOOL_KEYS = math.min( set_toolkeys, MAX_TOOL_SLOTS )
+	end
+	SetToolKeyCount( MAX_TOOL_KEYS )
+
+	local function Callback_ToolKeys( CVar, PreviousValue, NewValue )
+		local newvalue = tonumber( NewValue )
+		if newvalue == nil or newvalue < 1 then return end
+
+		MAX_TOOL_KEYS = math.min( newvalue, MAX_TOOL_SLOTS )
+		SetToolKeyCount( MAX_TOOL_KEYS )
+
+		if newvalue > 6 then
+			ChatPrintToAll( "Different tools set to  " .. MAX_TOOL_KEYS ..
+				"  - only the first 6 have a number key, the rest are scroll only" )
+		else
+			ChatPrintToAll( "Different tools set to  " .. MAX_TOOL_KEYS )
+		end
+	end
+	cvars.AddChangeCallback( "ttg_var_toolkeys", Callback_ToolKeys, "ttg_var_toolkeys_setting" )
 
 
 

@@ -105,8 +105,10 @@ hook.Add("PlayerBindPress", "WeaponSelector.Hooks.PlayerBindPress", function(ply
     if LocalPlayer():InVehicle() then return end
 
     if string.sub(bind, 1, 4) == "slot" and not ply:KeyDown(IN_ATTACK) then
+        --One character, so slot10 and up would read as slot1 anyway. The buy
+        --refuses a seventh different tool for this reason - see MAX_TOOL_KEYS.
         local n = tonumber(string.sub(bind, 5, 5) or 1) or 1
-        if n < 1 or n > 6 then return true end
+        if n < 1 or n > math.min( TTG_ToolKeyCount(), 9 ) then return true end
         n = n - 1
         update()
         if not tblLoad[n] then return true end

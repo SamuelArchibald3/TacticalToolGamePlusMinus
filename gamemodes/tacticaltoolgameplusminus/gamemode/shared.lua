@@ -256,6 +256,27 @@ end
 	Purchases withheld from a team
 ---------------------------------------------------------*/
 
+--How many different tools a player may carry.
+--
+--Networked for the same reason the ability count is: it comes from a convar,
+--convars only exist on the server, and the two things that need it - the buy
+--menu and the weapon selector - are both client side. Falls back to the shared
+--default, which covers the moment before the first push.
+function SetToolKeyCount( num )
+	SetGlobal2Int( "TTG_ToolKeys", num )
+end
+
+function TTG_ToolKeyCount()
+	local num = GetGlobal2Int( "TTG_ToolKeys", 0 )
+
+	if num == nil or num < 1 then
+		return MAX_TOOL_KEYS
+	end
+
+	return num
+end
+
+
 --How many of this purchase a team already has between them.
 --
 --Counted from what the players are actually carrying rather than from a tally
@@ -317,6 +338,29 @@ function TTG_PurchaseBlocked( ply, purchasename )
 	end
 
 	local purchase = Shop_Reference( purchasename )
+
+	--A seventh different tool is one with no number key to reach it - the
+	--weapon selector answers to slot1 through slot6 and swallows the rest, so
+	--it would be sold as something only scrolling can find.
+	--
+	--Owning it already is always fine. That is ammo going into a bucket that
+	--exists rather than a new key to look for, which is why this counts what
+	--is carried instead of what has been spent.
+	if purchase != nil and purchase.class != "ability" then
+		local carried = 0
+		local already = false
+
+		for _, tool in pairs( ply:GetSwepToolInfo() or {} ) do
+			carried = carried + 1
+
+			if tool.name == purchase.tool_name then already = true end
+		end
+
+		if not already and carried >= TTG_ToolKeyCount() then
+			return true, "You can carry " .. TTG_ToolKeyCount() ..
+				" different tools - buy more of one you already have instead"
+		end
+	end
 
 	if purchase != nil and purchase.team_limit != nil then
 		if TTG_TeamPurchaseCount( ply:Team(), purchasename ) >= purchase.team_limit then
