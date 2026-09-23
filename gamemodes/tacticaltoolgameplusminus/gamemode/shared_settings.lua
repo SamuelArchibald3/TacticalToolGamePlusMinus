@@ -77,6 +77,24 @@ ROUND_TOKENS = 4	//cant decide between 3 or 4
 MAX_TOOL_SLOTS = 10
 
 
+--How many DIFFERENT tools a player may carry.
+--
+--Not the same limit as the one above, and much lower. Each bought tool takes a
+--bucket of its own in the weapon selector, and the selector only answers to
+--slot1 through slot6 - anything past that is a tool no key can reach, findable
+--only by scrolling. So the buy refuses one rather than selling somebody
+--something they cannot press.
+--
+--Five rather than six, because the melee has the first bucket. default_melee
+--is SWEP.Slot 0 and the bought tools number up from 1, so key 1 is the crowbar
+--and key 6 is the fifth tool. The selector is told this count and allows one
+--key more than it, which is the melee's.
+--
+--Buying more of a tool already carried is always allowed: that is ammo going
+--into a bucket that already exists, not a new key to find.
+MAX_DIFFERENT_TOOLS = 5
+
+
 --The button each ability slot answers to, in order: slot 1 is the first entry.
 --This list is the only place the mapping lives. It used to be spelled out as
 --three named fields ( Ability_A / _B / _C ) wired to three fixed keys across
@@ -381,6 +399,42 @@ if SERVER then
 		end
 	end
 	cvars.AddChangeCallback( "ttg_var_abilityslots", Callback_AbilitySlots, "ttg_var_abilityslots_setting" )
+
+
+	--Different Tools
+	--How many tools a player may carry at once, as opposed to how many are
+	--listed. Capped at MAX_TOOL_SLOTS, because a tool the bought list cannot
+	--show is barely better than one no key can reach.
+	--Applies immediately: it is checked at the moment of buying.
+	--
+	--Past eight they stop being reachable by key whatever this says: the
+	--selector reads one character after "slot", so slot9 is the last bind it
+	--can tell apart, and the melee has the first of those nine.
+	if not ConVarExists( "ttg_var_difftools" ) then
+		CreateConVar( "ttg_var_difftools", tostring( MAX_DIFFERENT_TOOLS ), FCVAR_NOTIFY, "How many different tools a player can carry at once" )
+	end
+
+	local set_difftools = GetConVarNumber( "ttg_var_difftools" )
+	if set_difftools != nil and set_difftools >= 1 then
+		MAX_DIFFERENT_TOOLS = math.min( set_difftools, MAX_TOOL_SLOTS )
+	end
+	SetDifferentToolCount( MAX_DIFFERENT_TOOLS )
+
+	local function Callback_DifferentTools( CVar, PreviousValue, NewValue )
+		local newvalue = tonumber( NewValue )
+		if newvalue == nil or newvalue < 1 then return end
+
+		MAX_DIFFERENT_TOOLS = math.min( newvalue, MAX_TOOL_SLOTS )
+		SetDifferentToolCount( MAX_DIFFERENT_TOOLS )
+
+		if MAX_DIFFERENT_TOOLS > 8 then
+			ChatPrintToAll( "Different tools set to  " .. MAX_DIFFERENT_TOOLS ..
+				"  - only the first 8 can have a number key, the rest are scroll only" )
+		else
+			ChatPrintToAll( "Different tools set to  " .. MAX_DIFFERENT_TOOLS )
+		end
+	end
+	cvars.AddChangeCallback( "ttg_var_difftools", Callback_DifferentTools, "ttg_var_difftools_setting" )
 
 
 

@@ -27,6 +27,35 @@ function ENT:EmptyTable()
 end
 
 
+//The list below is built purely out of StartTouch and EndTouch, and neither
+//fires reliably when a player is teleported rather than walked out - which is
+//exactly what the Rewind ability does to everybody at once. Left stale it
+//decides rounds: somebody rewound off the point keeps contesting it forever, so
+//G_CurCaptureMode sticks on "stuck" and the attackers can never cap, and
+//somebody rewound onto it never starts capturing.
+//
+//Tests the player's centre against the brush rather than their whole hull, so
+//it is an approximation of what the engine does - somebody balanced on the very
+//edge of the zone can come out of a rewind on the other side of this from where
+//StartTouch would have put them. Close enough, given the alternative is a list
+//that is simply wrong.
+function ENT:RebuildTouchList()
+	table.Empty( self.TouchingPlyList )
+
+	if self.TTG_IsActive != true then return end
+
+	local mins, maxs = self:GetCollisionBounds()
+
+	for _, ply in pairs( player.GetAll() ) do
+		if ply:Team() == TEAM_SPEC then continue end
+
+		if self:WorldToLocal( ply:WorldSpaceCenter() ):WithinAABox( mins, maxs ) then
+			table.insert( self.TouchingPlyList, ply )
+		end
+	end
+end
+
+
 
 //TEAM_RED_SPEC and TEAM_BLUE_SPEC used to be tested for here as well. Neither
 //was ever defined - shared.lua sets up TEAM_RED, TEAM_BLUE and TEAM_SPEC and

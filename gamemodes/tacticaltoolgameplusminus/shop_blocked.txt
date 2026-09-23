@@ -1,0 +1,28 @@
+# Purchases to leave out of the shop, one per line.
+#
+# There are two copies of this file, and this text is in both of them:
+#
+#   gamemodes/tacticaltoolgameplusminus/shop_blocked.txt
+#       ships with the gamemode. It seeds the other one on a server that has
+#       not run this before, and is never read again afterwards. Edit it to
+#       change what a fresh server starts with.
+#
+#   garrysmod/data/ttg_shop_blocked.txt
+#       what the shop actually reads, and the one to edit. It belongs to
+#       whoever runs the server: it survives updating the gamemode, and
+#       nothing overwrites it once it exists.
+#
+# Names are the purchase_* ones from table_shop.lua, for example:
+#   purchase_sniper
+#   purchase_c4
+#
+# Anything after a # is ignored, so say why while you are here. A name that is
+# not a purchase is refused and reported in the server console rather than
+# quietly turning nothing off.
+#
+# Changes need  ttg_shop_reload  in the server console, or a map change.
+# Nothing is blocked by default.
+
+purchase_stuntrap
+purchase_mine
+purchase_ensnare

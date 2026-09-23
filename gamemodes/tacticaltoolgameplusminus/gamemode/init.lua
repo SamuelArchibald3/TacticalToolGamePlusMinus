@@ -32,6 +32,7 @@ AddCSLuaFile( "table_ent.lua" )
 AddCSLuaFile( "table_shop.lua" )
 AddCSLuaFile( "table_buff.lua" )
 AddCSLuaFile( "shop_descriptions.lua" )
+AddCSLuaFile( "shop_blocklist.lua" )
 AddCSLuaFile( "meta_ent.lua" )
 AddCSLuaFile( "meta_swep.lua" )
 AddCSLuaFile( "shared_settings.lua" )
@@ -44,6 +45,7 @@ AddCSLuaFile( 'metaplayer/metaplayer_freeze.lua' )
 AddCSLuaFile( 'metaplayer/metaplayer_invis.lua' )
 AddCSLuaFile( 'metaplayer/metaplayer_invuln.lua' )
 AddCSLuaFile( 'metaplayer/metaplayer_limbo.lua' )
+AddCSLuaFile( 'metaplayer/metaplayer_rewind.lua' )
 AddCSLuaFile( 'metaplayer/metaplayer_buffs.lua' )
 
 
@@ -72,6 +74,9 @@ include( "table_buff.lua" )
 --after all four tables, because it reads every one of them - see the note at
 --the top of that file
 include( "shop_descriptions.lua" )
+--after the shop tables too: it checks every name in the file against them, so
+--a typo is reported rather than silently turning nothing off
+include( "shop_blocklist.lua" )
 include( "meta_ent.lua" )
 include( "meta_swep.lua" )
 include( "shared_settings.lua" )
@@ -83,6 +88,7 @@ include( 'metaplayer/metaplayer_freeze.lua' )
 include( 'metaplayer/metaplayer_invis.lua' )
 include( 'metaplayer/metaplayer_invuln.lua' )
 include( 'metaplayer/metaplayer_limbo.lua' )
+include( 'metaplayer/metaplayer_rewind.lua' )
 include( 'metaplayer/metaplayer_buffs.lua' )
 
 

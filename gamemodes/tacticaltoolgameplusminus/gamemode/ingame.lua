@@ -11,6 +11,10 @@ function NextRound()
 	--staring at a team with no living players. It scored the round a second time.
 	End_TeamsAliveCheck()
 
+	--same reasoning, and it also unfreezes anybody caught mid-rewind by a round
+	--that ended underneath them
+	End_RewindSampler()
+
 	ResetVarsBetweenRounds()
 	
 	--[[
@@ -367,7 +371,9 @@ function CombatPhase()
 	Close_AbilityKeysMenus()
 	
 	Start_CaptureCheck()
-	
+
+	Start_RewindSampler()
+
 	OpenAttackersDoors()
 	
 	End_TriggerHurtCheck()
@@ -420,6 +426,7 @@ function WinningPhase(winners)
 	
 	End_CaptureCheck()
 	End_TeamsAliveCheck()
+	End_RewindSampler()
 
 	
 	--if the win was triggered by time running out, then make it so defenders won the round

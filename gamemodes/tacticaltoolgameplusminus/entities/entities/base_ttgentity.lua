@@ -104,6 +104,13 @@ function ENT:BuildFromCollision( data, ... )
 	local count = select( "#", ... )
 	local pos = data.HitPos
 
+	--Kept so a Rewind can put this entity back in the form it built into if it
+	--gets destroyed. ObjToMachine is only ever reached through this function,
+	--so this is the one place those arguments exist at all - most of them are a
+	--hit position and a wall normal that only the collision knew.
+	self.TTG_BuildArgs = args
+	self.TTG_BuildArgCount = count
+
 	timer.Simple( 0, function()
 		--the thing can be shot out of the air between hitting something and
 		--this running

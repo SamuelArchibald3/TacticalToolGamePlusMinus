@@ -8,6 +8,7 @@ include( "table_buff.lua" )
 --after all four tables, because it reads every one of them - see the note at
 --the top of that file
 include( "shop_descriptions.lua" )
+include( "shop_blocklist.lua" )
 include( "meta_ent.lua" )
 include( "meta_swep.lua" )
 include( "shared_settings.lua" )
@@ -20,6 +21,7 @@ include( 'metaplayer/metaplayer_freeze.lua' )
 include( 'metaplayer/metaplayer_invis.lua' )
 include( 'metaplayer/metaplayer_invuln.lua' )
 include( 'metaplayer/metaplayer_limbo.lua' )
+include( 'metaplayer/metaplayer_rewind.lua' )
 include( 'metaplayer/metaplayer_buffs.lua' )
 
 //all client files go here

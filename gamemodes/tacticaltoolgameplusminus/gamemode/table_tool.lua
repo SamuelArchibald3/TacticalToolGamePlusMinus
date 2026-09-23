@@ -1055,6 +1055,42 @@ duration = 8,
 }
 ,
 
+--Every number the Rewind uses lives here, including the ones the sampler reads
+--rather than the ability - metaplayer_rewind.lua and the sampler in
+--ingame_functions.lua both come back to this entry, so the shop description
+--cannot drift away from what the thing actually does.
+--
+--How many samples the ring holds is worked out from these rather than written
+--down beside them - see TTG_RewindBufferSize. A ring that does not cover the
+--window means every rewind refuses, because nothing in it is old enough to
+--reach for, and that is not a thing to leave to whoever next edits duration.
+--
+--buffer_slack is the extra seconds kept past the window. It absorbs the drift
+--in the CurTime() gate the sampler runs on, and gives the blocked-destination
+--walk somewhere to walk.
+--
+--playback_time is how long the replay takes, not how far back it goes. Ten
+--seconds of movement inside one is a tenfold scrub, which still reads as
+--rewinding; much faster than that and it is a blur. It is also how long
+--everybody is frozen, which is what stops it going up further.
+--
+--cooldown 60 sits between quickport's 50 and avia's 120. Rewind is strictly
+--stronger than quickport, but 120 against a 180 second combat phase is one use
+--a round, which is not enough for anybody to learn what it does.
+tool_abil_rewind =
+{
+name = "tool_abil_rewind",
+print_name = "Rewind",
+class = "ability",
+cooldown = 60,
+duration = 10,
+playback_time = 1,
+sample_interval = .1,
+buffer_slack = 2,
+sound_rewind = Sound("npc/scanner/cbot_energyexplosion1.wav"),
+}
+,
+
 }
 
 

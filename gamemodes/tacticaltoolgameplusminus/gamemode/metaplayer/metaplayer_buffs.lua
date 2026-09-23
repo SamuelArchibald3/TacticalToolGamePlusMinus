@@ -293,6 +293,61 @@ end
 
 
 
+--What this player is carrying, for the Rewind ability to record and put back.
+--
+--In slot order, and empties left out, so replaying it fills the slots in the
+--order they were filled.
+function TTGPlayer:BuffSnapshot()
+	local out = {}
+
+	for _, slot in ipairs( { "Buff_A", "Buff_B", "Buff_C", "Buff_D", "Buff_E", "Buff_F", "Buff_G" } ) do
+		local name = self:GetNetworkedString( slot, "none" )
+
+		if name != "none" then
+			table.insert( out, {
+				name = name,
+				timeleft = self:GetNetworkedInt( slot .. "_timeleft", 0 ),
+				showtime = self:GetNetworkedBool( slot .. "_showtime", true ),
+			} )
+		end
+	end
+
+	return out
+end
+
+
+--Put them back.
+--
+--Cleared and replayed through AddBuff rather than written into the slots
+--directly. A buff's expiry lives in the closures AddBuff builds, so one poked
+--straight into a slot would sit there for the rest of the round; going back in
+--through the front door gets it fresh timers. RemoveAllBuffs first, because
+--bumping every slot's token is what stops the timers still pending from the
+--buffs being replaced firing against the ones replacing them.
+--
+--A timeleft of zero means the buff never had a duration - it is held until
+--something takes it off - so it goes back that way rather than as one due to
+--expire this instant.
+--
+--Slots compact if the recorded set had gaps, so a buff can come back in a
+--lower slot than it left. The few places that keep a slot name to remove later
+--- the reload slow, the wallgrab snare, a primed drop slam - could then take
+--the wrong one off. RemoveAllBuffs already does that to them on death and
+--between rounds, so this is one more occasion rather than a new problem.
+function TTGPlayer:RestoreBuffs( recorded )
+	if recorded == nil then return end
+
+	self:RemoveAllBuffs()
+
+	for _, buff in ipairs( recorded ) do
+		local duration = buff.timeleft
+		if duration <= 0 then duration = nil end
+
+		self:AddBuff( buff.name, duration, buff.showtime )
+	end
+end
+
+
 function TTGPlayer:GetBuffInfoTable(  )
 	local buff_table = 
 	{

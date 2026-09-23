@@ -77,6 +77,34 @@ end
 hook.Add("Think", "GCTime", GCTime)
 
 
+--Put seconds back on the round clock, for the Rewind ability.
+--
+--GameTime is the whole of the clock's state, so giving it back is the whole of
+--rewinding it. Clamped to the phase's own length because the clock should
+--never read more time than the round began with - which cannot happen today,
+--since a rewind needs its whole window recorded before it will fire and so
+--cannot run in the first ten seconds, but that is a fact about another file.
+--
+--Coming back out of overtime is deliberate. If the clock had already run out
+--then it had not run out ten seconds ago, and an overtime banner sitting over
+--a clock with time on it is exactly the sort of thing that gets reported as a
+--bug. GCTime puts both back if it runs out again.
+function TTG_RewindGameTime( seconds )
+	if GameTimeOn != true then return end
+
+	--rounded because the clock counts in whole seconds and the display formats
+	--it as one: a fractional GameTime would show up as "01:50.6"
+	GameTime = math.min( GameTime + math.Round( seconds ), COMBATPHASE_TIME )
+
+	if GameTime > 0 and GetGlobalBool( "CL_DrawOvertime", false ) then
+		SetGlobalBool( "CL_DrawOvertime", false )
+		End_CheckOvertime()
+	end
+
+	UpdateHUDTime()
+end
+
+
 --Clears the timer, resetting it to zero, and turns it off
 function Clear_Timer()
 	GameTime = 0

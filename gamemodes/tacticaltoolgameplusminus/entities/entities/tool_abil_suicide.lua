@@ -45,6 +45,18 @@ end
 
 
 
+--Step 2 is a charge already counting down inside a timer, and a rewind cannot
+--call a timer back. This is the same pair of writes the second press makes to
+--call one off: the pending timer sees Cancel and stops rather than going off
+--at a player who has been moved somewhere else entirely.
+function ENT:RewindReset()
+	if self.Step != 2 then return end
+
+	self.Cancel = true
+	self.Step = 1
+end
+
+
 function ENT:Explode( )
 	local explosion = ents.Create( "env_explosion" )		///create an explosion and delete the prop
 		explosion:SetPos( self.Owner:GetPos() + Vector(0,0,50) )
