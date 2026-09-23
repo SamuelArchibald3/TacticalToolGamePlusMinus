@@ -26,21 +26,24 @@ ttg_knavey_a4
 ttg_canyon_a1
 ttg_foundry_a1
 
+ttg_threeway
+ttg_spoon
+ttg_nukevlan
+ttg_valley_v2
+ttg_medieval_land
+
 # generated in mapsrc/
-ttg_lanes_a1
-ttg_rift_a1
+# ttg_lanes_a1
+# ttg_rift_a1
 ttg_bastion_a1
-ttg_crossroads_a1
-ttg_archipelago_a1
+# ttg_crossroads_a1
+# ttg_archipelago_a1
 ttg_dam_a1
 
 # From the Workshop. They are TTG maps, but they live in the Workshop cache or
 # the download folder rather than in maps/, so a server needs them copied over
 # before they can go on the ballot.
-# ttg_threeway
-# ttg_spoon
-# ttg_nukevlan
-# ttg_valley_v2
-# ttg_medieval_land
+
+
 # ttg_arenakoth_a2
 # ttg_arenapickle_a1
