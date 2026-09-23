@@ -122,22 +122,23 @@ function ShowBuyingMenu()
 	//rule, and the rows it lost said nothing about why - the reason only ever
 	//reached whoever bought one from the console.
 	//
-	//not_in_shop is a different thing and still hides: that is not for sale at
-	//all, to anybody, ever.
+	//not_in_shop and the blocklist are a different thing and still hide: those
+	//are not for sale to anybody on this server at all, rather than something
+	//this player cannot have at this moment.
 	for _, purchase in pairs(FIRSTSHOP_TABLE) do
-		if purchase.not_in_shop != true then
+		if purchase.not_in_shop != true and not TTG_ShopBlocked( purchase.name ) then
 			FirstShopColumn:AddLine( purchase.print_name, purchase.pack_amount )  
 		end
 	end
 	
 	for _, purchase in pairs(SECONDSHOP_TABLE) do
-		if purchase.not_in_shop != true then
+		if purchase.not_in_shop != true and not TTG_ShopBlocked( purchase.name ) then
 			SecondShopColumn:AddLine( purchase.print_name )  
 		end
 	end	
 	
 	for _, purchase in pairs(THIRDSHOP_TABLE) do
-		if purchase.not_in_shop != true then
+		if purchase.not_in_shop != true and not TTG_ShopBlocked( purchase.name ) then
 			ThirdShopColumn:AddLine( purchase.print_name )  
 		end
 	end

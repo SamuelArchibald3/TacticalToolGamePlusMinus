@@ -94,19 +94,19 @@ function ShowHelpMenu()
 	
 	//add all purchases to the shops
 	for _, purchase in pairs(FIRSTSHOP_TABLE) do
-		if purchase.not_in_shop != true then
+		if purchase.not_in_shop != true and not TTG_ShopBlocked( purchase.name ) then
 			FirstShopColumn:AddLine( purchase.print_name, purchase.pack_amount )  
 		end
 	end
 	
 	for _, purchase in pairs(SECONDSHOP_TABLE) do
-		if purchase.not_in_shop != true then
+		if purchase.not_in_shop != true and not TTG_ShopBlocked( purchase.name ) then
 			SecondShopColumn:AddLine( purchase.print_name )  
 		end
 	end	
 	
 	for _, purchase in pairs(THIRDSHOP_TABLE) do
-		if purchase.not_in_shop != true then
+		if purchase.not_in_shop != true and not TTG_ShopBlocked( purchase.name ) then
 			ThirdShopColumn:AddLine( purchase.print_name )  
 		end
 	end

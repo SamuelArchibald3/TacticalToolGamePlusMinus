@@ -341,6 +341,15 @@ function TTG_PurchaseBlocked( ply, purchasename )
 
 	local purchase = Shop_Reference( purchasename )
 
+	--Turned off for this server, in data/ttg_shop_blocked.txt.
+	--
+	--not_in_shop rides along here. The menus have always left those out, but
+	--nothing ever refused one, so anything hidden could still be bought
+	--straight from the console - ttg_devbuy included.
+	if purchase != nil and ( TTG_ShopBlocked( purchasename ) or purchase.not_in_shop == true ) then
+		return true, purchase.print_name .. " is not available on this server"
+	end
+
 	--One tool too many is one with no number key to reach it - the weapon
 	--selector answers to slot1 through slot6 and swallows the rest, and the
 	--melee already has the first of those, so it would be sold as something

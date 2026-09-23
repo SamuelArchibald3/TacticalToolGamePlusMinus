@@ -1,0 +1,157 @@
+/*---------------------------------------------------------
+	Purchases turned off by hand
+---------------------------------------------------------*/
+
+--A blocklist rather than an allowlist, so a tool is on sale the moment it is
+--written rather than only once somebody remembers to add it to a list.
+--
+--One purchase name per line in data/ttg_shop_blocked.txt. Blank lines are
+--skipped and anything after a # is ignored, so the file can say why something
+--is off. ttg_shop_reload picks up an edit without a map change.
+--
+--A file rather than a convar because a convar holds one string, and twenty
+--purchase names inside a single console command is not something anybody wants
+--to edit. The cost is this loader and telling the client, which a convar would
+--have needed anyway.
+
+local BLOCKLIST_FILE = "ttg_shop_blocked.txt"
+
+--Written out the first time if there is nothing there, so the file exists to
+--be opened and explains itself rather than having to be guessed at.
+local BLOCKLIST_TEMPLATE = [[
+# Purchases to leave out of the shop, one per line.
+#
+# Names are the purchase_* ones from table_shop.lua, for example:
+#   purchase_sniper
+#   purchase_c4
+#
+# Anything after a # is ignored, so say why while you are here.
+# Changes need  ttg_shop_reload  in the server console, or a map change.
+]]
+
+--Kept as a set on both realms: the server reads the file, the client is told,
+--because the buy menu has to leave these out and cannot read data/ itself.
+local Blocked = {}
+
+
+function TTG_ShopBlocked( purchasename )
+	return Blocked[ purchasename ] == true
+end
+
+
+function TTG_ShopBlockedList()
+	local out = {}
+
+	for name in pairs( Blocked ) do table.insert( out, name ) end
+	table.sort( out )
+
+	return out
+end
+
+
+if SERVER then
+	util.AddNetworkString( "TTG_ShopBlocked" )
+
+	--`to` is who receives it; nil means everybody.
+	local function Broadcast( to )
+		local names = TTG_ShopBlockedList()
+
+		net.Start( "TTG_ShopBlocked" )
+			net.WriteUInt( #names, 8 )
+
+			for _, name in ipairs( names ) do
+				net.WriteString( name )
+			end
+
+		if IsValid( to ) then
+			net.Send( to )
+		elseif player.GetCount() > 0 then
+			net.Broadcast()
+		end
+	end
+
+
+	--Read the file in. Hands back how many names it took and how many it did
+	--not recognise, so the console says something useful either way - a typo
+	--in there is otherwise a tool that stays on sale for no visible reason.
+	function TTG_LoadShopBlocklist()
+		Blocked = {}
+
+		if not file.Exists( BLOCKLIST_FILE, "DATA" ) then
+			file.Write( BLOCKLIST_FILE, BLOCKLIST_TEMPLATE )
+		end
+
+		local body = file.Read( BLOCKLIST_FILE, "DATA" ) or ""
+		local taken, unknown = 0, 0
+
+		for _, line in ipairs( string.Explode( "\n", body ) ) do
+			local name = string.Trim( string.Explode( "#", line )[ 1 ] or "" )
+
+			if name != "" then
+				if CheckIfInShopTables( name ) then
+					Blocked[ name ] = true
+					taken = taken + 1
+				else
+					print( "TTG shop blocklist: there is no purchase called " .. name )
+					unknown = unknown + 1
+				end
+			end
+		end
+
+		Broadcast()
+
+		return taken, unknown
+	end
+
+
+	--Turn one off or on for this session only. The file is not rewritten, so a
+	--reload or a map change puts it back to whatever is written down.
+	function TTG_SetShopBlocked( purchasename, blocked )
+		if not CheckIfInShopTables( purchasename ) then return false end
+
+		Blocked[ purchasename ] = blocked == true or nil
+		Broadcast()
+
+		return true
+	end
+
+
+	--Somebody who joins later has missed the broadcast, and the list is only
+	--read at map load. Deferred a second for the same reason
+	--TTG_SendPlayerLists defers: a player in PlayerInitialSpawn is not ready to
+	--be sent anything yet.
+	hook.Add( "PlayerInitialSpawn", "TTG_SendShopBlocklist", function( ply )
+		timer.Simple( 1, function()
+			if IsValid( ply ) then Broadcast( ply ) end
+		end )
+	end )
+
+
+	concommand.Add( "ttg_shop_reload", function( ply )
+		local taken, unknown = TTG_LoadShopBlocklist()
+
+		local msg = "shop blocklist: " .. taken .. " purchase(s) turned off"
+		if unknown > 0 then
+			msg = msg .. ", " .. unknown .. " name(s) not recognised - see the console"
+		end
+
+		print( msg )
+		if IsValid( ply ) then ply:ChatPrint( msg ) end
+	end )
+
+
+	--At load, once the shop tables are there to check names against. init.lua
+	--includes this after them for exactly that reason.
+	TTG_LoadShopBlocklist()
+end
+
+
+if CLIENT then
+	net.Receive( "TTG_ShopBlocked", function()
+		Blocked = {}
+
+		for i = 1, net.ReadUInt( 8 ) do
+			Blocked[ net.ReadString() ] = true
+		end
+	end )
+end
