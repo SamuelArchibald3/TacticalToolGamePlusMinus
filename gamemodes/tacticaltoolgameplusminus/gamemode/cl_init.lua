@@ -342,8 +342,9 @@ function hud()
 	
 	local function DrawCapMarker()
 		for k,ent in pairs( ents.GetAll() ) do
-			if ent:GetClass() == "marker_capturezone" then
-				local PosScr = ent:GetPos():ToScreen() 
+			--a hidden marker belongs to a zone that is not live this round
+			if ent:GetClass() == "marker_capturezone" and not ent:GetNoDraw() then
+				local PosScr = ent:GetPos():ToScreen()
 				draw.SimpleTextOutlined("[ ]", "default", PosScr.x, PosScr.y, white, 1, 1, 1, Color(0, 0, 0, 255))
 				//return
 			end
