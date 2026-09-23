@@ -10,7 +10,16 @@
 ---------------------------------------------------------*/
 
 function fVote( ply, command, arguments )
-	if ply.Has_Voted == true then 
+	--Only a map on this ballot, checked before the vote is spent: a runoff
+	--offers fewer maps than the vote before it, and a client can send any name.
+	--Nothing checked it before, so a name that was never on the list counted as
+	--a vote and simply matched nothing.
+	if arguments[1] == "map" and not TTG_OnMapBallot( arguments[2] ) then
+		ply:ChatPrint( "That map is not on this ballot." )
+		return
+	end
+
+	if ply.Has_Voted == true then
 		ply:ChatPrint( "You have already voted." )
 		return
 	else

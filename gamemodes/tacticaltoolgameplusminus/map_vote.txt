@@ -1,0 +1,46 @@
+# The maps !votemap offers, one per line, in the order it lists them.
+#
+# There are two copies of this file, and this text is in both of them:
+#
+#   gamemodes/tacticaltoolgameplusminus/map_vote.txt
+#       ships with the gamemode. It seeds the other one on a server that has
+#       not run this before, and is never read again afterwards. Edit it to
+#       change what a fresh server starts with.
+#
+#   garrysmod/data/ttg_map_vote.txt
+#       what the vote actually reads, and the one to edit. It belongs to
+#       whoever runs the server: it survives updating the gamemode, and
+#       nothing overwrites it once it exists.
+#
+# A map that is not in this server's maps folder is left off the ballot and
+# reported in the server console, rather than offered and then failing to
+# load. Anything after a # is ignored, so a map can be switched off without
+# losing its place.
+#
+# Changes need  ttg_mapvote_reload  in the server console, or a map change.
+
+ttg_1path_v1
+ttg_2path_v1
+ttg_hole_a1
+ttg_knavey_a4
+ttg_canyon_a1
+ttg_foundry_a1
+
+# generated in mapsrc/
+ttg_lanes_a1
+ttg_rift_a1
+ttg_bastion_a1
+ttg_crossroads_a1
+ttg_archipelago_a1
+ttg_dam_a1
+
+# From the Workshop. They are TTG maps, but they live in the Workshop cache or
+# the download folder rather than in maps/, so a server needs them copied over
+# before they can go on the ballot.
+# ttg_threeway
+# ttg_spoon
+# ttg_nukevlan
+# ttg_valley_v2
+# ttg_medieval_land
+# ttg_arenakoth_a2
+# ttg_arenapickle_a1

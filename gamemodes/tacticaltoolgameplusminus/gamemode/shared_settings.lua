@@ -165,7 +165,9 @@ BRUSH_DOOR_NAME = "TTG_Brush_Door"
 
 
 VOTE_CHANGEMAP_ENABLED = true
-SERVER_MAPS = { "ttg_1path_v1", "ttg_2path_v1", "ttg_hole_a1", "ttg_knavey_a4", "ttg_canyon_a1", "ttg_foundry_a1",  }
+--which maps !votemap offers, and in what order, is in a text file now:
+--data/ttg_map_vote.txt, seeded from map_vote.txt in the gamemode folder
+
 
 
 

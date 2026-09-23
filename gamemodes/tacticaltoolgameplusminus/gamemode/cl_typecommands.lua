@@ -5,6 +5,11 @@ local CheckClientSay = false
 local CurVoteCommand = nil
 local Voting_ArgTable = {}
 
+--what the map vote on now offers, sent by the server as it starts: the whole
+--list, or just the maps a vote tied on if this is the runoff
+local MapBallot = {}
+local MapRunoff = false
+
 
 --Runs the console command sending a the players vote back to the server
 local function VoteKey( num )
@@ -43,9 +48,16 @@ local function Vote_Panel( option, cmd )
 	CheckClientSay = true
 	Vote_SetCurVoteCommand( cmd )
 
+	--Tall enough for every choice. It was a fixed 225, which is about six
+	--lines, and the map list is longer than that now.
+	local rows = 3
+	if option == "maps" then rows = #MapBallot + 1
+	elseif option == "players" then rows = #player.GetAll() + 1 end
+	local tall = math.min( 60 + rows * 26, ScrH() - 160 )
+
 	local Panel = vgui.Create( "DFrame" )
-	Panel:SetPos( ScrW()-225, ScrH()-340 )
-	Panel:SetSize( 200, 225 )
+	Panel:SetPos( ScrW()-265, ScrH() - 115 - tall )
+	Panel:SetSize( 240, tall )
 	//Panel:SetAlpha( 200 )
 	Panel:SetTitle( "Enter number in chat to vote" ) 
 	Panel:SetVisible( true )
@@ -56,7 +68,7 @@ local function Vote_Panel( option, cmd )
 	
 	local ChoiceList = vgui.Create( "DPanelList", Panel )
 	ChoiceList:SetPos( 25,25 )
-	ChoiceList:SetSize( 200, 500 )
+	ChoiceList:SetSize( 210, tall - 30 )
 	ChoiceList:SetSpacing( 5 )
 	ChoiceList:EnableHorizontal( false )
 	ChoiceList:EnableVerticalScrollbar( true )
@@ -72,7 +84,11 @@ local function Vote_Panel( option, cmd )
 		--timer
 		local timeleft = GetGlobalInt( "CL_VoteTimerInt" )
 		local InsertTitle = vgui.Create( "DLabel" )
-		InsertTitle:SetText( "Vote" .. cmd .. "? - " .. timeleft )
+		if option == "maps" and MapRunoff then
+			InsertTitle:SetText( "Runoff - " .. timeleft )
+		else
+			InsertTitle:SetText( "Vote" .. cmd .. "? - " .. timeleft )
+		end
 		InsertTitle:SetColor( Color(255,255,255,255) )
 		InsertTitle:SetFont( "Trebuchet24" )
 		InsertTitle:SizeToContents()
@@ -118,7 +134,7 @@ local function Vote_Panel( option, cmd )
 			end
 			
 		elseif option == "maps" then
-			for k, map in pairs( SERVER_MAPS ) do
+			for k, map in ipairs( MapBallot ) do
 				Voting_ArgTable[num] = map
 				
 				local votes = 0
@@ -180,9 +196,17 @@ end
 usermessage.Hook( "VoteInitialize_Restart", VoteInitialize_Restart )
 
 
-local function VoteInitialize_ChangeMap()
+--A map vote, or its runoff, starting. The ballot comes with it rather than out
+--of a list the client keeps: the list is a file on the server now, and a runoff
+--only offers the maps that tied.
+net.Receive( "TTG_MapBallot", function()
+	MapBallot = {}
+	for i = 1, net.ReadUInt( 8 ) do
+		table.insert( MapBallot, net.ReadString() )
+	end
+	MapRunoff = net.ReadBool()
+
 	Vote_Panel( "maps", "map" )
-end
-usermessage.Hook( "VoteInitialize_ChangeMap", VoteInitialize_ChangeMap )
+end )
 
 
