@@ -266,10 +266,11 @@ function fGiveTool( player, command, arguments )
 	end
 
 
-	//Something can be withheld from a team - First Aid when the teams are
-	//uneven, or anything that has hit its team_limit. The buy menu already
-	//leaves those out of the list, so this catches a console purchase, or a
-	//menu that was built before the last change reached the client.
+	//Something can be off limits - First Aid when the teams are uneven, a
+	//purchase at its team_limit, or one tool more than there are keys to reach
+	//them with. The buy menu lists all of it anyway and this is what turns the
+	//click down, the same way a full set of ability slots is turned down below
+	//rather than hidden.
 	//
 	//TTG_PurchaseBlocked says why, rather than the reason being written out
 	//here, so a new rule does not mean editing this.

@@ -113,23 +113,31 @@ function ShowBuyingMenu()
 	
 	
 	//add all purchases to the shops.
-	//TTG_PurchaseBlocked keeps out anything withheld from this player's team -
-	//First Aid, when the uneven teams handicap is set to take it off the bigger
-	//side. Better to leave it unlisted than to refuse the click afterwards.
+	//Everything is listed, including whatever cannot be bought at this moment.
+	//The refusal happens on the click, with a reason, which is how a full set
+	//of ability slots has always behaved.
+	//
+	//This used to leave blocked purchases out. A list that quietly loses rows
+	//while you are shopping reads as things going missing rather than as a
+	//rule, and the rows it lost said nothing about why - the reason only ever
+	//reached whoever bought one from the console.
+	//
+	//not_in_shop is a different thing and still hides: that is not for sale at
+	//all, to anybody, ever.
 	for _, purchase in pairs(FIRSTSHOP_TABLE) do
-		if purchase.not_in_shop != true and not TTG_PurchaseBlocked( LocalPlayer(), purchase.name ) then
+		if purchase.not_in_shop != true then
 			FirstShopColumn:AddLine( purchase.print_name, purchase.pack_amount )  
 		end
 	end
 	
 	for _, purchase in pairs(SECONDSHOP_TABLE) do
-		if purchase.not_in_shop != true and not TTG_PurchaseBlocked( LocalPlayer(), purchase.name ) then
+		if purchase.not_in_shop != true then
 			SecondShopColumn:AddLine( purchase.print_name )  
 		end
 	end	
 	
 	for _, purchase in pairs(THIRDSHOP_TABLE) do
-		if purchase.not_in_shop != true and not TTG_PurchaseBlocked( LocalPlayer(), purchase.name ) then
+		if purchase.not_in_shop != true then
 			ThirdShopColumn:AddLine( purchase.print_name )  
 		end
 	end

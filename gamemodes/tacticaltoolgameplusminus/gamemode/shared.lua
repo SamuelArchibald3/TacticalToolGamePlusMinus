@@ -317,8 +317,10 @@ end
 --message at the call site. Callers that only want the yes or no can carry on
 --reading it as a plain boolean.
 --
---Shared because both ends need it: the buy menu leaves a blocked purchase out
---of its list, and fGiveTool refuses it if the click gets through anyway.
+--Shared because both ends ask it, for different things. fGiveTool refuses the
+--purchase; the buy menu still lists it, and only wants the answer so it could
+--say so. Nothing is hidden - a list that loses rows while you shop reads as
+--things going missing rather than as a rule.
 --
 --Two rules so far.
 --
