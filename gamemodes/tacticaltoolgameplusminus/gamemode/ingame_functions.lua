@@ -474,8 +474,13 @@ function ChooseAttackSite()
 	end
 	
 	local ChosenSite = SitesTable[ math.random( 1, Count ) ]
-	
-		
+
+	--mark the live one and only the live one. Every zone made a marker when it
+	--spawned, so on a map with several a player would otherwise see them all.
+	for k,site in pairs(SitesTable) do
+		site:ShowMarker( site == ChosenSite )
+	end
+
 	--sets the global 'G_CurAttackZone' to be the chosen func_ttg_capturezone entity for this round
 	G_CurAttackZone = ChosenSite
 	G_CurAttackZone.TTG_IsActive = true
@@ -1101,6 +1106,7 @@ function ResetVarsBetweenRounds()
 	if IsValid(G_CurAttackZone) then
 		G_CurAttackZone:EmptyTable()
 		G_CurAttackZone.TTG_IsActive = false
+		G_CurAttackZone:ShowMarker( false )
 		G_CurAttackZone = nil
 	end
 	

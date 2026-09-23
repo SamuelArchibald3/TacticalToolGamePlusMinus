@@ -22,6 +22,9 @@ function ENT:Initialize()
 	self:SetModel("models/tacticaltoolgame_models/boulder01_medium.mdl")
 	self:SetSkin( 3 )
 	self:SetNotSolid(true)
+
+	--hidden until its zone is the live one; ChooseAttackSite shows it
+	self:SetNoDraw(true)
 end
 
 
