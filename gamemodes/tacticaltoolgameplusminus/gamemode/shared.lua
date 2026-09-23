@@ -262,15 +262,15 @@ end
 --convars only exist on the server, and the two things that need it - the buy
 --menu and the weapon selector - are both client side. Falls back to the shared
 --default, which covers the moment before the first push.
-function SetToolKeyCount( num )
-	SetGlobal2Int( "TTG_ToolKeys", num )
+function SetDifferentToolCount( num )
+	SetGlobal2Int( "TTG_DifferentTools", num )
 end
 
-function TTG_ToolKeyCount()
-	local num = GetGlobal2Int( "TTG_ToolKeys", 0 )
+function TTG_DifferentToolCount()
+	local num = GetGlobal2Int( "TTG_DifferentTools", 0 )
 
 	if num == nil or num < 1 then
-		return MAX_TOOL_KEYS
+		return MAX_DIFFERENT_TOOLS
 	end
 
 	return num
@@ -339,9 +339,10 @@ function TTG_PurchaseBlocked( ply, purchasename )
 
 	local purchase = Shop_Reference( purchasename )
 
-	--A seventh different tool is one with no number key to reach it - the
-	--weapon selector answers to slot1 through slot6 and swallows the rest, so
-	--it would be sold as something only scrolling can find.
+	--One tool too many is one with no number key to reach it - the weapon
+	--selector answers to slot1 through slot6 and swallows the rest, and the
+	--melee already has the first of those, so it would be sold as something
+	--only scrolling can find.
 	--
 	--Owning it already is always fine. That is ammo going into a bucket that
 	--exists rather than a new key to look for, which is why this counts what
@@ -356,8 +357,8 @@ function TTG_PurchaseBlocked( ply, purchasename )
 			if tool.name == purchase.tool_name then already = true end
 		end
 
-		if not already and carried >= TTG_ToolKeyCount() then
-			return true, "You can carry " .. TTG_ToolKeyCount() ..
+		if not already and carried >= TTG_DifferentToolCount() then
+			return true, "You can carry " .. TTG_DifferentToolCount() ..
 				" different tools - buy more of one you already have instead"
 		end
 	end
