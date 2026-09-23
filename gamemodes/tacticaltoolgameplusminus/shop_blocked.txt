@@ -22,3 +22,7 @@
 #
 # Changes need  ttg_shop_reload  in the server console, or a map change.
 # Nothing is blocked by default.
+
+purchase_stuntrap
+purchase_mine
+purchase_ensnare

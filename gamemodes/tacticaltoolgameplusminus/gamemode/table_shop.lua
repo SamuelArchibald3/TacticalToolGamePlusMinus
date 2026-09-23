@@ -131,20 +131,6 @@ bind_primary = "Deploy spike panel",
 }
 ,
 
---[[
-purchase_suicide =
-{
-name = "purchase_suicide",
-print_name = "SelfExplosion",
-class = "item",
-tool_name = "tool_suicide",
-pack_amount = 1,
-description = "Desrcription Not Availible",
-}
-,
-]]--
-
-
 purchase_boulder =
 {
 name = "purchase_boulder",
@@ -343,152 +329,6 @@ bind_primary = "Repair nearby building",
 }
 ,
 
--- purchase_smg =
--- {
--- name = "purchase_smg",
--- print_name = "SMG",
--- class = "gun",
--- tool_name = "tool_smg",
--- description = "Rapidfire machinegun which knocks back and very lightly damages enemies.",
--- bind_primary = "Shoot",
--- bind_r = "Reload",
--- }
--- ,
-
---[[
-purchase_chargeshot =
-{
-name = "purchase_chargeshot",
-print_name = "Charge Shot",
-class = "gun",
-tool_name = "tool_chargeshot",
-description = "Desrcription Not Availible",
-}
-,
-]]--
-
-
---[[
-purchase_jumppadgun =
-{
-name = "purchase_jumppadgun",
-print_name = "Jump-Pad",
-class = "gun",
-tool_name = "tool_jumppad",
-description = "Deploys a pad on the ground, if any prop or player comes within the pad's area, they are sent flying into the air. \nOnly one jump pad can be active at a time.  \n( Whenever a new pad is deployed, the old pad is destroyed. )",
-bind_primary = "Deploy jump pad",
-bind_alt = "Remove deployed jump pad",
-bind_r = "Reload",
-}
-,
-
-
-purchase_bomb =
-{
-name = "purchase_bomb",
-print_name = "Impact Bomb",
-class = "gun",
-tool_name = "tool_bomb",
-description = "Shoots projectiles that explode dealing AOE damage at the point of impact.",
-bind_primary = "Shoot bomb",
-bind_r = "Reload",
-}
-,
-
-purchase_shotgun =
-{
-name = "purchase_shotgun",
-print_name = "Shotgun",
-class = "gun",
-tool_name = "tool_shotgun",
-description = "Shoots a scattershot of shrapnel causing high damage to enemies at close range.",
-bind_primary = "Shoot",
-bind_r = "Reload",
-}
-,
-
-
-
-
-purchase_chargeshot =
-{
-name = "purchase_chargeshot",
-print_name = "Charge Shot",
-class = "gun",
-tool_name = "tool_chargeshot",
-description = "Desrcription Not Availible",
-}
-,
-
-
-
-
-purchase_sniper =
-{
-name = "purchase_sniper",
-print_name = "ChargeRifle",
-class = "gun",
-tool_name = "tool_sniper",
-description = "Desrcription Not Availible",
-}
-,
-
-
-purchase_pucknade =
-{
-name = "purchase_pucknade",
-print_name = "Puck Nade",
-class = "gun",
-tool_name = "tool_pucknade",
-description = "Shoots doughnut shaped pucks which slide across the ground and explode if near an enemy player. \nThe nades automatically explode after 2.5 seconds.",
-bind_primary = "Shoot puck nade",
-bind_r = "Reload",
-}
-,
-
-
-
-
-
-
-purchase_slowstick =
-{
-name = "purchase_slowstick",
-print_name = "SlowStick",
-class = "gun",
-tool_name = "tool_slowstick",
-description = "Desrcription Not Availible",
-}
-,
-
-
-
-purchase_revolver =
-{
-name = "purchase_revolver",
-print_name = "Revolver",
-class = "gun",
-tool_name = "tool_revolver",
-description = "Shoots high damage, high accuracy bullets.",
-bind_primary = "Shoot",
-bind_r = "Reload",
-}
-,
-
-
-
-purchase_missile =
-{
-name = "purchase_missile",
-print_name = "Missile",
-class = "gun",
-tool_name = "tool_missile",
-description = "Rapidly shoots slow moving missile projectiles which hurt the target they hit. \nThe missiles do NOT cause AOE damage at the point of impact.",
-bind_primary = "Shoot missiles",
-bind_r = "Reload",
-}
-,
-]]--
 
 }
 
@@ -646,22 +486,14 @@ description = "Amplifies the rate of fire of your melee weapon's Zap attack by {
 ,
 
 
---Says "including you and your own team" out loud because that is the part
---people otherwise find out by using it, and says what does not come back for
---the same reason - a rewound player who still sees the point half captured
---would otherwise read it as a bug.
 purchase_rewind =
 {
 name = "purchase_rewind",
 print_name = "Rewind",
 class = "ability",
 tool_name = "tool_abil_rewind",
---One between the whole team. It undoes an entire engagement for everybody on
---the map, so a side holding three of them could keep doing that. Any purchase
---can declare this - see TTG_PurchaseBlocked in shared.lua - and nothing there
---or in the buy menu names a particular item.
 team_limit = 1,
-description = "Sends every living player on both teams - including you and your own team - back along the path they walked, to where they stood {tool.duration} seconds ago. \nHealth, ammo and ability cooldowns go back with them, and anything thrown in that time is taken back off the map. \nSo it undoes your team's damage as much as theirs. \nAnybody killed in that time gets up and is rewound with everyone else, carrying what they died with. \nBuildings are repaired, ones that were destroyed go back up, and the round clock and the capture both go back to where they were. \nBuffs go back to what they were, down to how long each had left. \nRewind does not refund its own cooldown. \nOne per team. \nDoes nothing in the first {tool.duration} seconds of a round. \n{tool.cooldown} second cooldown.",
+description = "Rewinds time to {tool.duration} seconds ago. \n Rewind does not refund its own cooldown. \nOne per team. \nDoes nothing in the first {tool.duration} seconds of a round. \n{tool.cooldown} second cooldown.",
 }
 ,
 

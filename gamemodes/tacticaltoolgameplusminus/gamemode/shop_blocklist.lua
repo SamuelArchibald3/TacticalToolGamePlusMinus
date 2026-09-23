@@ -49,8 +49,28 @@ end
 if SERVER then
 	util.AddNetworkString( "TTG_ShopBlocked" )
 
+	--Whether anybody can actually receive one of these.
+	--
+	--Bots cannot, and that is the whole point of asking. A net message that is
+	--started and then not sent stays open, and the next net.Start anywhere in
+	--the gamemode discards itself over the top of it and says so - which is
+	--how this turned up: an unsent blocklist sitting open until the round
+	--restart's own broadcast tripped over it.
+	--
+	--player.GetCount() was the first guess and it is the wrong question: it
+	--counts bots, so on a server full of them net.Broadcast is handed a
+	--message with nobody to give it to. GetHumans is who is really listening.
+	local function CanReceive( to )
+		if IsValid( to ) then return to:IsBot() != true end
+
+		return #player.GetHumans() > 0
+	end
+
+
 	--`to` is who receives it; nil means everybody.
 	local function Broadcast( to )
+		if not CanReceive( to ) then return end
+
 		local names = TTG_ShopBlockedList()
 
 		net.Start( "TTG_ShopBlocked" )
@@ -62,7 +82,7 @@ if SERVER then
 
 		if IsValid( to ) then
 			net.Send( to )
-		elseif player.GetCount() > 0 then
+		else
 			net.Broadcast()
 		end
 	end
