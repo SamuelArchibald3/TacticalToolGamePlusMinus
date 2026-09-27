@@ -30,6 +30,14 @@ function ENT:DoAbility()
 	--charged for a refusal, the same way quickport only charges once its second
 	--step actually lands.
 	if TTG_RewindAllPlayers( self.Owner ) != true then
+		--Said as well as sounded. At the start of Combat and for ten seconds
+		--after any rewind there is nothing to go back to, and a Rewind that is
+		--not cooling down but will not fire looks broken.
+		local wait = TTG_RewindReadyIn()
+		if wait > 0 then
+			self.Owner:ChatPrint( "Nothing to rewind to yet - try again in " .. wait .. " seconds." )
+		end
+
 		self:CooldownSound()
 	return
 	end

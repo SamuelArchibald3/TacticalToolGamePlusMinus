@@ -598,6 +598,12 @@ G_RewindPlayback = nil
 
 local RewindNextSample = 0
 
+--When the recording that a rewind can reach into began: the start of Combat,
+--or the moment the last rewind landed, which throws everything before it away.
+--Only there to tell somebody how long they have to wait - whether a rewind can
+--go ahead is still the buffers' own business. nil when nothing is recording.
+local RewindHistoryStart = nil
+
 
 /*---------------------------------------------------------
 	What the map looked like
@@ -866,6 +872,7 @@ end
 function Start_RewindSampler()
 	RewindNextSample = 0
 	TTG_RewindWorldReset()
+	RewindHistoryStart = CurTime()
 
 	if not TTG_AnybodyHasRewind() then return end
 
@@ -876,6 +883,7 @@ end
 function End_RewindSampler()
 	hook.Remove( "Think", "TTG_RewindSampler" )
 	TTG_RewindWorldReset()
+	RewindHistoryStart = nil
 
 	--a playback in flight has everybody frozen. Dropping the hook without
 	--unfreezing them leaves the whole server stuck mid-rewind.
@@ -896,11 +904,12 @@ end
 --inside where A used to be - and a rewind that covers 0.4 seconds one time and
 --3 the next reads as broken rather than as a rule.
 --
---In practice the only thing that returns nil is the first few seconds of
---Combat, uniformly for everyone: PUB_MODE is off and SetSpawnStuff is only
---called from NextRound, so nobody spawns alive mid-round and everybody's buffer
---is exactly as deep as the round is old. If mid-round joining is ever wired up,
---this is one of the places that assumes it cannot happen.
+--In practice the only things that return nil are the first few seconds of
+--Combat and the first few after a rewind lands, uniformly for everyone:
+--PUB_MODE is off and SetSpawnStuff is only called from NextRound, so nobody
+--spawns alive mid-round and everybody's buffer is exactly as deep as the round,
+--or the last rewind, is old. If mid-round joining is ever wired up, this is one
+--of the places that assumes it cannot happen.
 function TTG_RewindTargets()
 	local cutoff = CurTime() - TOOL_TABLE.tool_abil_rewind.duration
 	local targets = {}
@@ -1044,6 +1053,36 @@ function TTG_RewindFinish()
 			if IsValid( abil ) then abil:RewindReset() end
 		end
 	end
+
+	--History starts again from here, so no rewind for the next ten seconds.
+	--
+	--Everything this one undid is still in the rings otherwise, and a second
+	--rewind inside the window reaches into it - back to a moment that no longer
+	--happened. Anybody who has died since is revived with the cooldowns they
+	--had back then, which for whoever fired this one is a Rewind not yet spent.
+	--And anything this rewind built again, under a new index, is built a second
+	--time from the old one. With nothing recorded before now, the next rewind
+	--is refused the way one is at the start of Combat: free, until there are
+	--ten seconds to go back to.
+	for _, ply in pairs( player.GetAll() ) do
+		ply:RewindBufferReset()
+	end
+
+	TTG_RewindWorldReset()
+	RewindHistoryStart = CurTime()
+end
+
+
+--Whole seconds until the recording reaches back far enough to rewind, or 0 if
+--it already does or nothing is recording.
+function TTG_RewindReadyIn()
+	if RewindHistoryStart == nil then return 0 end
+
+	--from the time waited rather than to a time ready, which is exact on the
+	--tick it started: start + 10 - now can land a hair over 10 and read as 11
+	local waited = CurTime() - RewindHistoryStart
+
+	return math.max( math.ceil( TOOL_TABLE.tool_abil_rewind.duration - waited ), 0 )
 end
 
 
