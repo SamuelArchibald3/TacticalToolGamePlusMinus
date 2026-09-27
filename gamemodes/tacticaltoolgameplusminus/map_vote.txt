@@ -29,8 +29,6 @@ ttg_foundry_a1
 ttg_threeway
 ttg_spoon
 ttg_nukevlan
-ttg_valley_v2
-ttg_medieval_land
 
 # generated in mapsrc/
 # ttg_lanes_a1
