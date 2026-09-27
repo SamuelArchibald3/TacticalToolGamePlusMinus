@@ -44,20 +44,48 @@ end
 
 
 
+--How wide the widest of `lines` is in `font`.
+local function TextWidth( lines, font )
+	surface.SetFont( font )
+	local widest = 0
+	for _, line in ipairs( lines ) do
+		widest = math.max( widest, ( surface.GetTextSize( line ) ) )
+	end
+	return widest
+end
+
+
 local function Vote_Panel( option, cmd )
 	CheckClientSay = true
 	Vote_SetCurVoteCommand( cmd )
 
-	--Tall enough for every choice. It was a fixed 225, which is about six
-	--lines, and the map list is longer than that now.
+	--Tall enough for every choice, and wide enough for the longest line. They
+	--were a fixed 225 and 240: about six lines, and the vote count went off the
+	--end of the longer map names. Every line is measured with the most votes it
+	--could show, which is everybody.
 	local rows = 3
-	if option == "maps" then rows = #MapBallot + 1
-	elseif option == "players" then rows = #player.GetAll() + 1 end
+	local lines = {}
+	if option == "maps" then
+		rows = #MapBallot + 1
+		for k, map in ipairs( MapBallot ) do
+			lines[k] = k .. ".  " .. map .. ":  " .. player.GetCount()
+		end
+	elseif option == "players" then
+		rows = #player.GetAll() + 1
+		for k, v in ipairs( player.GetAll() ) do
+			lines[k] = k .. ".  " .. v:Name() .. ":   " .. player.GetCount()
+		end
+	end
 	local tall = math.min( 60 + rows * 26, ScrH() - 160 )
 
+	--the title counts down, so two digits is as wide as it gets
+	local wide = math.max( TextWidth( { "Vote" .. cmd .. "? - 00", "Runoff - 00" }, "Trebuchet24" ), TextWidth( lines, "TargetID" ) )
+	--the list starts 25 in, and leaves room on the right for its scrollbar
+	wide = math.Clamp( wide + 50, 240, ScrW() - 50 )
+
 	local Panel = vgui.Create( "DFrame" )
-	Panel:SetPos( ScrW()-265, ScrH() - 115 - tall )
-	Panel:SetSize( 240, tall )
+	Panel:SetPos( ScrW() - 25 - wide, ScrH() - 115 - tall )
+	Panel:SetSize( wide, tall )
 	//Panel:SetAlpha( 200 )
 	Panel:SetTitle( "Enter number in chat to vote" ) 
 	Panel:SetVisible( true )
@@ -68,7 +96,7 @@ local function Vote_Panel( option, cmd )
 	
 	local ChoiceList = vgui.Create( "DPanelList", Panel )
 	ChoiceList:SetPos( 25,25 )
-	ChoiceList:SetSize( 210, tall - 30 )
+	ChoiceList:SetSize( wide - 30, tall - 30 )
 	ChoiceList:SetSpacing( 5 )
 	ChoiceList:EnableHorizontal( false )
 	ChoiceList:EnableVerticalScrollbar( true )
