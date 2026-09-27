@@ -493,7 +493,7 @@ print_name = "Rewind",
 class = "ability",
 tool_name = "tool_abil_rewind",
 team_limit = 1,
-description = "Rewinds time to {tool.duration} seconds ago. \n Rewind does not refund its own cooldown. \nOne per team. \nDoes nothing in the first {tool.duration} seconds of a round. \n{tool.cooldown} second cooldown.",
+description = "Rewinds time to {tool.duration} seconds ago. \n Rewind does not refund its own cooldown. \nOne per team. \nDoes nothing in the first {tool.duration} seconds of a round, or of any rewind. \n{tool.cooldown} second cooldown.",
 }
 ,
 
