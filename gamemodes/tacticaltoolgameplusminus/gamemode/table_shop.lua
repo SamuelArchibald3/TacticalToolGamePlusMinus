@@ -497,6 +497,23 @@ description = "Rewinds time to {tool.duration} seconds ago. \n Rewind does not r
 }
 ,
 
+
+--The only purchase with a cost of its own; everything else is one token. More
+--than a round ever hands out - ROUND_TOKENS, plus whatever being outnumbered
+--adds, which is capped at MAX_TOOL_SLOTS in all - so the only people who can
+--buy it are Premium Monthly Subscribers, who get SUBSCRIBER_TOKENS. See
+--premium.lua.
+purchase_venmo =
+{
+name = "purchase_venmo",
+print_name = "Venmo",
+class = "ability",
+tool_name = "tool_abil_venmo",
+cost = 20,
+description = "Get ${tool.amount} on Venmo. Really. \nCosts {calc.cost} tool tokens - more than a round ever gives you, unless you are a Premium Monthly Subscriber. \n{tool.cooldown} second cooldown.",
+}
+,
+
 }
 
 

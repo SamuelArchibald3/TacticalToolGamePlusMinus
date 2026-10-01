@@ -107,6 +107,7 @@ include( "server_fkeypress.lua" )
 include( "server_disconnect.lua" )
 include( "server_specialhooks.lua" )
 include( "map_vote_list.lua" )
+include( "premium.lua" )
 include( "server_typecommands.lua" )
 include("lf_playermodel_selector.lua")
 

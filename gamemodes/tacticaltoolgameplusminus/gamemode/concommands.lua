@@ -311,6 +311,19 @@ function fGiveTool( player, command, arguments )
 	
 	local purchaseref = Shop_Reference(purchase)
 		local tool_class = purchaseref.class
+
+	//One token, unless the purchase has a cost of its own. Said when it does,
+	//or "no tool slots left" reads like a bug to somebody holding four.
+	local cost = purchaseref.cost or 1
+
+	local function CantAfford()
+		if cost > 1 then
+			player:ChatPrint( purchaseref.print_name .. " costs " .. cost .. " tool tokens - you have " .. player:GetToolTokens() .. "." )
+		else
+			player:ChatPrint("No tool slots left!")
+		end
+		BuyFailedSound()
+	end
 		
 	
 	
@@ -330,10 +343,9 @@ function fGiveTool( player, command, arguments )
 		]]--
 		
 		//try to subtract the cost, but if it fails, print to the player he does not have enough money, and cancel buy
-		if not player:SubtractToolTokens(1) then
-			player:ChatPrint("No tool slots left!")
-			BuyFailedSound()
-			return 
+		if not player:SubtractToolTokens( cost ) then
+			CantAfford()
+			return
 		end
 		
 		
@@ -376,10 +388,9 @@ function fGiveTool( player, command, arguments )
 	elseif tool_class == "item" then
 
 		//try to subtract the cost, but if it fails, print to the player he does not have enough money
-		if not player:SubtractToolTokens(1) then
-			player:ChatPrint("No tool slots left!")
-			BuyFailedSound()
-			return 
+		if not player:SubtractToolTokens( cost ) then
+			CantAfford()
+			return
 		end
 	
 		//if the player already has this purchase, add the pack amount to the ammo it already has.
@@ -444,10 +455,9 @@ function fGiveTool( player, command, arguments )
 	
 	
 		//try to subtract the cost, but if it fails, print to the player he does not have enough money
-		if not player:SubtractToolTokens(1) then
-			player:ChatPrint("No tool slots left!")
-			BuyFailedSound()
-			return 
+		if not player:SubtractToolTokens( cost ) then
+			CantAfford()
+			return
 		end
 	
 	

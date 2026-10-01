@@ -32,6 +32,11 @@
 --returns a string - including any unit, since that is part of the derivation.
 local CALC = {
 
+	--what a purchase costs: one token, unless it says otherwise
+	cost = function( purchase )
+		return tostring( purchase.cost or 1 )
+	end,
+
 	--Buff_Shield.amount is the fraction of damage that still gets through
 	--(.15), and the sentence talks about what it takes away.
 	shield_reduction = function()
