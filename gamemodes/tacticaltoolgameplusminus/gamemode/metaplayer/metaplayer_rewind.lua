@@ -516,6 +516,12 @@ function TTGPlayer:RewindSetVelocity( vel )
 end
 
 
+--Being carried back along their path right now.
+function TTGPlayer:IsRewinding()
+	return self.RewindTo != nil
+end
+
+
 --Give up without moving them: they died partway through, or the round ended
 --mid-playback. Unfreezing still has to happen or they are stuck there.
 function TTGPlayer:RewindAbandonPlayback()

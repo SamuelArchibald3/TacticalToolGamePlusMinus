@@ -37,6 +37,7 @@ display = "Drop Slam Primed!",
 display_head = "Drop Slam Primed",
 is_nerf = false,
 color = Color(189, 255, 73, 255),
+rewind_held = true,	--held with no duration, and put back by a rewind anyway: drop slam's RewindReset sets its flag from the buff
 }
 ,
 
@@ -58,6 +59,7 @@ is_nerf = false,
 color = Color(124, 81, 50, 255),
 gravity = 2,
 amount = 120,	--speed taken off while hunkered. It was free before, so there was no reason not to hold it
+rewind_held = true,	--held with no duration, and put back by a rewind anyway: the toggle reads the buff, so it follows
 }
 ,
 
