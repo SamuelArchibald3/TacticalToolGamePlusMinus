@@ -1105,6 +1105,25 @@ sound_send = Sound( "ambient/levels/labs/coinslot1.wav" ),
 }
 ,
 
+
+--Eat a corpse: cast_time seconds held still over it, then heal health back
+--and the body is gone. reach is how far from where somebody died you can be
+--and still eat them - the server only knows where a body fell, not where it
+--rolled to on anybody's screen, so it is generous.
+tool_abil_cannibalism =
+{
+name = "tool_abil_cannibalism",
+print_name = "Cannibalism",
+class = "ability",
+cooldown = 20,
+cast_time = 1,
+heal = 50,
+reach = 100,
+sound_eat = Sound( "npc/barnacle/barnacle_crunch2.wav" ),
+sound_done = Sound( "npc/barnacle/barnacle_gulp1.wav" ),
+}
+,
+
 }
 
 

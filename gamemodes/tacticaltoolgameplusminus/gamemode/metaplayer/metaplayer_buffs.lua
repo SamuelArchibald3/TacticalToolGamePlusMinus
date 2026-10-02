@@ -476,6 +476,9 @@ function TTGPlayer:BuffEffect_SetIfOn( bufftype, x )
 		
 	elseif bufftype == "Buff_Barrage" then
 		self:BuffEffect_Barrage( x )
+
+	elseif bufftype == "Buff_Eating" then
+		self:BuffEffect_Eating( x )
 	
 	end
 end

@@ -187,6 +187,17 @@ color = Color(100, 100, 100, 255),
 }
 ,
 
+--the Cannibalism ability's cast: held still over the body until it is eaten
+Buff_Eating =
+{
+name = "Buff_Eating",
+display = "Eating!",
+display_head = "Eating",
+is_nerf = false,
+color = Color(150, 30, 30, 255),
+}
+,
+
 Buff_Airblasted =
 {
 name = "Buff_Airblasted",
@@ -425,6 +436,12 @@ function TTGPlayer:BuffEffect_Barrage( x )
 	else
 		self:Freeze( false )
 	end
+end
+
+
+--held still while eating, so the meal is the body they started on
+function TTGPlayer:BuffEffect_Eating( x )
+	self:Freeze( x == true )
 end
 
 

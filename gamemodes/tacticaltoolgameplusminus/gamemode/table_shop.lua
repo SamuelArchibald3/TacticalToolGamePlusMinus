@@ -514,6 +514,17 @@ description = "Get ${tool.amount} on Venmo. Really. \nCosts {calc.cost} tool tok
 }
 ,
 
+
+purchase_cannibalism =
+{
+name = "purchase_cannibalism",
+print_name = "Cannibalism",
+class = "ability",
+tool_name = "tool_abil_cannibalism",
+description = "Eat a corpse you are standing over. \nTakes {tool.cast_time} second, held still, then heals {tool.heal} health and the body is gone. \nOnly the bodies of players who are dead right now. \n{tool.cooldown} second cooldown.",
+}
+,
+
 }
 
 
