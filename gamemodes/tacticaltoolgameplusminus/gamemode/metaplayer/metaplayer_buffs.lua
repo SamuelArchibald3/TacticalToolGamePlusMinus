@@ -316,34 +316,62 @@ function TTGPlayer:BuffSnapshot()
 end
 
 
+--Whether a rewind puts this buff back, or leaves it exactly as it is now.
+--
+--Anything with a duration is rewound: it ends itself, so a fresh timer is all
+--it needs. A buff with no duration (a timeleft of zero) is held until whatever
+--added it takes it off, and most of what holds one runs on something a rewind
+--does not wind back - a reload's countdown, a barrage's timers, a decoy's
+--disguise, a wall grab the rewind has just let go of. Put one of those back
+--from ten seconds ago and the thing that would have taken it off has already
+--finished, so the player is slowed or frozen for the rest of the round. Held
+--buffs are left alone, then, unless the buff table says whatever holds them
+--follows the buff (rewind_held): hunker's toggle reads it, and drop slam's
+--RewindReset sets its flag from it.
+--
+--Which also covers a timed buff caught in its last second, when its time left
+--has counted down to zero but its timer has not removed it yet. Put back as
+--held, that one would never have gone either.
+local function RewindsBuff( name, timeleft )
+	if timeleft > 0 then return true end
+
+	local ref = Buff_Reference( name )
+
+	return ref != nil and ref.rewind_held == true
+end
+
+
 --Put them back.
 --
---Cleared and replayed through AddBuff rather than written into the slots
---directly. A buff's expiry lives in the closures AddBuff builds, so one poked
---straight into a slot would sit there for the rest of the round; going back in
---through the front door gets it fresh timers. RemoveAllBuffs first, because
---bumping every slot's token is what stops the timers still pending from the
---buffs being replaced firing against the ones replacing them.
+--Replayed through AddBuff rather than written into the slots directly. A
+--buff's expiry lives in the closures AddBuff builds, so one poked straight into
+--a slot would sit there for the rest of the round; going back in through the
+--front door gets it fresh timers. Each one being replaced is taken off by slot
+--first, because bumping the slot's token is what stops its pending timers
+--firing against whatever replaces it.
 --
---A timeleft of zero means the buff never had a duration - it is held until
---something takes it off - so it goes back that way rather than as one due to
---expire this instant.
---
---Slots compact if the recorded set had gaps, so a buff can come back in a
---lower slot than it left. The few places that keep a slot name to remove later
---- the reload slow, the wallgrab snare, a primed drop slam - could then take
---the wrong one off. RemoveAllBuffs already does that to them on death and
---between rounds, so this is one more occasion rather than a new problem.
+--What is not rewound stays in the slot it is in, untouched, so whatever holds
+--it - a reload, a barrage, a decoy - still finds it there to take off. A buff
+--that is rewound can come back in a different slot than it left, which is fine
+--for those: what keeps a slot name to remove it by is exactly what is not.
 function TTGPlayer:RestoreBuffs( recorded )
 	if recorded == nil then return end
 
-	self:RemoveAllBuffs()
+	for _, slot in ipairs( { "Buff_A", "Buff_B", "Buff_C", "Buff_D", "Buff_E", "Buff_F", "Buff_G" } ) do
+		local name = self:GetNetworkedString( slot, "none" )
+
+		if name != "none" and RewindsBuff( name, self:GetNetworkedInt( slot .. "_timeleft", 0 ) ) then
+			self:RemoveBuff_BySlot( slot )
+		end
+	end
 
 	for _, buff in ipairs( recorded ) do
-		local duration = buff.timeleft
-		if duration <= 0 then duration = nil end
+		if RewindsBuff( buff.name, buff.timeleft ) then
+			local duration = buff.timeleft
+			if duration <= 0 then duration = nil end
 
-		self:AddBuff( buff.name, duration, buff.showtime )
+			self:AddBuff( buff.name, duration, buff.showtime )
+		end
 	end
 end
 

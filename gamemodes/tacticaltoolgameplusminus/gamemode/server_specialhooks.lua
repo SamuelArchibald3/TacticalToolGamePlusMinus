@@ -61,6 +61,21 @@ function GM:PlayerShouldTakeDamage( victim, attacker )
 	//print( attacker )
 	//print( victim )
 
+	--A kill plane does not get a second go at somebody on their way back out
+	--of it. Whoever fell to their death inside the window is revived where they
+	--fell and carried back up along their own path - straight through the
+	--trigger_hurt that killed them, which killed them again on the way. Only
+	--the map's hurt volumes are turned away, and only mid-rewind: being shot
+	--during the playback still counts, deliberately (see TTG_RewindFinish),
+	--and where they land is somewhere they stood alive.
+	--
+	--Here rather than in an EntityTakeDamage hook, because ShieldScaleDamage
+	--returns a value for every player, which stops whichever of those hooks
+	--happen to run after it.
+	if victim:IsRewinding() and IsValid( attacker ) and attacker:GetClass() == "trigger_hurt" then
+		return false
+	end
+
 	
 	--Disable team damage
 	if attacker:IsPlayer() then
