@@ -201,7 +201,10 @@ local function Vote_Panel( option, cmd )
 
 	
 	local function Close()
-		Panel:Close()
+		--Vote_End arrives for every vote that ends, and this hook outlives the
+		--panel it closes over: once it has been closed and deleted, the next
+		--vote's end called Close on what was left of it and errored.
+		if IsValid( Panel ) then Panel:Close() end
 		StopTimer = true
 		CheckClientSay = false
 	end
