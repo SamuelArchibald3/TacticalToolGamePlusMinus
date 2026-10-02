@@ -47,6 +47,7 @@ AddCSLuaFile( 'metaplayer/metaplayer_invuln.lua' )
 AddCSLuaFile( 'metaplayer/metaplayer_limbo.lua' )
 AddCSLuaFile( 'metaplayer/metaplayer_rewind.lua' )
 AddCSLuaFile( 'metaplayer/metaplayer_buffs.lua' )
+AddCSLuaFile( 'metaplayer/metaplayer_toolkeys.lua' )
 
 
 -- weapon selector
@@ -90,6 +91,7 @@ include( 'metaplayer/metaplayer_invuln.lua' )
 include( 'metaplayer/metaplayer_limbo.lua' )
 include( 'metaplayer/metaplayer_rewind.lua' )
 include( 'metaplayer/metaplayer_buffs.lua' )
+include( 'metaplayer/metaplayer_toolkeys.lua' )
 
 
 

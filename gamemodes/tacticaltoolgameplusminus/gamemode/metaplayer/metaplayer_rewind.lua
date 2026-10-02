@@ -80,7 +80,7 @@ function TTGPlayer:RewindAmmoSnapshot()
 	local out = {}
 
 	for _, wep in pairs( self:GetWeapons() ) do
-		out[ wep:GetClass() ] = { clip = wep:Clip1(), guns = wep:GetNumGuns() }
+		out[ wep:GetClass() ] = { clip = wep:Clip1(), guns = wep:GetNumGuns(), key = TTG_ToolKeyOf( wep ) }
 	end
 
 	return out
@@ -459,6 +459,16 @@ function TTGPlayer:RewindReequip( sample )
 
 		wep:SetClip1( had.clip )
 		wep:SetTTGAmmo( had.clip )
+	end
+
+	--Each on the number key it was on. The melee came back from the spawn on
+	--key 1 and everything given above has none yet, so the whole recorded set
+	--is put back rather than worked out again - it was all one moment, so it
+	--fits together.
+	for class, had in pairs( sample.ammo or {} ) do
+		if had.key != nil and had.key > 0 then
+			self:AssignToolKey( self:GetWeapon( class ), had.key )
+		end
 	end
 
 	--The bought-tools list, which dying cleared, put back as it was recorded:

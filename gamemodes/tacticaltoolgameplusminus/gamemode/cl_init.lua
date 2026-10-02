@@ -23,6 +23,7 @@ include( 'metaplayer/metaplayer_invuln.lua' )
 include( 'metaplayer/metaplayer_limbo.lua' )
 include( 'metaplayer/metaplayer_rewind.lua' )
 include( 'metaplayer/metaplayer_buffs.lua' )
+include( 'metaplayer/metaplayer_toolkeys.lua' )
 
 //all client files go here
 include("cl_teammenu.lua")

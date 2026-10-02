@@ -49,7 +49,7 @@ hook.Add("ShowHelp", "HelpGUI", HelpGUI)
 
 
 
---ability keys panel (which key runs which ability)
+--keys panel (which number key selects which tool, and which key runs which ability)
 
 --F2 Key press. Free since the mid-game team join above was retired.
 function AbilityKeysGUI( ply )

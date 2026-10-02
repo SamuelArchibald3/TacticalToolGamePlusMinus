@@ -74,10 +74,6 @@ function SWEP:SetBaseVars()
 	self.Primary.Delay = self.Ref.rate_of_fire
 	self.ViewModel			= self.Ref.v_model
 	self.WorldModel			= self.Ref.w_model
-	
-	//sets the slot of the weapon in the players inventory
-	if !CLIENT then return end
-		self.Slot = Bought_Slot_To_Add_Wep_To --sets this var in cl_buymenu, to go from client to client
 end
 
 

@@ -302,13 +302,7 @@ function ShowBuyingMenu()
 		
 		
 
-		//Bought_Slot is a global which the swep will reference when setting its slot for the player
-		Bought_Slot_To_Add_Wep_To = nil
-		
-		local swepcount = Ply:GetSwepCount()
-		
-		//Bought_Slot is a clientside var which the swep will reference when setting its slot
-		Bought_Slot_To_Add_Wep_To = swepcount + 1
+		//which number key it lands on is the server's to say - see metaplayer_toolkeys.lua
 		
 		//run the console command which gives the tool to the player
 		RunConsoleCommand( "ttg_givepurchase", purchase )
