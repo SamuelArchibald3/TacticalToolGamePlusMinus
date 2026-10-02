@@ -5,6 +5,9 @@
 function GM:PlayerDisconnected( ply )
 	--Remove all the player's ability ents
 	Reset_PlyAbilities( ply )
+
+	--and their body, which nothing else would ever clear away
+	ply:RemoveCorpse()
 	
 	
 	--remove the player from the list of players set to join a team after the current round

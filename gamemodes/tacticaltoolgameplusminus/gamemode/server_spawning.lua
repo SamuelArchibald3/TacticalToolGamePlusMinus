@@ -32,6 +32,9 @@ end
 --called whenever a player spawns
 function GM:PlayerSpawn( ply )
 
+	--up again, so their body goes - a new round, or a revive by Rewind
+	ply:RemoveCorpse()
+
 	--make spectators fly around
 	if (ply:Team() == TEAM_SPEC) then
 		ply.DeathSpectate = false

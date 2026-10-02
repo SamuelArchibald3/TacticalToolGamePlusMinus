@@ -77,11 +77,9 @@ function ENT:FinishEating( corpse )
 	ply:TTG_Heal( self.Ref.heal )
 
 	local effect = EffectData()
-		effect:SetOrigin( corpse:GetPos() + Vector( 0, 0, 10 ) )
+		effect:SetOrigin( TTG_CorpsePos( corpse ) + Vector( 0, 0, 10 ) )
 	util.Effect( "BloodImpact", effect )
 
-	--Taking the server's entity takes the body off every screen with it: the
-	--ragdoll each client simulates belongs to this.
 	corpse:Remove()
 
 	ply:EmitSound( self.Ref.sound_done )
