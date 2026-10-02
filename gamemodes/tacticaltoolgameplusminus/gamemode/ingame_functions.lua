@@ -362,6 +362,13 @@ end
 //gets, which is what the tie breaker rule and the settings tests care about.
 function TTG_RoundStartTokens( ply )
 
+	//A Premium Monthly Subscriber gets SUBSCRIBER_TOKENS, no matter what:
+	//before the tie breaker and instead of the handicap, not on top of it.
+	//See premium.lua.
+	if TTG_IsSubscriber( ply ) then
+		return SUBSCRIBER_TOKENS
+	end
+
 	//the tie breaker is the round after the last normal one. If the setting is
 	//on, it is played out with whatever you can already carry - no purchases.
 	if TIEBREAK_NO_TOKENS == true and TTG_IsTiebreakRound() then

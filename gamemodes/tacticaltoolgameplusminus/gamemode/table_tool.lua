@@ -1091,6 +1091,20 @@ sound_rewind = Sound("npc/scanner/cbot_energyexplosion1.wav"),
 }
 ,
 
+
+--A joke. Pressing it writes down that you are owed amount dollars on Venmo -
+--see premium.lua.
+tool_abil_venmo =
+{
+name = "tool_abil_venmo",
+print_name = "Venmo",
+class = "ability",
+cooldown = 60,
+amount = 4,		--dollars
+sound_send = Sound( "ambient/levels/labs/coinslot1.wav" ),
+}
+,
+
 }
 
 

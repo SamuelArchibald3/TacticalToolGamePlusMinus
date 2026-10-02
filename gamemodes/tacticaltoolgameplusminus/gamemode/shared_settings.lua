@@ -66,6 +66,8 @@ TIME_TO_CAPTURE = 30
 
 ROUND_TOKENS = 4	//cant decide between 3 or 4
 
+SUBSCRIBER_TOKENS = 20	//what a Premium Monthly Subscriber gets every round instead, no matter what - see premium.lua
+
 //How many bought tools can be listed at once. Every tool costs a token, so a
 //player can never own more than ROUND_TOKENS of them - this only has to stay
 //ahead of any sane token setting.
