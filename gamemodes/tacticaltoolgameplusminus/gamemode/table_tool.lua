@@ -1106,10 +1106,9 @@ sound_send = Sound( "ambient/levels/labs/coinslot1.wav" ),
 ,
 
 
---Eat a corpse: cast_time seconds held still over it, then heal health back
---and the body is gone. reach is how far from where somebody died you can be
---and still eat them - the server only knows where a body fell, not where it
---rolled to on anybody's screen, so it is generous.
+--Eat a corpse: cast_time seconds held still at its gravestone, then heal
+--health back and the body is gone. reach is how close to the spot under the
+--stone you have to be - gravestones.lua.
 tool_abil_cannibalism =
 {
 name = "tool_abil_cannibalism",
@@ -1118,7 +1117,7 @@ class = "ability",
 cooldown = 20,
 cast_time = 1,
 heal = 50,
-reach = 100,
+reach = 80,
 sound_eat = Sound( "npc/barnacle/barnacle_crunch2.wav" ),
 sound_done = Sound( "npc/barnacle/barnacle_gulp1.wav" ),
 }

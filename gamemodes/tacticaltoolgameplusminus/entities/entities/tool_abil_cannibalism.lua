@@ -8,8 +8,9 @@ if !SERVER then return end
 ------------------------------------------------------------------------------------------------
 
 
---Eat a corpse: a moment held still over it, then health back and the body
---gone. What counts as a corpse, and where, is TTGPlayer:NearestCorpse.
+--Eat a corpse: a moment held still at its gravestone, then health back and
+--the body gone. What counts as a corpse, and where, is TTGPlayer:NearestCorpse
+--in gravestones.lua.
 function ENT:DoAbility()
 	if self.Cooldown == true or self.Eating == true then
 		self:CooldownSound()
@@ -77,12 +78,15 @@ function ENT:FinishEating( corpse )
 	ply:TTG_Heal( self.Ref.heal )
 
 	local effect = EffectData()
-		effect:SetOrigin( corpse:GetPos() + Vector( 0, 0, 10 ) )
+		effect:SetOrigin( corpse.TTG_Ground + Vector( 0, 0, 10 ) )
 	util.Effect( "BloodImpact", effect )
 
-	--Taking the server's entity takes the body off every screen with it: the
-	--ragdoll each client simulates belongs to this.
-	corpse:Remove()
+	--the gravestone, and the body with it
+	if IsValid( corpse.TTG_GraveOf ) then
+		corpse.TTG_GraveOf:RemoveRemains()
+	else
+		corpse:Remove()
+	end
 
 	ply:EmitSound( self.Ref.sound_done )
 

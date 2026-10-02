@@ -155,31 +155,6 @@ end
 
 
 
---The nearest corpse within `reach` of this player, or nil.
---
---A corpse is the body of a player who is dead right now: the hl2mp_ragdoll
---the engine leaves when somebody dies. It sits where they fell and has no
---physics of its own - each client simulates the body it draws - so that spot
---is what reach is measured from. Somebody alive again, respawned or revived
---by a rewind, has no corpse even if their old body is still lying there.
-function TTGPlayer:NearestCorpse( reach )
-	local best, bestdist = nil, reach
-
-	for _, other in ipairs( player.GetAll() ) do
-		if other != self and not other:Alive() then
-			local corpse = other:GetRagdollEntity()
-
-			if IsValid( corpse ) then
-				local dist = corpse:GetPos():Distance( self:GetPos() )
-				if dist <= bestdist then best, bestdist = corpse, dist end
-			end
-		end
-	end
-
-	return best
-end
-
-
 //returns how many SWEPs the player has
 function TTGPlayer:GetSwepCount()
 	local wep_table = self:GetWeapons( )
