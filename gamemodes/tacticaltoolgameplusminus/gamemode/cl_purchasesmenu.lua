@@ -68,19 +68,45 @@ end
 ------------------------------------------------------------------------------------------------------------*/
 
 
---How tall the purchases panels are: as tall as the screen allows, down to the
---ability keys at the bottom left that the friendly one sits above. It was a
---fixed 450 - about seventeen lines - which a team of four with a few tools
---each already scrolls past. Never shorter than that.
-function TTG_PurchasesPanelHeight()
-	return math.max( 450, ScrH() - 340 )
+--How tall the purchases panels are: just tall enough for a team of three with
+--four tools each to show without any of it scrolling out of sight. It was a
+--fixed 450, which cut the third player's last tools off.
+--
+--Worked out from the fonts the rows are drawn in, because how tall a line is
+--depends on the resolution those fonts were made at. What the list holds: the
+--role header if there is one (a label left at the default 24 tall), then per
+--player their name, a line per tool and a blank spacer in the small font, with
+--5 between every row - the same rows the Update functions below build.
+local FIT_PLAYERS = 3
+local FIT_TOOLS = 4
+
+function TTG_PurchasesPanelHeight( header )
+	surface.SetFont( "TheDefaultSettings7" )
+	local _, line = surface.GetTextSize( "Ag" )
+
+	surface.SetFont( "DebugFixed" )
+	local _, spacer = surface.GetTextSize( " " )
+
+	local rows = FIT_PLAYERS * ( 1 + FIT_TOOLS + 1 )
+	local tall = FIT_PLAYERS * ( ( 1 + FIT_TOOLS ) * line + spacer )
+
+	if header then
+		rows = rows + 1
+		tall = tall + 24
+	end
+
+	tall = tall + ( rows - 1 ) * 5
+
+	--the list starts 25 down the frame, and a few pixels spare so the last
+	--line is not flush against the bottom edge
+	return tall + 25 + 6
 end
 
 
 function NewShowTeamPurchasesMenu()
 	local ply = LocalPlayer()
 	local panel_width = 300
-	local panel_height = TTG_PurchasesPanelHeight()
+	local panel_height = TTG_PurchasesPanelHeight( true )
 	
 	
 	--quick and dirty fix for resolution problems, will fix it correctly later
