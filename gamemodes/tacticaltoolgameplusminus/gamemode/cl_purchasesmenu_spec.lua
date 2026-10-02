@@ -8,7 +8,7 @@
 function ShowAttackersPurchasesMenu()
 	local ply = LocalPlayer()
 	local panel_width = 300
-	local panel_height = 450
+	local panel_height = TTG_PurchasesPanelHeight()
  
  
 	//Panel for red team's purchases, updates as purchases are made
@@ -166,7 +166,7 @@ usermessage.Hook( "Open_SpecPurchasesVgui_Attackers", ShowAttackersPurchasesMenu
 function ShowDefendersPurchasesMenu()
 	local ply = LocalPlayer()
 	local panel_width = 300
-	local panel_height = 450
+	local panel_height = TTG_PurchasesPanelHeight()
  
  
 	//Panel for red team's purchases, updates as purchases are made

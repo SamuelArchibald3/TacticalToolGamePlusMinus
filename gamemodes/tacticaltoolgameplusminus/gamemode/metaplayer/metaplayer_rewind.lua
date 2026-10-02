@@ -64,6 +64,7 @@ function TTGPlayer:RewindSampleNow()
 		ammo = self:RewindAmmoSnapshot(),
 		abilities = self:RewindAbilitySnapshot(),
 		buffs = self:BuffSnapshot(),
+		listed = self:GetSwepToolInfo() or {},
 		t = CurTime(),
 	}
 end
@@ -329,13 +330,18 @@ end
 --is not un-bought - the token was spent, and refunding purchases is a much
 --larger idea than putting a clip back.
 --
---Three numbers per weapon rather than one: the clip itself, the networked copy
---the client reads because Clip1 does not survive the trip, and the tool list
---the hud draws.
+--Two numbers per weapon: the clip itself, and the networked copy the client
+--reads because Clip1 does not survive the trip - which is what the player's
+--own inventory shows.
+--
+--Not the bought-tools list (SetSwepToolInfo). That is what everybody else
+--sees on the purchases panel and the scoreboard, and it says how many of a
+--thing were bought, not how many are left. This used to write the restored
+--clip into it, which turned it into a live count of somebody's remaining
+--ammo after the first rewind of the round. Somebody revived gets it back
+--from the recording instead - see RewindReequip.
 function TTGPlayer:RewindRestoreAmmo( recorded )
 	if recorded == nil then return end
-
-	local listed = self:GetSwepToolInfo() or {}
 
 	for _, wep in pairs( self:GetWeapons() ) do
 		local had = recorded[ wep:GetClass() ]
@@ -343,12 +349,6 @@ function TTGPlayer:RewindRestoreAmmo( recorded )
 
 		wep:SetClip1( had.clip )
 		wep:SetTTGAmmo( had.clip )
-
-		for _, tool in pairs( listed ) do
-			if tool.name == wep:GetClass() then
-				self:SetSwepToolInfo( tool.name, had.clip, tool.numguns )
-			end
-		end
 	end
 end
 
@@ -459,7 +459,14 @@ function TTGPlayer:RewindReequip( sample )
 
 		wep:SetClip1( had.clip )
 		wep:SetTTGAmmo( had.clip )
-		self:SetSwepToolInfo( class, had.clip, had.guns or 1 )
+	end
+
+	--The bought-tools list, which dying cleared, put back as it was recorded:
+	--what they bought, in the order they bought it. It used to be rebuilt from
+	--the weapons above, which listed what was left in each clip rather than
+	--what was bought - and the melee everybody spawns with as a purchase.
+	for _, tool in ipairs( sample.listed or {} ) do
+		self:SetSwepToolInfo( tool.name, tool.ammo, tool.numguns )
 	end
 
 	local slots = self:GetAbilitySlots()
