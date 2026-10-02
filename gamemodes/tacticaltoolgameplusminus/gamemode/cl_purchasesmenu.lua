@@ -68,10 +68,19 @@ end
 ------------------------------------------------------------------------------------------------------------*/
 
 
+--How tall the purchases panels are: as tall as the screen allows, down to the
+--ability keys at the bottom left that the friendly one sits above. It was a
+--fixed 450 - about seventeen lines - which a team of four with a few tools
+--each already scrolls past. Never shorter than that.
+function TTG_PurchasesPanelHeight()
+	return math.max( 450, ScrH() - 340 )
+end
+
+
 function NewShowTeamPurchasesMenu()
 	local ply = LocalPlayer()
 	local panel_width = 300
-	local panel_height = 450
+	local panel_height = TTG_PurchasesPanelHeight()
 	
 	
 	--quick and dirty fix for resolution problems, will fix it correctly later
