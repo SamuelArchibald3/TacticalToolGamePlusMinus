@@ -288,7 +288,7 @@ function ShowHelpMenu()
 			SelectedToolText:SizeToContents()
 			
 			--no SizeToContents: that would undo the wrapping
-			DescriptionText:SetText( purchaseref.description )
+			DescriptionText:SetText( TTG_ShopDescription( purchaseref ) )
 		else
 
 			SelectedToolText:SetText("-")

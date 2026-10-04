@@ -12,12 +12,17 @@
 --at load. The buy menu and the help menu still read a plain string and did not
 --have to change.
 --
---Four namespaces, and nothing else:
+--Five namespaces, and nothing else:
 --
 --    {tool.FIELD}        the purchase's own TOOL_TABLE entry
 --    {ent.FIELD}         the ENT_TABLE entry that entry's thrown_ent names
 --    {buff.NAME.FIELD}   a named BUFF_TABLE entry
 --    {calc.NAME}         a derived value, defined in CALC below
+--    {live.NAME}         one that can change mid-game, defined in LIVE below
+--
+--The first four are filled in once at load. A {live.} one is left in place
+--then, and filled in each time a menu shows the text - which is why the menus
+--ask TTG_ShopDescription for it rather than reading the field.
 --
 --This is its own file rather than the bottom of table_shop.lua because of load
 --order. init.lua includes tool, ent, shop, then BUFF - so while table_shop.lua
@@ -60,6 +65,24 @@ local CALC = {
 }
 
 
+--Values that follow a setting, which can change while the server is up.
+--Filled in each time a menu shows the description, so the text describes the
+--setting that is on now rather than the one at load.
+--
+--Each is called with the purchase and returns a string.
+local LIVE = {
+
+	--where Cannibalism is eaten from, which ttg_var_corpses decides: at the
+	--gravestone, since that is all the server knows about where a body is,
+	--or over a body the server owns
+	corpse_where = function()
+		if TTG_CorpseStyle() == "body" then return "stand over the body" end
+
+		return "stand at its gravestone"
+	end,
+}
+
+
 --2.5 has to stay 2.5, and 4 must not become 4.0.
 local function FormatNumber( value )
 	if type( value ) != "number" then return tostring( value ) end
@@ -90,7 +113,7 @@ local function ResolveToken( purchase, tool, ent, token )
 	local namespace, rest = string.match( token, "^(%a+)%.(.+)$" )
 
 	if namespace == nil then
-		return Unresolved( purchase.name, token, "not namespaced, expected tool/ent/buff/calc" )
+		return Unresolved( purchase.name, token, "not namespaced, expected tool/ent/buff/calc/live" )
 	end
 
 	if namespace == "tool" then
@@ -136,6 +159,15 @@ local function ResolveToken( purchase, tool, ent, token )
 		return CALC[ rest ]( purchase, tool, ent )
 	end
 
+	--left for TTG_ShopDescription, once it is known to exist
+	if namespace == "live" then
+		if LIVE[ rest ] == nil then
+			return Unresolved( purchase.name, token, "no such live value" )
+		end
+
+		return "{" .. token .. "}"
+	end
+
 	return Unresolved( purchase.name, token, "unknown namespace " .. namespace )
 end
 
@@ -159,6 +191,21 @@ function TTG_ResolveShopDescription( purchase )
 end
 
 
+--A purchase's description the way a menu should show it now: the load-time
+--values already in, and the {live.} ones filled in from the settings as they
+--are this moment. An unknown one stays visible, the same as at load.
+function TTG_ShopDescription( purchase )
+	local text = string.gsub( purchase.description or "", "{live%.([%w_]+)}",
+		function( name )
+			if LIVE[ name ] == nil then return nil end
+
+			return LIVE[ name ]( purchase )
+		end )
+
+	return text
+end
+
+
 --Every purchase in every shop, once, at load.
 function TTG_ResolveShopDescriptions()
 	for _, shop in pairs( { FIRSTSHOP_TABLE, SECONDSHOP_TABLE, THIRDSHOP_TABLE } ) do
@@ -173,6 +220,7 @@ end
 --than inferring them from a finished sentence.
 TTG_FormatShopNumber = FormatNumber
 TTG_ShopDescriptionCalcs = CALC
+TTG_ShopDescriptionLives = LIVE
 
 
 TTG_ResolveShopDescriptions()
