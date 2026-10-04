@@ -371,6 +371,9 @@ function fGiveTool( player, command, arguments )
 		
 			player:SetIfHasGun( true )
 			player:Give(purchaseref.tool_name)
+
+			--onto the first free number key - see metaplayer_toolkeys.lua
+			player:AssignToolKey( player:GetWeapon( purchaseref.tool_name ) )
 			
 			--Networks the sweps info
 			local swep = player:GetWeapon( purchaseref.tool_name )
@@ -410,6 +413,9 @@ function fGiveTool( player, command, arguments )
 		else
 		
 			player:Give(purchaseref.tool_name)
+
+			--onto the first free number key - see metaplayer_toolkeys.lua
+			player:AssignToolKey( player:GetWeapon( purchaseref.tool_name ) )
 			local swep = player:GetWeapon(purchaseref.tool_name)
 			
 			
@@ -526,6 +532,45 @@ function fSwapAbilities( ply, command, arguments )
 		" and " .. math.floor( second ) )
 end
 concommand.Add( "ttg_swapabilities", fSwapAbilities )
+
+
+/*---------------------------------------------------------
+	Swap Tools
+---------------------------------------------------------*/
+--The same for the number keys: which tool, or the melee, each one selects.
+--They came in the order you bought in and stayed there. This swaps what is
+--on two keys, or moves a tool onto an empty one.
+
+function fSwapTools( ply, command, arguments )
+
+	--Before the fighting only, like the ability keys: it is part of getting
+	--ready, and the F2 panel that sends this only opens then.
+	if G_CurrentPhase != "DefendersBuy" and G_CurrentPhase != "AttackersBuy"
+		and G_CurrentPhase != "Planning" and G_CurrentPhase != "Setup" then
+		ply:ChatPrint( "Tool keys can only be changed before combat starts" )
+		return
+	end
+
+	local first = tonumber( arguments[1] )
+	local second = tonumber( arguments[2] )
+
+	if first == nil or second == nil then
+		ply:ChatPrint( "Usage: ttg_swaptools <key> <key>  ( or just press F2 )" )
+		return
+	end
+
+	if not ply:SwapToolKeys( math.floor( first ), math.floor( second ) ) then
+		ply:ChatPrint( "Tool keys go from 1 to " .. TTG_ToolKeyCount() ..
+			", have to be different, and need something on at least one of them" )
+		return
+	end
+
+	--Numbers, not key names, for the same reason as the abilities: the
+	--server cannot see what anybody has bound. The F2 panel names them.
+	ply:ChatPrint( "Swapped tool keys " .. math.floor( first ) ..
+		" and " .. math.floor( second ) )
+end
+concommand.Add( "ttg_swaptools", fSwapTools )
 
 
 

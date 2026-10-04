@@ -82,6 +82,11 @@ function SetSpawnStuff( ply )
 	
 	--give the player his default melee weapon
 	ply:Give("default_melee")
+
+	--onto a number key: 1, at the start of a round when nothing else is
+	--carried yet. Left where it is if they somehow already had one.
+	local melee = ply:GetWeapon( "default_melee" )
+	if TTG_ToolKeyOf( melee ) == 0 then ply:AssignToolKey( melee ) end
 	
 	--set the players model depending on what team theyre on
 	if ply:Team() == TEAM_BLUE then

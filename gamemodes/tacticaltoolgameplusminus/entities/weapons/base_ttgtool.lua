@@ -80,10 +80,6 @@ function SWEP:SetBaseVars()
 	//if self.Ref.infinite == true then
 		//self:SetClip1(self.Primary.ClipSize)
 	//end
-	
-	//sets the slot of the weapon in the players inventory
-	if !CLIENT then return end
-		self.Slot = Bought_Slot_To_Add_Wep_To --sets this var in cl_buymenu, to go from client to client
 end
 
 

@@ -68,7 +68,10 @@ local function update()
 
     for k, v in pairs(LocalPlayer():GetWeapons()) do
         local classname = v:GetClass()
-        local Slot = CurSwep[classname] and CurSwep[classname].Slot - 1 or v.Slot or 1
+        --the number key the server put it on (metaplayer_toolkeys.lua), and
+        --the old guesses only for something it has not been told about yet
+        local key = TTG_ToolKeyOf(v)
+        local Slot = (key > 0 and key - 1) or (CurSwep[classname] and CurSwep[classname].Slot - 1) or v.Slot or 1
         tblLoad[Slot] = tblLoad[Slot] or {}
 
         table.insert(tblLoad[Slot], {
@@ -113,7 +116,7 @@ hook.Add("PlayerBindPress", "WeaponSelector.Hooks.PlayerBindPress", function(ply
         --tools number up from 1, so key 1 is the crowbar and the fifth tool is
         --key 6.
         local n = tonumber(string.sub(bind, 5, 5) or 1) or 1
-        if n < 1 or n > math.min( TTG_DifferentToolCount() + 1, 9 ) then return true end
+        if n < 1 or n > TTG_ToolKeyCount() then return true end
         n = n - 1
         update()
         if not tblLoad[n] then return true end
