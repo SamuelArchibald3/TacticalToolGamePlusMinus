@@ -10,7 +10,7 @@ function ShowHelpMenu()
 	-----------------------------------------------------------------------------------------------*/
 	
 	local panel_width = 800
-	local panel_height = 600
+	local panel_height = 640	--room under the description for one that wraps, with the hint below it
  
 	local DermaPanel = vgui.Create( "DFrame" )
 	DermaPanel:SetPos( (ScrW()/2)-panel_width/2, 100 )
@@ -132,13 +132,22 @@ function ShowHelpMenu()
 	DescriptionText:SetFont("TheDefaultSettings7")
 	DescriptionText:SetText("-") // Text
 
+	--Wrapped to a fixed width, and as tall as it needs to be, rather than sized
+	--to its longest line and run off the edge of the panel - see cl_buymenu.lua
+	DescriptionText:SetWide( 580 )
+	DescriptionText:SetWrap( true )
+	DescriptionText:SetAutoStretchVertical( true )
+
 	
 	local HowToBuy = vgui.Create("DLabel", DermaPanel)
-	HowToBuy:SetPos(600, 565) // Position
 	HowToBuy:SetColor(Color(255,255,255,255)) // Color
 	HowToBuy:SetFont("TheDefaultSettings5")
 	HowToBuy:SetText("(press F1 to close, F2 to rearrange your tool and ability keys)") // Text
 	HowToBuy:SizeToContents()
+
+	--along the bottom, against the right edge. It started at a fixed 600 across
+	--and was wider than the 200 left, so it ran off the panel
+	HowToBuy:SetPos( panel_width - HowToBuy:GetWide() - 20, panel_height - 35 )
 	
 -- hook.Add( "PlayerDeath", "GlobalDeathMessage", function( victim, inflictor, attacker )
 -- for k, v in pairs(player.GetAll()) do
@@ -278,8 +287,8 @@ function ShowHelpMenu()
 			SelectedToolText:SetText( purchaseref.print_name )
 			SelectedToolText:SizeToContents()
 			
+			--no SizeToContents: that would undo the wrapping
 			DescriptionText:SetText( purchaseref.description )
-			DescriptionText:SizeToContents()
 		else
 
 			SelectedToolText:SetText("-")
