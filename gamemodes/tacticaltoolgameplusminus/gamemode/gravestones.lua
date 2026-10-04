@@ -23,8 +23,20 @@ if not SERVER then return end
 
 local TTGPlayer = FindMetaTable( "Player" )
 
---how high the stone floats over the spot
-local FLOAT = 24
+--How high the stone's middle floats over the spot. The model is centred on its
+--origin and stands 90 tall, 40 or so at ent_gravestone's scale, so this keeps
+--its base clear of the ground.
+local FLOAT = 30
+
+
+--The photo on the stones, sent to everybody who joins - when this server has
+--it. It is a local file and never committed: a real person's picture, and the
+--repos are on GitHub. See ent_gravestone.
+local PORTRAIT = "materials/tacticaltoolgame_mats/gravestone_portrait.vmt"
+
+if file.Exists( PORTRAIT, "GAME" ) then
+	resource.AddFile( PORTRAIT )
+end
 
 
 --Where this player's gravestone goes: where they are if they died on their
