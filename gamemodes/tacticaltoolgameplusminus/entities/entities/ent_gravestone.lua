@@ -1,3 +1,7 @@
+--Sent to every client, as every entity players see has to be: without this the
+--server made gravestones that no client could create, let alone draw.
+AddCSLuaFile( "ent_gravestone.lua" )
+
 ENT.Type 		= "anim"
 ENT.Base 		= "base_anim"
 ENT.PrintName	= "Gravestone"

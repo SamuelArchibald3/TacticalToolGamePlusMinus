@@ -117,6 +117,9 @@ function NextRound()
 	Start_TeamsAliveCheck()
 	Start_TriggerHurtCheck()
 	
+	--every corpse from the last round goes - see TTG_ClearCorpses
+	TTG_ClearCorpses()
+
 	for k,v in pairs(player.GetAll()) do	
 		if v:Team() != TEAM_SPEC then
 			-- take away all the players tools from the previous round
