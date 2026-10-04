@@ -16,8 +16,10 @@
 --last spot each player had their feet down, which is why it now runs every
 --Combat whether anybody bought a Rewind or not - see Start_RewindSampler.
 --
---The stone goes when its player spawns again (a new round, a revive by
---Rewind), when they leave, and when it is eaten, which takes the body too.
+--The stone goes when its player is back in play (a new round, a revive by
+--Rewind - SetSpawnStuff), when they leave, and when it is eaten, which takes
+--the body too. Not on any spawn: a dead player with nobody left to watch is
+--spawned into roaming spectate, and is still dead for this.
 --
 --This is the default of the two corpse styles - ttg_var_corpses,
 --CORPSE_STYLE. The other, "body", has the server make the body itself so it
@@ -92,7 +94,8 @@ end
 
 
 --The gravestone nearest this player within `reach`, and how far, or nil. Only
---for somebody who is dead right now, and measured from the spot it stands over.
+--for somebody out of play right now - dead, or spectating since - and measured
+--from the spot it stands over.
 function TTGPlayer:NearestGravestone( reach )
 	local here = self:GetPos()
 	local best, bestdist = nil, reach
@@ -100,7 +103,7 @@ function TTGPlayer:NearestGravestone( reach )
 	for _, other in ipairs( player.GetAll() ) do
 		local stone = other.TTG_Gravestone
 
-		if other != self and not other:Alive() and IsValid( stone ) then
+		if other != self and not other:IsValidGamePlayer() and IsValid( stone ) then
 			local dist = stone.TTG_Ground:Distance( here )
 			if dist <= bestdist then best, bestdist = stone, dist end
 		end

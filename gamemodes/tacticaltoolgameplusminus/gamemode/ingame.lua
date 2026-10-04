@@ -117,6 +117,13 @@ function NextRound()
 	Start_TeamsAliveCheck()
 	Start_TriggerHurtCheck()
 	
+	--every corpse from the last round goes, a spectator's included - the rest
+	--get theirs cleared by SetSpawnStuff below anyway
+	for _, v in pairs( player.GetAll() ) do
+		v:RemoveCorpse()
+		v:RemoveGravestone()
+	end
+
 	for k,v in pairs(player.GetAll()) do	
 		if v:Team() != TEAM_SPEC then
 			-- take away all the players tools from the previous round

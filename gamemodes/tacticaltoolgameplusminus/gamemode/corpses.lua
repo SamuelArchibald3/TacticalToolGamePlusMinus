@@ -16,8 +16,8 @@
 --with the world and not with player movement. A plain trace does still hit it,
 --so a shot can land on a body.
 --
---It goes when they spawn again - a new round, a revive by Rewind - when they
---leave, and when somebody eats it.
+--It goes when they are back in play - a new round, a revive by Rewind - when
+--they leave, and when somebody eats it.
 --
 --A player model with no ragdoll gets the engine's body instead (see
 --CreateCorpse), which the server only knows the landing point of.
@@ -160,8 +160,9 @@ end
 --The nearest body the server owns within `reach` of this player, and how far,
 --or nil.
 --
---Only the body of somebody who is dead right now - alive again means their
---body went with the spawn anyway. Measured to whichever part of it is closest,
+--Only the body of somebody out of play right now - dead, or spectating since
+--(which a spawn can make them, with Alive saying true). Back in play means
+--their body went with it anyway. Measured to whichever part of it is closest,
 --so standing over the legs counts as much as over the chest.
 function TTGPlayer:NearestBody( reach )
 	local here = self:GetPos()
@@ -170,7 +171,7 @@ function TTGPlayer:NearestBody( reach )
 	for _, other in ipairs( player.GetAll() ) do
 		local corpse = other.TTG_Corpse
 
-		if other != self and not other:Alive() and IsValid( corpse ) then
+		if other != self and not other:IsValidGamePlayer() and IsValid( corpse ) then
 			local dist = TTG_CorpsePos( corpse ):Distance( here )
 
 			for i = 0, corpse:GetPhysicsObjectCount() - 1 do

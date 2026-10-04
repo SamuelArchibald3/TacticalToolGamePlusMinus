@@ -32,11 +32,6 @@ end
 --called whenever a player spawns
 function GM:PlayerSpawn( ply )
 
-	--up again, so their body or gravestone goes - a new round, or a revive by
-	--Rewind
-	ply:RemoveCorpse()
-	ply:RemoveGravestone()
-
 	--make spectators fly around
 	if (ply:Team() == TEAM_SPEC) then
 		ply.DeathSpectate = false
@@ -53,6 +48,14 @@ end
 
 --Sets default vars a player should spawn with
 function SetSpawnStuff( ply )
+
+	--Back in play, so their body or gravestone goes: a new round, or a revive
+	--by Rewind. Here rather than in PlayerSpawn, because a spawn is not always
+	--that - a dead player with nobody left to watch is spawned straight into
+	--roaming spectate (DeathSpectateTick), and that took their gravestone away
+	--the moment it went down.
+	ply:RemoveCorpse()
+	ply:RemoveGravestone()
 
 	--set eye angles
 	//local vec1 = Vector( 0,0,0 ) -- Where we're looking at
