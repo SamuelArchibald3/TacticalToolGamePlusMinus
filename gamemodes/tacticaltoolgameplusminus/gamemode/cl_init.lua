@@ -654,6 +654,28 @@ end )
 	--One block per ability slot, stacked upwards 50 apart. This was three copies
 	--of the same drawing with the key label and the offsets written into each,
 	--which is why a fourth slot was never going to appear on its own.
+	--
+	--The name box is as wide as the longest name showing, with room after it
+	--for a three digit cooldown, and never narrower than it always was. It was
+	--a fixed 190 with the cooldown at a fixed spot inside it, and Cannibalism's
+	--name ran straight into its own countdown.
+	local namewide = 0
+	surface.SetFont( "TheDefaultSettings6" )
+
+	for slot = 1, TTG_AbilitySlotCount() do
+		local info = Ply:GetAbilityInfo( slot )
+
+		if info.name != "none" and ABILITY_KEYS[ slot ] != nil then
+			namewide = math.max( namewide, ( surface.GetTextSize( ConvertToPrintName( info.name ) ) ) )
+		end
+	end
+
+	surface.SetFont( "TheDefaultSettings2" )
+	local timewide = surface.GetTextSize( "000" )
+
+	--15 in to the name, a gap, the cooldown, and 10 to the edge
+	local boxwide = math.max( 190, 15 + namewide + 15 + timewide + 10 )
+
 	for slot = 1, TTG_AbilitySlotCount() do
 		local info = Ply:GetAbilityInfo( slot )
 		local bind = ABILITY_KEYS[ slot ]
@@ -663,12 +685,12 @@ end )
 
 			draw.RoundedBox(8, 10, boxy, 85, 45, Color(50,50,50,255))			--background box
 
-			draw.RoundedBox(8, 85, boxy + 5, 190, 35, Color(50,50,50,180))			--2nd background box
+			draw.RoundedBox(8, 85, boxy + 5, boxwide, 35, Color(50,50,50,180))			--2nd background box
 
 			draw.SimpleText( TTG_AbilityKeyLabel( slot ), "TheDefaultSettings2", 52, boxy + 10, Color(255,255,255,255), TEXT_ALIGN_CENTER)
 			if info.cooldown == true then
 				draw.SimpleText( ConvertToPrintName(info.name), "TheDefaultSettings6", 100, boxy + 5, Color(255,100,100,255))
-				draw.SimpleText( info.time, "TheDefaultSettings2", 260, boxy + 10, Color(255,100,100,255), TEXT_ALIGN_CENTER)
+				draw.SimpleText( info.time, "TheDefaultSettings2", 85 + boxwide - 10, boxy + 10, Color(255,100,100,255), TEXT_ALIGN_RIGHT)
 			else
 				draw.SimpleText( ConvertToPrintName(info.name), "TheDefaultSettings6", 100, boxy + 5, Color(200,200,200,255))
 			end
