@@ -30,7 +30,7 @@ function ShowBuyingMenu()
 	-----------------------------------------------------------------------------------------------*/
 	
 	local panel_width = 800
-	local panel_height = 575
+	local panel_height = 615	--room under the description for one that wraps to six or seven lines
  
 	local DermaPanel = vgui.Create( "DFrame" )
 	DermaPanel:SetPos( (ScrW()/2)-panel_width/2, 100 )
@@ -164,6 +164,13 @@ function ShowBuyingMenu()
 	DescriptionText:SetFont("TheDefaultSettings7")
 	DescriptionText:SetText("-") // Text
 
+	--Wrapped to a fixed width, and as tall as it needs to be. It used to size
+	--itself to its longest line, so a long one ran straight under the ability
+	--and token counters and off the edge of the panel - the Venmo's did.
+	DescriptionText:SetWide( 580 )
+	DescriptionText:SetWrap( true )
+	DescriptionText:SetAutoStretchVertical( true )
+
 	
 
 	//Buy tool button
@@ -176,7 +183,7 @@ function ShowBuyingMenu()
 	
 	//the money you have
 	local HowToBuy = vgui.Create("DLabel", DermaPanel)
-	HowToBuy:SetPos(40, 537) // Position
+	HowToBuy:SetPos(40, 577) // Position
 	HowToBuy:SetColor(Color(255,255,255,255)) // Color
 	HowToBuy:SetFont("TheDefaultSettings5")
 	HowToBuy:SetText("(Right click tools to buy them)") // Text
@@ -383,8 +390,9 @@ function ShowBuyingMenu()
 			SelectedToolText:SetText( purchaseref.print_name )
 			SelectedToolText:SizeToContents()
 			
+			--no SizeToContents: that would throw the wrapping away and size it
+			--to its longest line again
 			DescriptionText:SetText( purchaseref.description )
-			DescriptionText:SizeToContents()
 		else
 
 			SelectedToolText:SetText("-")
