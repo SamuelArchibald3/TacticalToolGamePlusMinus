@@ -65,6 +65,11 @@ function TTGPlayer:RewindSampleNow()
 		abilities = self:RewindAbilitySnapshot(),
 		buffs = self:BuffSnapshot(),
 		listed = self:GetSwepToolInfo() or {},
+
+		--for the gravestone of somebody who dies in the air: it goes where
+		--they last had their feet down (gravestones.lua)
+		grounded = self:IsOnGround(),
+
 		t = CurTime(),
 	}
 end
@@ -139,6 +144,24 @@ function TTGPlayer:RewindSampleAt( time )
 		local sample = self.RewindBuffer[ index ]
 
 		if sample != nil and sample.t <= time then return index, sample end
+	end
+
+	return nil
+end
+
+
+--Where this player last stood on the ground: the newest sample that has them
+--there. nil when there is none - nothing recorded yet this round, or since the
+--last rewind landed and the recording started over.
+function TTGPlayer:LastGroundedPos()
+	if self.RewindCount == nil or self.RewindCount == 0 then return nil end
+
+	local size = TTG_RewindBufferSize()
+
+	for step = 0, self.RewindCount - 1 do
+		local sample = self.RewindBuffer[ ( ( self.RewindHead - step - 1 ) % size ) + 1 ]
+
+		if sample != nil and sample.grounded == true then return sample.pos end
 	end
 
 	return nil

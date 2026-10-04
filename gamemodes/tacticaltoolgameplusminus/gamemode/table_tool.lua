@@ -1105,6 +1105,24 @@ sound_send = Sound( "ambient/levels/labs/coinslot1.wav" ),
 }
 ,
 
+
+--Eat a corpse: cast_time seconds held still at its gravestone, then heal
+--health back and the body is gone. reach is how close to the spot under the
+--stone you have to be - gravestones.lua.
+tool_abil_cannibalism =
+{
+name = "tool_abil_cannibalism",
+print_name = "Cannibalism",
+class = "ability",
+cooldown = 20,
+cast_time = 1,
+heal = 50,
+reach = 80,
+sound_eat = Sound( "npc/barnacle/barnacle_crunch2.wav" ),
+sound_done = Sound( "npc/barnacle/barnacle_gulp1.wav" ),
+}
+,
+
 }
 
 

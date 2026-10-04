@@ -605,6 +605,10 @@ G_RewindPlayback = nil
 
 local RewindNextSample = 0
 
+--Whether the buildings are recorded as well as the players this round. The
+--players always are - see Start_RewindSampler.
+local RewindRecordWorld = false
+
 --When the recording that a rewind can reach into began: the start of Combat,
 --or the moment the last rewind landed, which throws everything before it away.
 --Only there to tell somebody how long they have to wait - whether a rewind can
@@ -849,11 +853,13 @@ function RewindSampler()
 		end
 	end
 
-	RewindWorldPush()
+	if RewindRecordWorld then
+		RewindWorldPush()
+	end
 end
 
 
---Nothing to record for if nobody bought one.
+--Whether the buildings need recording: only for a Rewind to put them back.
 --
 --Asked server side, from the ability entities themselves, rather than through
 --the networked view - this decides whether the recording runs at all, so it
@@ -871,19 +877,29 @@ function TTG_AnybodyHasRewind()
 end
 
 
---Asked once here rather than every tick, because it cannot change underneath
---us: buying only happens in the buy phases, and those are over before Combat
---starts. The one thing that can change it mid-round is somebody dying and
---losing theirs, which is not worth tearing the recording down for while their
---team mates still hold one.
+--Every Combat, whether or not anybody bought a Rewind: a gravestone goes where
+--its player last stood on the ground, and for somebody who died in the air only
+--the recording knows where that was (gravestones.lua). The players' half is
+--cheap - a few fields each, ten times a second.
+--
+--The buildings' half is a pass over every entity on the map and nobody but a
+--Rewind needs it, so it only runs when somebody has one. Asked once here rather
+--than every tick, because it cannot change underneath us: buying only happens in
+--the buy phases, and those are over before Combat starts. The one thing that can
+--change it mid-round is somebody dying and losing theirs, which is not worth
+--tearing the recording down for while their team mates still hold one.
 function Start_RewindSampler()
 	RewindNextSample = 0
 	TTG_RewindWorldReset()
 	RewindHistoryStart = CurTime()
-
-	if not TTG_AnybodyHasRewind() then return end
+	RewindRecordWorld = TTG_AnybodyHasRewind()
 
 	hook.Add( "Think", "TTG_RewindSampler", RewindSampler )
+end
+
+
+function TTG_RewindRecordingWorld()
+	return RewindRecordWorld
 end
 
 
