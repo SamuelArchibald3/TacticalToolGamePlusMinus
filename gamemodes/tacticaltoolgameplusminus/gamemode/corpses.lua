@@ -218,6 +218,22 @@ function TTG_CorpseSpot( corpse )
 end
 
 
+--Every corpse goes, at the start of a round: every player's body or
+--gravestone, a spectator's included, and every gravestone on the map whoever's
+--it was - one from ttg_devgrave belongs to nobody, and only going by player
+--left those standing round after round.
+function TTG_ClearCorpses()
+	for _, ply in ipairs( player.GetAll() ) do
+		ply:RemoveCorpse()
+		ply:RemoveGravestone()
+	end
+
+	for _, stone in ipairs( ents.FindByClass( "ent_gravestone" ) ) do
+		stone:Remove()
+	end
+end
+
+
 --Eaten: a gravestone takes its body with it, and a body just goes.
 function TTG_ConsumeCorpse( corpse )
 	if IsValid( corpse.TTG_GraveOf ) then
