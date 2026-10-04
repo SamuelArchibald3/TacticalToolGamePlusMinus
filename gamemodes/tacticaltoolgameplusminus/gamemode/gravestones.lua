@@ -18,6 +18,10 @@
 --
 --The stone goes when its player spawns again (a new round, a revive by
 --Rewind), when they leave, and when it is eaten, which takes the body too.
+--
+--This is the default of the two corpse styles - ttg_var_corpses,
+--CORPSE_STYLE. The other, "body", has the server make the body itself so it
+--lies in the same place for everybody (corpses.lua).
 
 if not SERVER then return end
 
@@ -87,9 +91,9 @@ function TTGPlayer:RemoveRemains()
 end
 
 
---The gravestone nearest this player within `reach`, or nil. Only for somebody
---who is dead right now, and measured from the spot it stands over.
-function TTGPlayer:NearestCorpse( reach )
+--The gravestone nearest this player within `reach`, and how far, or nil. Only
+--for somebody who is dead right now, and measured from the spot it stands over.
+function TTGPlayer:NearestGravestone( reach )
 	local here = self:GetPos()
 	local best, bestdist = nil, reach
 
@@ -102,12 +106,14 @@ function TTGPlayer:NearestCorpse( reach )
 		end
 	end
 
-	return best
+	return best, bestdist
 end
 
 
 --Before the death is dealt with rather than after, while where they were
 --standing is still what the player says: this runs ahead of GM:DoPlayerDeath.
 hook.Add( "DoPlayerDeath", "TTG_PlaceGravestone", function( ply )
+	if TTG_CorpseStyle() != "gravestone" then return end
+
 	ply:PlaceGravestone()
 end )

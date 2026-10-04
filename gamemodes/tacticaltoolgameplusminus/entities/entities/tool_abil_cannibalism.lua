@@ -78,15 +78,11 @@ function ENT:FinishEating( corpse )
 	ply:TTG_Heal( self.Ref.heal )
 
 	local effect = EffectData()
-		effect:SetOrigin( corpse.TTG_Ground + Vector( 0, 0, 10 ) )
+		effect:SetOrigin( TTG_CorpseSpot( corpse ) + Vector( 0, 0, 10 ) )
 	util.Effect( "BloodImpact", effect )
 
-	--the gravestone, and the body with it
-	if IsValid( corpse.TTG_GraveOf ) then
-		corpse.TTG_GraveOf:RemoveRemains()
-	else
-		corpse:Remove()
-	end
+	--the body, or the gravestone and the body with it
+	TTG_ConsumeCorpse( corpse )
 
 	ply:EmitSound( self.Ref.sound_done )
 

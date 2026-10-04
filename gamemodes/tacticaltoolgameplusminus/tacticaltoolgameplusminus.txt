@@ -106,5 +106,15 @@
 			"type"		"CheckBox"
 			"default"	"1"
 		}
+
+
+		11
+		{
+			"name"		"ttg_var_corpses"
+			"text"		"Corpse Style"
+			"help"		"What a death leaves for Cannibalism to eat. gravestone: a marker where the player last stood, beside the usual body. body: a body the server makes, in the same place for everybody (applies from the next death)"
+			"type"		"Text"
+			"default"	"gravestone"
+		}
 	}
 }

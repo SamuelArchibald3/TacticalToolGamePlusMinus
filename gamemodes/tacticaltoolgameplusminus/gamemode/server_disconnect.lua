@@ -6,7 +6,8 @@ function GM:PlayerDisconnected( ply )
 	--Remove all the player's ability ents
 	Reset_PlyAbilities( ply )
 
-	--and their gravestone, which nothing else would ever clear away
+	--and their body or gravestone, which nothing else would ever clear away
+	ply:RemoveCorpse()
 	ply:RemoveGravestone()
 	
 	

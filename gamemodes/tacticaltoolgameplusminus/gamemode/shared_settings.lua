@@ -167,6 +167,12 @@ BRUSH_DOOR_NAME = "TTG_Brush_Door"
 
 
 VOTE_CHANGEMAP_ENABLED = true
+
+--What a death leaves for Cannibalism to eat: "gravestone", a marker where the
+--player last stood beside the engine's body as it always was, or "body", a body
+--the server makes itself so it lies in the same place for everybody. The
+--setting is ttg_var_corpses; see corpses.lua and gravestones.lua.
+CORPSE_STYLE = "gravestone"
 --which maps !votemap offers, and in what order, is in a text file now:
 --data/ttg_map_vote.txt, seeded from map_vote.txt in the gamemode folder
 
@@ -466,6 +472,30 @@ if SERVER then
 		end
 	end
 	cvars.AddChangeCallback( "ttg_var_nadecollision", Callback_NadeCollision, "ttg_var_nadecollision_setting" )
+
+
+
+
+	--Corpse Style
+	--"gravestone" or "body" - see CORPSE_STYLE above. Read at each death, so a
+	--change applies from the next one, and Cannibalism eats either kind, so
+	--corpses already lying about are not stranded by it.
+	if not ConVarExists( "ttg_var_corpses" ) then
+		CreateConVar( "ttg_var_corpses", CORPSE_STYLE, FCVAR_NOTIFY, "What a death leaves to eat: gravestone, or body" )
+	end
+
+	CORPSE_STYLE = GetConVarString( "ttg_var_corpses" )
+
+	local function Callback_Corpses( CVar, PreviousValue, NewValue )
+		CORPSE_STYLE = NewValue
+
+		if TTG_CorpseStyle() == "body" then
+			ChatPrintToAll( "Corpses are now bodies the server owns, in the same place for everybody (from the next death)" )
+		else
+			ChatPrintToAll( "Corpses are now marked with a gravestone where they last stood (from the next death)" )
+		end
+	end
+	cvars.AddChangeCallback( "ttg_var_corpses", Callback_Corpses, "ttg_var_corpses_setting" )
 
 end
 

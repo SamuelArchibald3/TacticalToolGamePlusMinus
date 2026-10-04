@@ -202,6 +202,11 @@ function TTGPlayer:RewindCanFit( pos )
 		maxs = maxs,
 		mask = MASK_PLAYERSOLID,
 		filter = self,
+
+		--by the rules player movement goes by, so what a player walks
+		--through does not count as in the way - a corpse lying on the spot,
+		--most of all
+		collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT,
 	} )
 
 	return not ( tr.Hit or tr.StartSolid )
