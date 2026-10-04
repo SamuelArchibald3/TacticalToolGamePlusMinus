@@ -392,7 +392,7 @@ function ShowBuyingMenu()
 			
 			--no SizeToContents: that would throw the wrapping away and size it
 			--to its longest line again
-			DescriptionText:SetText( purchaseref.description )
+			DescriptionText:SetText( TTG_ShopDescription( purchaseref ) )
 		else
 
 			SelectedToolText:SetText("-")

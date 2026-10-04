@@ -31,6 +31,23 @@
 local TTGPlayer = FindMetaTable( "Player" )
 
 
+--Which corpse style a death gets: "body" for the server's own, and anything
+--else the default, "gravestone". Read at each death, so a change applies from
+--the next one.
+--
+--Shared, because the shop's Cannibalism text says where to eat from. The
+--setting is a server convar, so a client goes by the copy shared_settings.lua
+--networks, and the shared default until that arrives.
+function TTG_CorpseStyle()
+	local style = CORPSE_STYLE
+	if CLIENT then style = GetGlobal2String( "TTG_CorpseStyle", style ) end
+
+	if style == "body" then return "body" end
+
+	return "gravestone"
+end
+
+
 --Where a corpse is: its pelvis, which is what the root physics object is,
 --rather than the entity's origin, which only catches up after a physics step.
 function TTG_CorpsePos( corpse )
@@ -186,16 +203,6 @@ function TTGPlayer:NearestBody( reach )
 	end
 
 	return best, bestdist
-end
-
-
---Which corpse style a death gets: "body" for the server's own, and anything
---else the default, "gravestone". Read at each death, so a change applies from
---the next one.
-function TTG_CorpseStyle()
-	if CORPSE_STYLE == "body" then return "body" end
-
-	return "gravestone"
 end
 
 

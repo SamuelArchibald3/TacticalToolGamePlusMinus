@@ -139,8 +139,9 @@ ABILITY_KEYS =
 }
 
 --How many abilities a player can carry at once. Never more than there are keys
---to trigger them with - a slot with no key would be unusable.
-MAX_ABILITY_SLOTS = 3
+--to trigger them with - a slot with no key would be unusable. Six by default,
+--one for every key in ABILITY_KEYS; ttg_var_abilityslots can turn it down.
+MAX_ABILITY_SLOTS = 6
 
 
 --Whether a nade is solid to players.
@@ -486,8 +487,13 @@ if SERVER then
 
 	CORPSE_STYLE = GetConVarString( "ttg_var_corpses" )
 
+	--and to clients, which cannot read the convar: the shop's Cannibalism
+	--text says where to eat from (TTG_CorpseStyle in corpses.lua)
+	SetGlobal2String( "TTG_CorpseStyle", CORPSE_STYLE )
+
 	local function Callback_Corpses( CVar, PreviousValue, NewValue )
 		CORPSE_STYLE = NewValue
+		SetGlobal2String( "TTG_CorpseStyle", CORPSE_STYLE )
 
 		if TTG_CorpseStyle() == "body" then
 			ChatPrintToAll( "Corpses are now bodies the server owns, in the same place for everybody (from the next death)" )
