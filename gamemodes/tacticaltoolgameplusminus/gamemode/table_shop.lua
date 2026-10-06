@@ -510,7 +510,7 @@ print_name = "Venmo",
 class = "ability",
 tool_name = "tool_abil_venmo",
 cost = 20,
-description = "Get ${tool.amount} on Venmo. Really. \nCosts {calc.cost} tool tokens - more than a round ever gives you, unless you are a Premium Monthly Subscriber. \n{tool.cooldown} second cooldown.",
+description = "Get ${tool.amount} on Venmo. \nCosts {calc.cost} tool tokens",
 }
 ,
 
@@ -521,7 +521,7 @@ name = "purchase_cannibalism",
 print_name = "Cannibalism",
 class = "ability",
 tool_name = "tool_abil_cannibalism",
-description = "Eat a corpse: {live.corpse_where}. \nTakes {tool.cast_time} second, held still, then heals {tool.heal} health and the body is gone. \nOnly players who are dead right now. \n{tool.cooldown} second cooldown.",
+description = "Eat a corpse: {live.corpse_where}. \nTakes {tool.cast_time} second, then heals {tool.heal} health and the body is gone.\n{tool.cooldown} second cooldown.",
 }
 ,
 
