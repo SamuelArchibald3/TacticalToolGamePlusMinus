@@ -231,13 +231,23 @@ end
 --How far along the capture is, for the Rewind ability to record and put back.
 --
 --CaptureTime is file local and stays that way; these two are the only way in
---or out. G_CurCaptureMode is deliberately not part of it: ChangeCapture works
---the mode out again from the zone's touch list every Think, and a rewind
---rebuilds that list from where people actually ended up, so the mode corrects
---itself a tick later rather than being restored to something that may no
---longer match who is standing there.
+--or out.
+--
+--The mode goes back with the clock. It was left out on the idea that
+--ChangeCapture works it out again from who is on the point, but it does not:
+--it only moves between capturing, reversing and stuck, and a capture only
+--starts from "none", which only TurnOffCapture returns it to. So a rewind to
+--before a capture began stopped the clock and left the mode on "capturing",
+--and the point could not be taken again that round. The other way round, a
+--clock put back running with the mode on "none" moved neither way and held
+--the round in overtime. From the mode put back, ChangeCapture carries on as
+--it would have from that moment.
 function TTG_CaptureProgress()
-	return { time = CaptureTime, moving = G_CaptureTimeMoving == true }
+	return {
+		time = CaptureTime,
+		moving = G_CaptureTimeMoving == true,
+		mode = G_CurCaptureMode,
+	}
 end
 
 
@@ -246,6 +256,9 @@ function TTG_RestoreCaptureProgress( was )
 
 	CaptureTime = was.time
 	G_CaptureTimeMoving = was.moving
+
+	--a record with no mode in it gets the one that goes with its clock
+	G_CurCaptureMode = was.mode or ( was.moving and "capturing" or "none" )
 
 	--re-based rather than resumed part way through a second, so the number
 	--that was just put back is not taken off again immediately

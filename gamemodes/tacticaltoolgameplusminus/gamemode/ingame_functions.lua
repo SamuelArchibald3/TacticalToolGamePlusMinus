@@ -1059,9 +1059,8 @@ function TTG_RewindFinish()
 	local ref = TOOL_TABLE.tool_abil_rewind
 	TTG_RewindGameTime( ref.duration + ref.playback_time )
 
-	--the zone tracks who is on it with StartTouch and EndTouch, and neither
-	--fires reliably when a player is teleported. Left alone, a defender rewound
-	--off the point keeps contesting it forever and the attackers can never cap.
+	--who is on the point now, rather than a tick from now when the engine's
+	--StartTouch and EndTouch catch up with the teleports (RebuildTouchList)
 	if IsValid( G_CurAttackZone ) then
 		G_CurAttackZone:RebuildTouchList()
 	end

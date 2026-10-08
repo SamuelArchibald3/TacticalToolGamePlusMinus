@@ -27,18 +27,22 @@ function ENT:EmptyTable()
 end
 
 
-//The list below is built purely out of StartTouch and EndTouch, and neither
-//fires reliably when a player is teleported rather than walked out - which is
-//exactly what the Rewind ability does to everybody at once. Left stale it
-//decides rounds: somebody rewound off the point keeps contesting it forever, so
-//G_CurCaptureMode sticks on "stuck" and the attackers can never cap, and
-//somebody rewound onto it never starts capturing.
+//The list from where everybody is right now, for straight after a rewind has
+//teleported them all.
 //
-//Tests the player's centre against the brush rather than their whole hull, so
-//it is an approximation of what the engine does - somebody balanced on the very
-//edge of the zone can come out of a rewind on the other side of this from where
-//StartTouch would have put them. Close enough, given the alternative is a list
-//that is simply wrong.
+//The engine does report a teleport - StartTouch or EndTouch on the next tick,
+//frozen or not, measured on ttg_arena_v1's zone. This only saves the capture
+//from spending that tick on where people stood before the rewind. It used to
+//be the cause of the very thing it was meant to prevent: it listed somebody
+//rewound onto the point, the engine's StartTouch listed them again, and
+//walking off took one of the two away. The other stayed for the rest of the
+//round, so a defender who had left went on contesting the point and the
+//attackers could not cap. StartTouch now never lists anybody twice.
+//
+//The player's hull against the zone's box, as the engine tests it, rather than
+//just their centre - otherwise somebody on the very edge comes out of this
+//off the list while the engine still has them on the point, and so never
+//sends the StartTouch that would put them back.
 function ENT:RebuildTouchList()
 	table.Empty( self.TouchingPlyList )
 
@@ -49,7 +53,16 @@ function ENT:RebuildTouchList()
 	for _, ply in pairs( player.GetAll() ) do
 		if ply:Team() == TEAM_SPEC then continue end
 
-		if self:WorldToLocal( ply:WorldSpaceCenter() ):WithinAABox( mins, maxs ) then
+		--the hull in the zone's own space. Zones are unrotated boxes, so the
+		--player's box can be carried across as it is
+		local at = self:WorldToLocal( ply:GetPos() )
+		local lo, hi = at + ply:OBBMins(), at + ply:OBBMaxs()
+
+		local overlaps = lo.x <= maxs.x and hi.x >= mins.x
+			and lo.y <= maxs.y and hi.y >= mins.y
+			and lo.z <= maxs.z and hi.z >= mins.z
+
+		if overlaps then
 			table.insert( self.TouchingPlyList, ply )
 		end
 	end
@@ -71,6 +84,10 @@ function ENT:StartTouch( entity )
 
 	if IsValid( entity ) and entity:IsPlayer() then
 		if entity:Team() == TEAM_SPEC then return end
+
+		//Once each. EndTouch takes one copy off, so a second one would be a
+		//player still counted on the point after they have left it.
+		if table.HasValue( self.TouchingPlyList, entity ) then return end
 
 		table.insert( self.TouchingPlyList, entity )
 	end
