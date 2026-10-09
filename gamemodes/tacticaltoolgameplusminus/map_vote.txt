@@ -33,10 +33,6 @@ ttg_nukevlan
 # generated in mapsrc/
 ttg_3path_a1
 ttg_keep_a1
-# ttg_lanes_a1
-# ttg_rift_a1
-# ttg_crossroads_a1
-# ttg_archipelago_a1
 
 # From the Workshop. They are TTG maps, but they live in the Workshop cache or
 # the download folder rather than in maps/, so a server needs them copied over
