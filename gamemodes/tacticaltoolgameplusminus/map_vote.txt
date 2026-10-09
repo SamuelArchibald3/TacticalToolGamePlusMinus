@@ -31,6 +31,8 @@ ttg_spoon
 ttg_nukevlan
 
 # generated in mapsrc/
+ttg_3path_a1
+ttg_keep_a1
 # ttg_lanes_a1
 # ttg_rift_a1
 # ttg_crossroads_a1
