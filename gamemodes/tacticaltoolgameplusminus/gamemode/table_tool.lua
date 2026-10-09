@@ -1124,6 +1124,69 @@ sound_done = Sound( "npc/barnacle/barnacle_gulp1.wav" ),
 }
 ,
 
+
+--Claude, in all three shops. Each one works out for itself what would help,
+--and says what it chose; the shop does not say what that is, on purpose. See
+--the entity files for what they actually do.
+tool_abil_claude =
+{
+name = "tool_abil_claude",
+print_name = "Claude Ability",
+class = "ability",
+cooldown = 30,
+think_time = .5,
+hurt_fraction = .5,		--heals you at or under half your max health
+heal = 40,
+danger_radius = 700,	--an enemy this close who can see you gets you a shield
+shield_time = 3,
+cooldown_cut = 10,		--seconds off your other abilities' cooldowns
+speed_time = 2,
+sound_think = Sound( "buttons/blip1.wav" ),
+sound_answer = Sound( "buttons/button9.wav" ),
+}
+,
+
+tool_claude =
+{
+name = "tool_claude",
+print_name = "Claude Weapon",
+class = "gun",
+holdtype = "grenade",
+uses_grenade_model = true,
+thrown_ent = "ent_claude",
+throw_force = 140000,
+rate_of_fire = 1,
+clip_size = 1,
+reload_time = 8,
+anim_time = .28,
+automatic = true,
+infinite = true,
+v_model = "models/weapons/v_grenade.mdl",
+w_model = "models/weapons/w_grenade.mdl",
+color_skin = Color(255,255,255,255),
+shoot_sound = Sound("npc/zombie/claw_miss1.wav"),
+reload_sound = Sound("weapons/smg_worldreload.wav"),
+}
+,
+
+tool_claudebox =
+{
+name = "tool_claudebox",
+print_name = "Claude Item",
+class = "item",
+thrown_ent = "ent_claudebox",
+throw_force = 170000,
+rate_of_fire = 1,
+automatic = false,
+infinite = false,
+v_model = "models/weapons/c_toolgun.mdl",
+w_model = "models/weapons/w_toolgun.mdl",
+color_skin = Color(255,255,255,255),
+shoot_sound = Sound("Weapon_Mortar.Single"),
+sets_ent_team = true,
+}
+,
+
 }
 
 

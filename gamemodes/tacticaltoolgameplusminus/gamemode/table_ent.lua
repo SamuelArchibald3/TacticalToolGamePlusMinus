@@ -577,6 +577,44 @@ model = "models/props_junk/garbage_coffeemug001a.mdl",
 }
 ,
 
+--Claude, thrown from its weapon - see ent_claude.lua
+ent_claude =
+{
+name = "ent_claude",
+print_name = "Claude Weapon",
+model = "models/props_junk/popcan01a.mdl",
+radius = 220,
+damage = 35,
+heal = 30,
+sound_hit = "npc/scanner/scanner_explode_crash2.wav",
+sound_heal = "items/medshot4.wav",
+sound_nothing = "buttons/button10.wav",
+takes_damage = false,
+}
+,
+
+--Claude, deployed as an item - see ent_claudebox.lua
+ent_claudebox =
+{
+name = "ent_claudebox",
+print_name = "Claude Item",
+model = "models/items/grenadeammo.mdl",
+transition_model = "models/props_junk/plasticbucket001a.mdl",
+built_model = "models/props_lab/monitor01a.mdl",
+sound_a = "physics/metal/metal_box_break1.wav",
+sound_b = "buttons/button9.wav",
+sound_build = "ambient/machines/engine4.wav",
+sound_ping = "buttons/blip2.wav",
+takes_damage = true,
+health = 150,
+build_time = 5,
+build_radius = 40,
+radius = 600,			--how near an enemy has to come to be reported
+scan_rate = .5,
+repeat_after = 6,		--seconds before the same enemy is reported again
+}
+,
+
 }
 
 --recieves an actual ent, not the string name of one

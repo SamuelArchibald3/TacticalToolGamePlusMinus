@@ -222,6 +222,18 @@ bind_primary = "Deploy jump pad",
 }
 ,
 
+purchase_claudebox =
+{
+name = "purchase_claudebox",
+print_name = "Claude Item",
+class = "item",
+tool_name = "tool_claudebox",
+pack_amount = 1,
+description = "Leave Claude somewhere and see what happens.",
+bind_primary = "Deploy Claude",
+}
+,
+
 
 }
 
@@ -326,6 +338,18 @@ class = "gun",
 tool_name = "tool_repairstick",
 description = "Repairs the buildings you whack for {tool.heal_amount_building} hp per hit.\nBuying multiple upgrades rate of fire.",
 bind_primary = "Repair nearby building",
+}
+,
+
+purchase_claude =
+{
+name = "purchase_claude",
+print_name = "Claude Weapon",
+class = "gun",
+tool_name = "tool_claude",
+description = "Throw Claude at a problem. \nOne at a time, {tool.reload_time} seconds to get the next.",
+bind_primary = "Throw Claude",
+bind_r = "Reload",
 }
 ,
 
@@ -522,6 +546,16 @@ print_name = "Cannibalism",
 class = "ability",
 tool_name = "tool_abil_cannibalism",
 description = "Eat a corpse: {live.corpse_where}. \nTakes {tool.cast_time} second, then heals {tool.heal} health and the body is gone.\n{tool.cooldown} second cooldown.",
+}
+,
+
+purchase_claude_ability =
+{
+name = "purchase_claude_ability",
+print_name = "Claude Ability",
+class = "ability",
+tool_name = "tool_abil_claude",
+description = "Ask Claude for help. \n{tool.cooldown} second cooldown.",
 }
 ,
 
