@@ -119,13 +119,17 @@ function ENT:CreateMarker()
 end
 
 
-//Whether this zone's marker is showing. Only the live zone's should be: a map
+//Whether this zone's marker is showing. Only the live zones' should be: a map
 //can hold several zones and ChooseAttackSite makes one of them the objective each
 //round, but every zone makes a marker as it spawns, so without this a three-point
 //map shows three points. The client's [ ] over the marker follows the same flag.
-function ENT:ShowMarker( show )
+//
+//`label` goes inside the brackets - [A], [B] - for when several are live and
+//the HUD has to say which is which.
+function ENT:ShowMarker( show, label )
 	if IsValid( self.MarkerEnt ) then
 		self.MarkerEnt:SetNoDraw( show != true )
+		self.MarkerEnt:SetNW2String( "TTG_Label", label or "" )
 	end
 end
 

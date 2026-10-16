@@ -23,8 +23,9 @@
 --G_GameBegun
 	-- true or false
 
---G_CurAttackZone
-	--this will be one of the func_bomb_zones of the map, chosen at random each round
+--G_LiveZones
+	--the func_ttg_capturezones that count this round: one chosen at random, or
+	--all of them on a map set to zones=all (map_settings.lua)
 
 
 
@@ -458,7 +459,9 @@ end
 	functions that run during the round sometimes
 ---------------------------------------------------------*/
 
-//Choses what will be the attack site for this round, if there are multiple like on de_ maps
+//Makes this round's capture zones live: one chosen at random from the map's,
+//or on a map whose settings say zones=all, every one of them - each with its
+//own capture clock, the first to run out winning the round (capturetimer.lua).
 function ChooseAttackSite()
 	//find the capture areas (bomb sites) and set one to be active this round.
 	local SitesTable = {}
@@ -476,21 +479,30 @@ function ChooseAttackSite()
 	print("Error, there is no func_ttg_capturezone in this map, so there's no objective")
 	return end
 	
-	for k,site in pairs(SitesTable) do
-		site:EmptyTable()
-	end
-	
-	local ChosenSite = SitesTable[ math.random( 1, Count ) ]
+	--in map order, so A and B keep their places on the HUD round to round
+	table.sort( SitesTable, function( a, b ) return a:EntIndex() < b:EntIndex() end )
 
-	--mark the live one and only the live one. Every zone made a marker when it
+	local live = {}
+	if TTG_MapSetting( "zones" ) == "all" then
+		live = SitesTable
+	else
+		live = { SitesTable[ math.random( 1, Count ) ] }
+	end
+
+	local isLive = {}
+	for _, site in ipairs( live ) do isLive[ site ] = true end
+
+	--mark the live ones and only those. Every zone made a marker when it
 	--spawned, so on a map with several a player would otherwise see them all.
-	for k,site in pairs(SitesTable) do
-		site:ShowMarker( site == ChosenSite )
+	--named on the HUD only when there is more than one to tell apart
+	for _, site in ipairs( SitesTable ) do
+		site:EmptyTable()
+		site.Capture = nil
+		site.TTG_IsActive = isLive[ site ] == true
+		site:ShowMarker( isLive[ site ] == true, #live > 1 and TTG_ZoneLabel( site ) or "" )
 	end
 
-	--sets the global 'G_CurAttackZone' to be the chosen func_ttg_capturezone entity for this round
-	G_CurAttackZone = ChosenSite
-	G_CurAttackZone.TTG_IsActive = true
+	G_LiveZones = live
 end
 
 
@@ -1059,10 +1071,10 @@ function TTG_RewindFinish()
 	local ref = TOOL_TABLE.tool_abil_rewind
 	TTG_RewindGameTime( ref.duration + ref.playback_time )
 
-	--who is on the point now, rather than a tick from now when the engine's
+	--who is on each point now, rather than a tick from now when the engine's
 	--StartTouch and EndTouch catch up with the teleports (RebuildTouchList)
-	if IsValid( G_CurAttackZone ) then
-		G_CurAttackZone:RebuildTouchList()
+	for _, zone in ipairs( G_LiveZones ) do
+		if IsValid( zone ) then zone:RebuildTouchList() end
 	end
 
 	--Last, so an ability working out what it should be now is looking at a
@@ -1159,26 +1171,25 @@ end
 
 function ResetVarsBetweenRounds()
 	--global vars to be reset between rounds
-	G_CaptureTimeMoving = false
-	G_CurCaptureMode = "none"
 	G_WinAlreadyTriggered = false
-	
-	--Sets there to be no current attack zone and turns off the zone
-	if IsValid(G_CurAttackZone) then
-		G_CurAttackZone:EmptyTable()
-		G_CurAttackZone.TTG_IsActive = false
-		G_CurAttackZone:ShowMarker( false )
-		G_CurAttackZone = nil
+
+	--no zone is live between rounds: each one stops, empties and is unmarked
+	for _, zone in ipairs( G_LiveZones ) do
+		if IsValid( zone ) then
+			zone:EmptyTable()
+			zone.Capture = nil
+			zone.TTG_IsActive = false
+			zone:ShowMarker( false )
+		end
 	end
-	
+	G_LiveZones = {}
+
 	--global bools that communicate stuff to the client
 	SetGlobalBool("CL_DrawOvertime", false)
 	SetGlobalBool("CL_PlayTimerCountSounds", false)
-	
-	--turns off the capture hud thing
-	umsg.Start( "IfCaptureOn" )
-    umsg.Bool( false )
-	umsg.End()
+
+	--takes the capture bars down
+	TTG_SendCaptureState()
 
 	--clears old client vars
 	umsg.Start("ClearOldClientVars")

@@ -23,14 +23,71 @@
 --duplicate fails a test instead of quietly taking over at load.
 
 
---global var which says what mode the capture timer is in
-G_CurCaptureMode = "none"
-			--"capturing"
-			--"reversing"
-			--"stuck"
+--Every zone that counts this round. ChooseAttackSite fills it - one zone picked
+--at random, or every zone on a map whose settings say zones=all (see
+--map_settings.lua) - and ResetVarsBetweenRounds empties it.
+G_LiveZones = {}
 
---global var which says if the capture time is moving at all
-G_CaptureTimeMoving = false
+--Each live zone runs a capture of its own, kept on the zone as zone.Capture -
+--see TTG_ZoneCapture. With several live, each has its own clock, and the
+--first one to run out wins the round for the attackers.
+
+
+--A zone's capture, made the first time it is asked for:
+--  mode     "none", "capturing", "reversing" or "stuck"
+--  time     seconds left; nil until a capture has started
+--  moving   whether its clock is running at all
+--  nextat   when its clock next moves
+function TTG_ZoneCapture( zone )
+	zone.Capture = zone.Capture or { mode = "none", time = nil, moving = false, nextat = nil }
+	return zone.Capture
+end
+
+
+--Whether any zone's clock is moving. The round timer waits in overtime while
+--one is, rather than ending the round under a capture.
+function TTG_AnyCaptureMoving()
+	for _, zone in ipairs( G_LiveZones ) do
+		if zone.Capture and zone.Capture.moving then return true end
+	end
+
+	return false
+end
+
+
+--What a zone is called on the HUD and in chat: the targetname the map gave it,
+--such as A or B. Empty for a zone with none, which on a one-zone map needs no
+--name anyway.
+function TTG_ZoneLabel( zone )
+	if zone.GetName then return zone:GetName() or "" end
+	return ""
+end
+
+
+util.AddNetworkString( "TTG_CaptureState" )
+
+--Every live zone's capture, to everybody, for the HUD to draw a bar for each
+--one whose clock is moving.
+--
+--Only with a human to receive it. A net message started and not sent stays
+--open, and the next net.Start anywhere discards itself over the top of it -
+--see shop_blocklist.lua, where that turned up with a server of bots.
+function TTG_SendCaptureState()
+	if #player.GetHumans() == 0 then return end
+
+	net.Start( "TTG_CaptureState" )
+		net.WriteUInt( #G_LiveZones, 4 )
+
+		for _, zone in ipairs( G_LiveZones ) do
+			local cap = TTG_ZoneCapture( zone )
+
+			net.WriteString( TTG_ZoneLabel( zone ) )
+			net.WriteUInt( math.Clamp( cap.time or 0, 0, 65535 ), 16 )
+			net.WriteUInt( math.Clamp( TTG_CaptureTimeFull(), 1, 65535 ), 16 )
+			net.WriteBool( cap.moving == true )
+		end
+	net.Broadcast()
+end
 
 
 
@@ -41,19 +98,25 @@ end
 function End_CaptureCheck()
 	hook.Remove("Think", "ChangeCapture")
 
-	--turns off the capture hud thing if its still on for some reason
-	umsg.Start( "IfCaptureOn" )
-    umsg.Bool( false )
-	umsg.End()
+	--takes the capture bars down if they are still up for some reason
+	TTG_SendCaptureState()
 end
 
 
 
---runs on think
---this will need to be modified when i add roles for the teams, now it bases roles off colors
+--runs on think: every live zone's capture, each from who is standing in it
 function ChangeCapture()
-	if G_CurAttackZone == nil then return end
-	local plylist = G_CurAttackZone.TouchingPlyList
+	for _, zone in ipairs( G_LiveZones ) do
+		if zone.TouchingPlyList then
+			ChangeZoneCapture( zone )
+		end
+	end
+end
+
+
+function ChangeZoneCapture( zone )
+	local plylist = zone.TouchingPlyList
+	local cap = TTG_ZoneCapture( zone )
 
 	local attacker_touching = false
 	local defender_touching = false
@@ -78,30 +141,30 @@ function ChangeCapture()
 		end
 	end
 
-	if G_CurCaptureMode == "none" then
+	if cap.mode == "none" then
 		if attacker_touching and not defender_touching then
-			InitializeCapture()
+			InitializeCapture( zone )
 		end
 
-	elseif G_CurCaptureMode == "capturing" then
+	elseif cap.mode == "capturing" then
 		if defender_touching and not attacker_touching then
-			G_CurCaptureMode = "reversing"
+			cap.mode = "reversing"
 		elseif defender_touching and attacker_touching then
-			G_CurCaptureMode = "stuck"
+			cap.mode = "stuck"
 		end
 
-	elseif G_CurCaptureMode == "reversing" then
+	elseif cap.mode == "reversing" then
 		if attacker_touching and not defender_touching then
-			G_CurCaptureMode = "capturing"
+			cap.mode = "capturing"
 		elseif defender_touching and attacker_touching then
-			G_CurCaptureMode = "stuck"
+			cap.mode = "stuck"
 		end
 
-	elseif G_CurCaptureMode == "stuck" then
+	elseif cap.mode == "stuck" then
 		if attacker_touching and not defender_touching then
-			G_CurCaptureMode = "capturing"
+			cap.mode = "capturing"
 		elseif defender_touching and not attacker_touching then
-			G_CurCaptureMode = "reversing"
+			cap.mode = "reversing"
 		end
 
 	end
@@ -109,26 +172,16 @@ end
 
 
 
+--called when an attacker touches a zone and begins the capture process
+function InitializeCapture( zone )
+	if zone == nil then return end
+	local cap = TTG_ZoneCapture( zone )
 
-
-local FirstCheck = false
-local CaptureTime = nil
-local NextAddTime = nil
-
-
---called when an attacker touches the func_bomb_zone and begins the capture process
-function InitializeCapture()
 	--sets the time to be going down
-	G_CurCaptureMode = "capturing"
+	cap.mode = "capturing"
+	cap.moving = true
 
-	G_CaptureTimeMoving = true
-
-	--tells everyones hud to start drawing the capture graphic.
-	umsg.Start( "IfCaptureOn" )
-    umsg.Bool( G_CaptureTimeMoving )
-	umsg.End()
-
-	--announces to red team in voice that their zone is being captured
+	--announces to the defenders in voice that their zone is being captured
 	for k,v in pairs(player.GetAll()) do
 		if GetTeamRole(v:Team()) == "Defending" then
 			umsg.Start("Announcer_Capture", v)
@@ -136,67 +189,94 @@ function InitializeCapture()
 		end
 	end
 
-	--sets the time to be equal to the full amount right when it starts to count down
-	CaptureTime = TIME_TO_CAPTURE
+	--with several zones live, which one
+	local label = TTG_ZoneLabel( zone )
+	if #G_LiveZones > 1 and label != "" then
+		ChatPrintToAll( label .. " is being captured!" )
+	end
 
-	NextAddTime = CurTime() + 1
-	CaptureHUDUpdate()
+	--the full amount right when it starts to count down
+	cap.time = TTG_CaptureTimeFull()
+
+	cap.nextat = CurTime() + 1
+	TTG_SendCaptureState()
 end
 
-function CaptureZoneTime()
-	if G_CaptureTimeMoving == true then
-		if (CurTime() >= NextAddTime) then
-			NextAddTime = CurTime() + 1
 
-			if G_CurCaptureMode == "capturing" then
-				CaptureTime = CaptureTime - 1
-			elseif G_CurCaptureMode == "reversing" then
-				CaptureTime = CaptureTime + 1
-				if CaptureTime >= TIME_TO_CAPTURE then --if the time is reversed all the way back up to its max
-					TurnOffCapture()
-				end
-			elseif G_CurCaptureMode == "stuck" then
-				CaptureTime = CaptureTime
-			end
+--One zone's clock, a second at a time. Returns true if it ran out.
+local function TickZone( zone )
+	local cap = zone.Capture
+	if cap == nil or not cap.moving or CurTime() < ( cap.nextat or 0 ) then return false end
 
-			CaptureHUDUpdate()
+	cap.nextat = CurTime() + 1
 
-			--if it reaches 0 then the attackers have captured the zone, so they win
-			if CaptureTime <= 0 then
-				CapturedByAttackers()
-			end
+	if cap.mode == "capturing" then
+		cap.time = cap.time - 1
+	elseif cap.mode == "reversing" then
+		cap.time = cap.time + 1
+		if cap.time >= TTG_CaptureTimeFull() then --reversed all the way back up to its max
+			TurnOffCapture( zone )
 		end
 	end
+
+	return cap.time <= 0
+end
+
+
+function CaptureZoneTime()
+	local changed, captured = false, nil
+
+	for _, zone in ipairs( G_LiveZones ) do
+		local before = zone.Capture and zone.Capture.time
+
+		if TickZone( zone ) and captured == nil then captured = zone end
+		if zone.Capture and zone.Capture.time != before then changed = true end
+	end
+
+	if changed then TTG_SendCaptureState() end
+
+	--the first to reach 0 wins; a second reaching it on the same tick finds
+	--the round already won
+	if captured then CapturedByAttackers( captured ) end
 end
 hook.Add("Think", "CaptureZoneTime", CaptureZoneTime)
 
 
---Turns the capture zone off, without deciding a winner.
+--Turns a zone's capture off, without deciding a winner - or every live zone's,
+--given none.
 --
 --A successful overtime defense used to try to award the round to the
 --defenders from here, gated on G_Overtime - a flag nothing ever set to true,
---so the branch never ran. It was not needed: the moment this sets
---G_CaptureTimeMoving false, the next Think re-enters GCTime's zero check in
---timer.lua, finds the capture no longer moving, and falls through to
---ZeroEvent( WinningPhase ) - called with no winner, which WinningPhase already
---resolves to the defending team. That is the same rule every ordinary
---timeout uses, one Think tick later than the dead branch would have fired.
---DEBT-9, confirmed in play.
-function TurnOffCapture()
-	G_CaptureTimeMoving = false
-	G_CurCaptureMode = "none"
+--so the branch never ran. It was not needed: the moment the last moving clock
+--stops, the next Think re-enters GCTime's zero check in timer.lua, finds no
+--capture moving, and falls through to ZeroEvent( WinningPhase ) - called with
+--no winner, which WinningPhase already resolves to the defending team. That is
+--the same rule every ordinary timeout uses, one Think tick later than the dead
+--branch would have fired. DEBT-9, confirmed in play.
+function TurnOffCapture( zone )
+	local zones = zone and { zone } or G_LiveZones
 
-	umsg.Start( "IfCaptureOn" )
-    umsg.Bool( G_CaptureTimeMoving )
-	umsg.End()
+	for _, z in ipairs( zones ) do
+		local cap = TTG_ZoneCapture( z )
+		cap.moving = false
+		cap.mode = "none"
+	end
+
+	TTG_SendCaptureState()
 end
 
 
-function CapturedByAttackers()
+--The attackers have filled `zone`'s clock - or, given none, a capture with no
+--zone named, as the tests drive it.
+function CapturedByAttackers( zone )
 	if G_WinAlreadyTriggered == true then return end
 
-	G_CaptureTimeMoving = false
-	G_CurCaptureMode = "none"
+	--every clock stops, not only the one that ran out
+	for _, z in ipairs( G_LiveZones ) do
+		local cap = TTG_ZoneCapture( z )
+		cap.moving = false
+		cap.mode = "none"
+	end
 	End_CaptureCheck()
 
 	local attackers = nil
@@ -212,7 +292,13 @@ function CapturedByAttackers()
 
 	--how it was won, in chat. The centre of the screen belongs to the round
 	--win message WinningPhase prints, so this does not fight it for the space.
-	ChatPrintToAll( ConvertToTeamName( attackers ) .. " wins the round by capping!" )
+	--With several zones live, which one they took.
+	local label = zone and TTG_ZoneLabel( zone ) or ""
+	if #G_LiveZones > 1 and label != "" then
+		ChatPrintToAll( ConvertToTeamName( attackers ) .. " wins the round by capping " .. label .. "!" )
+	else
+		ChatPrintToAll( ConvertToTeamName( attackers ) .. " wins the round by capping!" )
+	end
 
 	--Everything else is WinningPhase's job: the point, the game-win check, the
 	--tie breaker check, disabling ents, the phase, the announcer and the next
@@ -221,17 +307,8 @@ function CapturedByAttackers()
 end
 
 
-function CaptureHUDUpdate()
-	umsg.Start( "CaptureUpdate" )
-    umsg.String( CaptureTime )
-	umsg.End()
-end
-
-
---How far along the capture is, for the Rewind ability to record and put back.
---
---CaptureTime is file local and stays that way; these two are the only way in
---or out.
+--How far along every live zone's capture is, for the Rewind ability to record
+--and put back: a record per zone, keyed by the zone.
 --
 --The mode goes back with the clock. It was left out on the idea that
 --ChangeCapture works it out again from who is on the point, but it does not:
@@ -243,32 +320,35 @@ end
 --the round in overtime. From the mode put back, ChangeCapture carries on as
 --it would have from that moment.
 function TTG_CaptureProgress()
-	return {
-		time = CaptureTime,
-		moving = G_CaptureTimeMoving == true,
-		mode = G_CurCaptureMode,
-	}
+	local out = {}
+
+	for _, zone in ipairs( G_LiveZones ) do
+		local cap = TTG_ZoneCapture( zone )
+		out[ zone ] = { time = cap.time, moving = cap.moving == true, mode = cap.mode }
+	end
+
+	return out
 end
 
 
 function TTG_RestoreCaptureProgress( was )
 	if was == nil then return end
 
-	CaptureTime = was.time
-	G_CaptureTimeMoving = was.moving
+	for _, zone in ipairs( G_LiveZones ) do
+		local rec = was[ zone ]
+		local cap = TTG_ZoneCapture( zone )
 
-	--a record with no mode in it gets the one that goes with its clock
-	G_CurCaptureMode = was.mode or ( was.moving and "capturing" or "none" )
+		--a zone with no record had no capture to put back
+		cap.time = rec and rec.time
+		cap.moving = rec != nil and rec.moving == true
 
-	--re-based rather than resumed part way through a second, so the number
-	--that was just put back is not taken off again immediately
-	NextAddTime = CurTime() + 1
+		--a record with no mode in it gets the one that goes with its clock
+		cap.mode = rec and rec.mode or ( cap.moving and "capturing" or "none" )
 
-	umsg.Start( "IfCaptureOn" )
-	umsg.Bool( G_CaptureTimeMoving )
-	umsg.End()
+		--re-based rather than resumed part way through a second, so the
+		--number that was just put back is not taken off again immediately
+		cap.nextat = CurTime() + 1
+	end
 
-	--nil means no capture had started yet, and the hud update writes the
-	--number straight into a usermessage
-	if CaptureTime != nil then CaptureHUDUpdate() end
+	TTG_SendCaptureState()
 end
