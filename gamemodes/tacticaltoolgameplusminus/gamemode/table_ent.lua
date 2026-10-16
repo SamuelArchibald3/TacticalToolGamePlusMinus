@@ -335,6 +335,30 @@ time_break_control = 1,
 }
 ,
 
+--the Boulder, but it hurts everybody: see ent_evilboulder.lua
+ent_evilboulder =
+{
+name = "ent_evilboulder",
+print_name = "Evil Boulder",
+model = "models/items/grenadeammo.mdl",
+transition_model = "models/props_junk/plasticbucket001a.mdl",
+built_model = "models/tacticaltoolgame_models/boulder01.mdl",
+sound_hit = "physics/metal/metal_box_break"..math.random(1,2)..".wav",
+sound_builddone = "vehicles/crane/crane_magnet_release.wav",
+sound_build = "ambient/machines/engine4.wav",
+sound_kill = "weapons/physcannon/energy_disintegrate4.wav",
+damage = 200,
+takes_damage = true,
+collides_with_barriers = true,
+affected_by_lasso = true,
+health = 50,
+build_time = 5,
+build_radius = 80,
+time_break_control = 1,
+color = Color( 170, 60, 220, 255 ),	--nobody's team colour: it is on nobody's side
+}
+,
+
 ent_smokecube =
 {
 name = "ent_smokecube",

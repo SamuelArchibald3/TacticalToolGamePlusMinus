@@ -143,6 +143,18 @@ bind_primary = "Deploy boulder (deploys at the position it impacts)",
 }
 ,
 
+purchase_evilboulder =
+{
+name = "purchase_evilboulder",
+print_name = "Evil Boulder",
+class = "item",
+tool_name = "tool_evilboulder",
+pack_amount = 2,
+description = "Deploys a large boulder prop which deals {ent.damage} damage to EVERY player who touches it - your own team, and you, as well as the enemy. Comes in twos. \n(The boulders killing damage is not an execution, it does not go through invulnerability or shield.)",
+bind_primary = "Deploy evil boulder (deploys at the position it impacts)",
+}
+,
+
 
 purchase_smokecube =
 {

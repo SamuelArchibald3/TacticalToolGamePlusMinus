@@ -154,7 +154,8 @@ function TTGEnt:Knockback( dir, horforce, vertforce )
 	
 	
 	--when the boulder is knocked back, it makes the player in control of it unable to control it for a short period
-	if self:GetClass() == "ent_boulder" then
+	--(the Evil Boulder too, which is one)
+	if self:GetClass() == "ent_boulder" or self:GetClass() == "ent_evilboulder" then
 		self:BreakControl()
 	end
 end
