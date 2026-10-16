@@ -40,7 +40,7 @@ end
 
 --called on think when it becomes overtime, (when timer is at 0 but the capture time is still in flux)
 function CheckOvertime()
-	if G_CaptureTimeMoving == false then --end itself if the
+	if not TTG_AnyCaptureMoving() then --end itself if the
 		SetGlobalBool("CL_DrawOvertime", false)
 
 		End_CheckOvertime()
@@ -58,9 +58,9 @@ function GCTime()
 		
 		if GameTime <= 0 then
 		
-			--if the capture timer thing is still active in the combat phase,
+			--if any zone's capture clock is still moving in the combat phase,
 			--the game is not over so dont do a zero event.
-			if G_CaptureTimeMoving == true and G_CurrentPhase == "Combat" then
+			if TTG_AnyCaptureMoving() and G_CurrentPhase == "Combat" then
 				SetGlobalBool("CL_DrawOvertime", true)
 
 				Start_CheckOvertime()

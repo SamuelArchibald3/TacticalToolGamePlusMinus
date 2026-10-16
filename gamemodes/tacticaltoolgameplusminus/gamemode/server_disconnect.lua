@@ -25,12 +25,10 @@ function GM:PlayerDisconnected( ply )
 	end
 	
 	
-	--remove the player from the list of players touching the capture zone
-	if G_CurAttackZone != nil then
-		for _, v in pairs( G_CurAttackZone.TouchingPlyList ) do
-			if v == ply then
-				table.RemoveByValue( G_CurAttackZone.TouchingPlyList, v )
-			end
+	--remove the player from the list of players touching each live zone
+	for _, zone in ipairs( G_LiveZones or {} ) do
+		if zone.TouchingPlyList then
+			table.RemoveByValue( zone.TouchingPlyList, ply )
 		end
 	end
 	

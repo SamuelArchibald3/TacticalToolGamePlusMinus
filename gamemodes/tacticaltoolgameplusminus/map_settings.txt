@@ -1,0 +1,35 @@
+# Settings for particular maps, one map per line: its name, then setting=value.
+#
+# There are two copies of this file, and this text is in both of them:
+#
+#   gamemodes/tacticaltoolgameplusminus/map_settings.txt
+#       ships with the gamemode. It seeds the other one on a server that has
+#       not run this before, and is never read again afterwards. Edit it to
+#       change what a fresh server starts with.
+#
+#   garrysmod/data/ttg_map_settings.txt
+#       what the game actually reads, and the one to edit. It belongs to
+#       whoever runs the server: it survives updating the gamemode, and
+#       nothing overwrites it once it exists.
+#
+# The settings, and what a map not listed here gets:
+#
+#   zones=random        one of the map's capture zones is live each round,
+#                       picked at random. The default.
+#   zones=all           every zone is live, each with its own capture clock, and
+#                       the attackers win by filling any one of them. The
+#                       defenders have to hold them all.
+#
+#   capture_time=30     seconds to capture a zone. The default is
+#                       TIME_TO_CAPTURE in shared_settings.lua.
+#   capture_time=2x     or as a multiple of it.
+#
+# Anything after a # is ignored. A setting or value that is not one of these is
+# refused and reported in the server console rather than quietly ignored.
+#
+# Changes need  ttg_mapsettings_reload  in the server console, or a map change.
+# A changed zones= setting takes effect from the next round.
+
+# A and B both live, as in Counter-Strike - and twice as long to take either,
+# because the attackers get two chances at it
+ttg_dust2_a1    zones=all    capture_time=2x
