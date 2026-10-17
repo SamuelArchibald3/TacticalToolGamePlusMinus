@@ -62,11 +62,15 @@ end
 --player's right click steered every boulder on the map, the enemy's included.
 --A list on each tool instead would forget them whenever the tool is handed
 --back new, which a Rewind revive does.
+--
+--One broken this tick is still found until the tick ends, and is left alone.
 function SWEP:OwnBoulders()
 	local mine = {}
 
 	for _, ent in ipairs( ents.FindByClass( self.ThrownEnt ) ) do
-		if ent.Creator == self.Owner then table.insert( mine, ent ) end
+		if ent.Creator == self.Owner and not ent:IsMarkedForDeletion() then
+			table.insert( mine, ent )
+		end
 	end
 
 	return mine
