@@ -329,7 +329,8 @@ takes_damage = true,
 collides_with_barriers = true,
 affected_by_lasso = true,
 --C4's 450 breaks one; anything else takes a while: 23 crowbar swings, 18 zaps
---or Slow Pellets, about 14 Building Bombs or 3 Explosions
+--or Slow Pellets, 9 Building Bombs hit square on (about 54 each, measured
+--thrown) or 3 Explosions
 health = 450,
 --but only this much while it is still building, as it always had: damage
 --taken then comes off the full health once it is built, as the Barrier's does
