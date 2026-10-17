@@ -1125,9 +1125,8 @@ sound_send = Sound( "ambient/levels/labs/coinslot1.wav" ),
 
 
 --Eat a corpse: cast_time seconds held still at it, then heal health back and
---the body is gone. reach is how close you have to be to the corpse - any part
---of the body, or the spot under its gravestone, depending on the corpse style
---(corpses.lua, gravestones.lua).
+--the body is gone. reach is how close you have to be to the spot under its
+--gravestone (corpses.lua, gravestones.lua).
 tool_abil_cannibalism =
 {
 name = "tool_abil_cannibalism",

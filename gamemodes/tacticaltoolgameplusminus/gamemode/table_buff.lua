@@ -187,7 +187,7 @@ color = Color(100, 100, 100, 255),
 }
 ,
 
---the Cannibalism ability's cast: held still over the body until it is eaten
+--the Cannibalism ability's cast: held still at the gravestone until it is eaten
 Buff_Eating =
 {
 name = "Buff_Eating",

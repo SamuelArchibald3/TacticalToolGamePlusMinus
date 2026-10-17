@@ -557,7 +557,7 @@ name = "purchase_cannibalism",
 print_name = "Cannibalism",
 class = "ability",
 tool_name = "tool_abil_cannibalism",
-description = "Eat a corpse: {live.corpse_where}. \nTakes {tool.cast_time} second, then heals {tool.heal} health and the body is gone.\n{tool.cooldown} second cooldown.",
+description = "Eat a dead player's corpse at their gravestone. \nHolds you still for {tool.cast_time} second, then heals {tool.heal} health and the gravestone is gone. \n{tool.cooldown} second cooldown.",
 }
 ,
 

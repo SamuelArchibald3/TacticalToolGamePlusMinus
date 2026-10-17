@@ -10,7 +10,7 @@ if !SERVER then return end
 
 --Eat a corpse: a moment held still at its gravestone, then health back and
 --the body gone. What counts as a corpse, and where, is TTGPlayer:NearestCorpse
---in gravestones.lua.
+--in corpses.lua.
 function ENT:DoAbility()
 	if self.Cooldown == true or self.Eating == true then
 		self:CooldownSound()
@@ -81,7 +81,7 @@ function ENT:FinishEating( corpse )
 		effect:SetOrigin( TTG_CorpseSpot( corpse ) + Vector( 0, 0, 10 ) )
 	util.Effect( "BloodImpact", effect )
 
-	--the body, or the gravestone and the body with it
+	--the gravestone, and the body with it
 	TTG_ConsumeCorpse( corpse )
 
 	ply:EmitSound( self.Ref.sound_done )
