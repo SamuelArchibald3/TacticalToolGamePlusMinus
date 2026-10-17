@@ -136,8 +136,11 @@ function ENT:FinishBuild()
 	self:EmitSound(self.Ref.sound_builddone)
 	
 	self:ChangePhysicsModel( self.Ref.built_model, COLLISION_GROUP_NONE )
-	
-	self.CurTakeDamage = false
+
+	--Built, it can still be broken. It used to stop taking damage here, which
+	--left a built boulder unbreakable by anything; its health (table_ent.lua)
+	--now decides how hard it is to get rid of.
+	self.CurTakeDamage = true
 	
 	//self:SetSkin( 3 )
 	
