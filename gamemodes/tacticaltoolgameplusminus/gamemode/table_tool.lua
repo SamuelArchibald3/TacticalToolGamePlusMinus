@@ -658,6 +658,24 @@ shoot_sound = Sound("Weapon_Mortar.Single"),
 }
 ,
 
+tool_evilboulder =
+{
+name = "tool_evilboulder",
+print_name = "Evil Boulder",
+class = "item",
+thrown_ent = "ent_evilboulder",
+throw_force = 170000,
+rate_of_fire = 1,
+rate_of_fire_secondary = .2,
+automatic = false,
+force_phys = 125,
+v_model = "models/weapons/c_toolgun.mdl",
+w_model = "models/weapons/w_toolgun.mdl",
+color_skin = Color(255,255,255,255),
+shoot_sound = Sound("Weapon_Mortar.Single"),
+}
+,
+
 tool_smokecube =
 {
 name = "tool_smokecube",
