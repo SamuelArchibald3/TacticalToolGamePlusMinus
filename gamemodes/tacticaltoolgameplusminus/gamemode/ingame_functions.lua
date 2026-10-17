@@ -799,6 +799,11 @@ local function RebuildEnt( was )
 		if IsValid( phys ) then phys:SetVelocity( was.vel ) end
 	end
 
+	--A built one's health is out of its full health already, so finishing the
+	--build again keeps it as it is rather than growing it from a building
+	--health (GrowToFullHealth). Before the colour, which reads it too.
+	if was.built == true then ent.TTG_FullHealthAlready = true end
+
 	ent:SetHealth( was.health )
 	ent:InitializeColor()
 end

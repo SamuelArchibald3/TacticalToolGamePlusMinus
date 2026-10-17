@@ -15,6 +15,45 @@ ENT.AdminSpawnable		= false
 
 
 
+--The health it counts down from right now, for how dark the damage shows:
+--its building health while it is still building, if it has one, and its full
+--health once built. Going by the building health even once built showed a
+--built Barrier undamaged until it was down to 75; going by the full health
+--while building turned a building Boulder near black from a single hit.
+function ENT:FullHealthNow()
+	local ref = self:GetRef()
+
+	if ref.health_building != nil and self.Built != true and self.TTG_FullHealthAlready != true then
+		return ref.health_building
+	end
+
+	return ref.health
+end
+
+
+--Built: up from its building health to its full one, keeping whatever it lost
+--while it built - 20 off its building health is 20 off its full health. For
+--whatever has a health_building; call it once Built is set.
+--
+--Not when its health is out of its full one already. A Rewind putting back a
+--building destroyed inside its window builds it again from scratch and hands
+--it the health it had built (RebuildEnt), and scaling that up a second time
+--would turn a boulder C4'd at 450 into one at 850.
+function ENT:GrowToFullHealth()
+	local ref = self:GetRef()
+	if ref.health_building == nil then return end
+
+	if self.TTG_FullHealthAlready != true then
+		local lost = ref.health_building - self:Health()
+		self:SetHealth( ref.health - lost )
+	end
+
+	--the model change before this worked the colour out before the health
+	--went up
+	self:InitializeColor()
+end
+
+
 function ENT:InitializeColor()
 	//print("adding color")
 
@@ -42,11 +81,8 @@ function ENT:InitializeColor()
 	
 	if ref.takes_damage == true and ref.damage_color_override != true then
 		local health = self:Health() 
-		local basehealth = ref.health
-		if ref.health_building != nil then
-			basehealth = ref.health_building
-		end
-		
+		local basehealth = self:FullHealthNow()
+
 		local colordeci = (health/basehealth)
 		local color = Color( self.BaseColor.r * colordeci, self.BaseColor.g * colordeci, self.BaseColor.b * colordeci, alpha )
 		self:SetColor( color ) 
@@ -231,7 +267,7 @@ function ENT:OnTakeDamage( damageinfo )
 	
 	//makes it blacker depending on how damaged it is
 	if ref.damage_color_override != true then
-		local basehealth = ref.health
+		local basehealth = self:FullHealthNow()
 		local colordeci = (newhealth/basehealth)
 		local color = Color( self.BaseColor.r * colordeci, self.BaseColor.g * colordeci, self.BaseColor.b * colordeci, alpha )
 		self:SetColor( color ) 
@@ -289,7 +325,7 @@ function ENT:Invisibility_Start( seeing_team )
 	//makes it have transparency
 	local ref = self:GetRef()
 	if ref.damage_color_override != true then
-		local basehealth = ref.health
+		local basehealth = self:FullHealthNow()
 		local colordeci = (self:Health()/basehealth)
 		local color = Color( self.BaseColor.r * colordeci, self.BaseColor.g * colordeci, self.BaseColor.b * colordeci, self.AlphaAmount )
 		self:SetColor( color ) 
@@ -310,7 +346,7 @@ function ENT:Invisibility_End(  )
 	//makes it have transparency
 	local ref = self:GetRef()
 	if ref.damage_color_override != true then
-		local basehealth = ref.health
+		local basehealth = self:FullHealthNow()
 		local colordeci = (self:Health()/basehealth)
 		local color = Color( self.BaseColor.r * colordeci, self.BaseColor.g * colordeci, self.BaseColor.b * colordeci, self.AlphaAmount )
 		self:SetColor( color ) 
