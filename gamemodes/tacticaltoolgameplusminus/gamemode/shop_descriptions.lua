@@ -71,15 +71,6 @@ local CALC = {
 --
 --Each is called with the purchase and returns a string.
 local LIVE = {
-
-	--where Cannibalism is eaten from, which ttg_var_corpses decides: at the
-	--gravestone, since that is all the server knows about where a body is,
-	--or over a body the server owns
-	corpse_where = function()
-		if TTG_CorpseStyle() == "body" then return "stand over the body" end
-
-		return "stand at its gravestone"
-	end,
 }
 
 

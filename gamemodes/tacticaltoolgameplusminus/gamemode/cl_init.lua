@@ -28,7 +28,6 @@ include( 'metaplayer/metaplayer_toolkeys.lua' )
 //all client files go here
 include("cl_teammenu.lua")
 include("cl_buymenu.lua")
-include( "corpses.lua" )
 include("cl_timedisplay.lua")
 include("cl_purchasesmenu.lua")
 include("cl_inventory.lua")

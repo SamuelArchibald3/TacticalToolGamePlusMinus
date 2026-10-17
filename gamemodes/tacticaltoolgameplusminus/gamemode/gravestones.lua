@@ -21,9 +21,8 @@
 --the body too. Not on any spawn: a dead player with nobody left to watch is
 --spawned into roaming spectate, and is still dead for this.
 --
---This is the default of the two corpse styles - ttg_var_corpses,
---CORPSE_STYLE. The other, "body", has the server make the body itself so it
---lies in the same place for everybody (corpses.lua).
+--Every death gets one. There used to be a setting for a body the server made
+--instead; see corpses.lua.
 
 if not SERVER then return end
 
@@ -114,9 +113,8 @@ end
 
 
 --Before the death is dealt with rather than after, while where they were
---standing is still what the player says: this runs ahead of GM:DoPlayerDeath.
+--standing is still what the player says: this runs ahead of GM:DoPlayerDeath,
+--which is the base gamemode's - the engine's body, the death and the frag.
 hook.Add( "DoPlayerDeath", "TTG_PlaceGravestone", function( ply )
-	if TTG_CorpseStyle() != "gravestone" then return end
-
 	ply:PlaceGravestone()
 end )

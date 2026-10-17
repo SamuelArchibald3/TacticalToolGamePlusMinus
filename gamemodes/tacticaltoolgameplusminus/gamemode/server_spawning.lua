@@ -49,12 +49,11 @@ end
 --Sets default vars a player should spawn with
 function SetSpawnStuff( ply )
 
-	--Back in play, so their body or gravestone goes: a new round, or a revive
-	--by Rewind. Here rather than in PlayerSpawn, because a spawn is not always
+	--Back in play, so their gravestone goes: a new round, or a revive by
+	--Rewind. Here rather than in PlayerSpawn, because a spawn is not always
 	--that - a dead player with nobody left to watch is spawned straight into
 	--roaming spectate (DeathSpectateTick), and that took their gravestone away
 	--the moment it went down.
-	ply:RemoveCorpse()
 	ply:RemoveGravestone()
 
 	--set eye angles
