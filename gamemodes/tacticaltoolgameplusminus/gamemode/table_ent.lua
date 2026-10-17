@@ -329,8 +329,8 @@ takes_damage = true,
 collides_with_barriers = true,
 affected_by_lasso = true,
 --C4's 450 breaks one; anything else takes a while: 23 crowbar swings, 18 zaps
---or Slow Pellets, 9 Building Bombs hit square on (about 54 each, measured
---thrown) or 3 Explosions
+--or Slow Pellets, 24 Building Bombs hit square on (about 19.5 each) or 3
+--Explosions
 health = 450,
 --but only this much while it is still building, as it always had: damage
 --taken then comes off the full health once it is built, as the Barrier's does
@@ -503,7 +503,11 @@ name = "ent_buildingbomb",
 print_name = "Building Bomb",
 model = "models/props_junk/metal_paintcan001a.mdl",
 sound_explode = "vehicles/airboat/pontoon_impact_hard1.wav",
-imagnitude = 55,
+--The damage at the middle of the blast, down to nothing at iradiusoverride: a
+--direct hit does about 97% of it. It was 55, when the bomb was in the way of
+--its own blast and a direct hit did 18 to a box and 14 to a boulder; this keeps
+--a thrown one about where that played, now that it is not.
+imagnitude = 20,
 iradiusoverride = 200,
 takes_damage = false,
 force_radius = 128,
