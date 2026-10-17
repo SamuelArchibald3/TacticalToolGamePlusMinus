@@ -3,10 +3,6 @@ AddCSLuaFile( "tool_mine.lua" )
 SWEP.Base = "base_ttgtool"
 
 
---table that holds all the active buildables this SWEP has placed
-SWEP.EntTable = {}
-
-
 
 function SWEP:PrimaryAttack()
 	if ( !self:CanPrimaryAttack() ) then return end
@@ -46,11 +42,7 @@ function SWEP:ThrowEnt()
 		obj.TTG_Team = self.Owner:Team()
 		obj.Creator = self.Owner
 		obj.CreatorSwep = self
-		
-		--add the object to the ent table, so the swep remembers it to activate its ability
-		table.insert( self.EntTable, obj )
-		obj.CreatorTool = self
-	
+
 	self.Owner:SetAnimation(PLAYER_ATTACK1)
 	
 	local phys = obj:GetPhysicsObject()
@@ -58,10 +50,9 @@ function SWEP:ThrowEnt()
 end
 
 
+--set off your mines, and nobody else's (SWEP:OwnThrown)
 function SWEP:SecondaryAttack()
-	for k, ent in pairs( self.EntTable ) do
-		if IsValid(ent) then
-			ent:Trigger()
-		end
+	for _, ent in ipairs( self:OwnThrown() ) do
+		ent:Trigger()
 	end
 end

@@ -19,7 +19,7 @@ tool_name = "tool_barrier",
 pack_amount = 2,
 description = "Deploys a stationary barrier which blocks enemy players and enemy props. \nCan be toggled between active and inactive states.\nCan be deployed horizontally onto walls.",
 bind_primary = "Deploy barrier",
-bind_alt = "Toggle all barriers (barriers become invisible when inactive)",
+bind_alt = "Toggle all your barriers (barriers become invisible when inactive)",
 }
 ,
 
@@ -113,7 +113,7 @@ tool_name = "tool_airblastmachine",
 pack_amount = 1,
 description = "Deploys a trap which blasts back enemies who walk into its radius.\nBlasts things in the direction the player was aiming when he placed it. \nCan be manually triggered. \nAlso effects props.",
 bind_primary = "Deploy push trap",
-bind_alt = "Manually trigger push trap",
+bind_alt = "Manually trigger your push traps",
 }
 ,
 
@@ -220,7 +220,7 @@ tool_name = "tool_mine",
 pack_amount = 0,
 description = "Deploys stationary invisible mines which can be manually triggered to explode. \nThere is a {ent.fuse} second delay when triggering the explosion during which the mine is revealed. \nOnly hurts players.",
 bind_primary = "Deploy mines",
-bind_alt = "Detonate all deployed mines",
+bind_alt = "Detonate all your deployed mines",
 }
 ,
 
@@ -300,9 +300,9 @@ name = "purchase_pucknade",
 print_name = "Nade",
 class = "gun",
 tool_name = "tool_pucknade",
-description = "Shoots doughnut shaped pucks which slide across the ground. \nThe nades automatically explode after {ent.fuse} seconds. \nAlt fire freezes all active nades mid air until they explode. \nONLY hurts players. \nBuying multiple upgrades clipsize",
+description = "Shoots doughnut shaped pucks which slide across the ground. \nThe nades automatically explode after {ent.fuse} seconds. \nAlt fire freezes all your active nades mid air until they explode. \nONLY hurts players. \nBuying multiple upgrades clipsize",
 bind_primary = "Shoot puck nade",
-bind_alt = "Freeze all active puck nades",
+bind_alt = "Freeze all your active puck nades",
 bind_r = "Reload",
 }
 ,

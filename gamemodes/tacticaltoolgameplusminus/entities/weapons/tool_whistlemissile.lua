@@ -2,9 +2,6 @@ AddCSLuaFile( "tool_whistlemissile.lua" )
 
 SWEP.Base = "base_ttgtool"
 
---table that holds all the active ents this SWEP has created
-SWEP.EntTable = {}
-
 
 function SWEP:PrimaryAttack()
 	if ( !self:CanPrimaryAttack() ) then return end
@@ -49,14 +46,13 @@ function SWEP:ThrowMissile()
 		obj:Spawn()
 		
 		obj.TTG_Angles = (self.Owner:EyeAngles())
-	
-		for k,ent in pairs( self.EntTable ) do
-			constraint.NoCollide( obj, ent, 0, 0 )
+
+		--passes through the pellets you already have out, and only yours
+		--(SWEP:OwnThrown, which finds this one too)
+		for _, ent in ipairs( self:OwnThrown() ) do
+			if ent != obj then constraint.NoCollide( obj, ent, 0, 0 ) end
 		end
-	
-		--add the object to the ent table, so the swep remembers it
-		table.insert( self.EntTable, obj )
-	
+
 	self.Owner:SetAnimation(PLAYER_ATTACK1)
 	
 	local phys = obj:GetPhysicsObject()

@@ -44,8 +44,6 @@ function SWEP:ThrowBoulder()
 		obj.TTG_Angles = (self.Owner:EyeAngles())
 		obj.TTG_Team = self.Owner:Team()
 
-		obj.CreatorTool = self
-	
 	self.Owner:SetAnimation(PLAYER_ATTACK1)
 	
 	local phys = obj:GetPhysicsObject()
@@ -55,25 +53,10 @@ end
 
 
 --The boulders right click steers: the ones its holder threw with this tool's
---kind of boulder, and nobody else's.
---
---Found by who threw them rather than kept in a list. The list was SWEP.EntTable,
---one table on the class that every Boulder anybody held read and wrote, so one
---player's right click steered every boulder on the map, the enemy's included.
---A list on each tool instead would forget them whenever the tool is handed
---back new, which a Rewind revive does.
---
---One broken this tick is still found until the tick ends, and is left alone.
+--kind of boulder, and nobody else's. SWEP:OwnThrown, in base_ttgtool, says
+--how they are found and why not from a list.
 function SWEP:OwnBoulders()
-	local mine = {}
-
-	for _, ent in ipairs( ents.FindByClass( self.ThrownEnt ) ) do
-		if ent.Creator == self.Owner and not ent:IsMarkedForDeletion() then
-			table.insert( mine, ent )
-		end
-	end
-
-	return mine
+	return self:OwnThrown()
 end
 
 

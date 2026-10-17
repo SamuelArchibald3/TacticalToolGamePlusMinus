@@ -2,9 +2,6 @@ AddCSLuaFile( "tool_barrier.lua" )
 
 SWEP.Base = "base_ttgtool"
 
---table that holds all the active buildables this SWEP has placed
-SWEP.EntTable = {}
-
 function SWEP:PrimaryAttack()
 	if ( !self:CanPrimaryAttack() ) then return end
 
@@ -41,11 +38,7 @@ function SWEP:ThrowBarrier()
 		obj:Spawn()
 		
 		obj.TTG_Angles = (self.Owner:EyeAngles())
-	
-		--add the object to the ent table, so the swep remembers it to activate its ability
-		table.insert( self.EntTable, obj )
-		obj.CreatorTool = self
-	
+
 	self.Owner:SetAnimation(PLAYER_ATTACK1)
 	
 	local phys = obj:GetPhysicsObject()
@@ -60,11 +53,10 @@ function SWEP:SecondaryAttack()
 	//if tr.Entity:GetClass() == "ent_barrier" and tr.Entity.TTG_Team == self.Owner:Team() then
 		//tr.Entity:TogglePos()
 	//end
-	
-	for k, ent in pairs( self.EntTable ) do
-		if IsValid(ent) then
-			ent:TogglePos()
-		end
+
+	--toggle your barriers, and nobody else's (SWEP:OwnThrown)
+	for _, ent in ipairs( self:OwnThrown() ) do
+		ent:TogglePos()
 	end
 end
 
