@@ -179,12 +179,3 @@ function ENT:AirblastAbility( blastallies )
 	end)
 end
 
-
---remove the machine from the swep's list of active machines
-function ENT:OnRemove( )
-	local swep = self.CreatorTool 
-	if swep:IsValid() then
-		table.RemoveByValue( swep.EntTable, self )
-	end
-end
-

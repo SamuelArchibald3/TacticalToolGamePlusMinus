@@ -235,6 +235,33 @@ function SWEP:ThrowEnt()
 end
 
 
+
+--What this tool's holder has thrown with this kind of tool and still has out,
+--and nobody else's: the entities of its thrown_ent they created. Alt fire acts
+--on these - mines set off, barriers toggled, traps fired, nades frozen,
+--boulders steered - and a new Slow Pellet passes through them.
+--
+--Found by who threw them rather than kept in a list. The list was
+--SWEP.EntTable, which every copy of the tool had its own of - weapons.Get
+--copies a SWEP's tables into each weapon it makes - so it forgot everything
+--thrown before whenever the tool was handed back new, which a Rewind revive
+--does, and never had in it one a Rewind throws again, which no tool made.
+--
+--One removed this tick is still found until the tick ends, and is left out.
+--Creator is only ever set on the server, so on the client this finds nothing.
+function SWEP:OwnThrown()
+	local mine = {}
+
+	for _, ent in ipairs( ents.FindByClass( self.ThrownEnt ) ) do
+		if ent.Creator == self.Owner and not ent:IsMarkedForDeletion() then
+			table.insert( mine, ent )
+		end
+	end
+
+	return mine
+end
+
+
 function SWEP:OwnerGiveBuff()
 	if (!SERVER) then return end
 

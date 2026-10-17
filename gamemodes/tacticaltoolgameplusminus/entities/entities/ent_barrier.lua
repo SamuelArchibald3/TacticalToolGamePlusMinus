@@ -287,20 +287,5 @@ function ENT:NoCollideAllTeamProps( )
 				constraint.NoCollide( self, ent, 0, 0 )
 			end
 		end
-	end	
-end
-
-
-
---remove the machine from the swep's list of active machines
-function ENT:OnRemove( )
-	local swep = self.CreatorTool 
-	if IsValid(swep) then
-		table.RemoveByValue( swep.EntTable, self )
-	end
-	
-	--stop the looping build sound if its building
-	if self.BuildingSound != nil then
-		self.BuildingSound:Stop()
 	end
 end

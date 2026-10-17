@@ -156,16 +156,6 @@ end
 
 
 
-
-
-function ENT:OnRemove( )
-	local swep = self.CreatorTool 
-	if IsValid(swep) then
-		table.RemoveByValue( swep.EntTable, self )
-	end
-end
-
-
 --explosion is no longer triggered by a player being within range
 --[[
 function ENT:Think()

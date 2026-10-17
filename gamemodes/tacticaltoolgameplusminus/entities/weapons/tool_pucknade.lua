@@ -2,9 +2,6 @@ AddCSLuaFile( "tool_pucknade.lua" )
 
 SWEP.Base = "base_ttgtool"
 
---table that holds all the active buildables this SWEP has placed
-SWEP.EntTable = {}
-
 
 function SWEP:PrimaryAttack()
 	if ( !self:CanPrimaryAttack() ) then return end
@@ -41,24 +38,18 @@ function SWEP:ThrowNade()
 		obj:Spawn()
 		
 		obj.TTG_Angles = (self.Owner:EyeAngles())
-	
-		--add the object to the ent table, so the swep remembers it to activate its ability
-		table.insert( self.EntTable, obj )
-		obj.CreatorTool = self
-	
+
 	self.Owner:SetAnimation(PLAYER_ATTACK1)
 	
 	local phys = obj:GetPhysicsObject()
 		phys:ApplyForceCenter (self.Owner:GetAimVector():GetNormalized() *  self.ThrowForce)
 end
 
---freeze nades
+--freeze your nades, and nobody else's (SWEP:OwnThrown)
 function SWEP:SecondaryAttack()
-	for k, ent in pairs( self.EntTable ) do
-		if IsValid(ent) then
-			local phys = ent:GetPhysicsObject()
-			phys:EnableMotion(false)
-			ent:SetOwner(nil)
-		end
+	for _, ent in ipairs( self:OwnThrown() ) do
+		local phys = ent:GetPhysicsObject()
+		phys:EnableMotion(false)
+		ent:SetOwner(nil)
 	end
 end
