@@ -683,6 +683,7 @@ function TTG_RewindWorldSnapshot()
 			createdat = ent:CreatedAt(),
 			buildargs = ent.TTG_BuildArgs,
 			buildcount = ent.TTG_BuildArgCount,
+			landing = ent.TTG_BuildLanding,
 		}
 	end
 
@@ -782,8 +783,25 @@ local function RebuildEnt( was )
 	ent.TTG_Angles = was.thrownangles or was.ang
 
 	if was.built == true then
+		--Where it came down, which the build reads as well as its arguments:
+		--without it a boulder, barrier or box errored part way through and lay
+		--half built for the rest of the round. Copies throughout, as the build
+		--moves some of it about in place - and all of it kept on the new one
+		--too, so another rewind can build it again.
+		for key, value in pairs( was.landing or {} ) do
+			ent[ key ] = TTG_CopyBuildValue( value )
+		end
+		ent.TTG_BuildLanding = was.landing
+		ent.TTG_BuildArgs = was.buildargs
+		ent.TTG_BuildArgCount = was.buildcount
+
 		if was.buildargs != nil then
-			ent:ObjToMachine( unpack( was.buildargs, 1, was.buildcount or 0 ) )
+			local args = {}
+			for i = 1, was.buildcount or 0 do
+				args[ i ] = TTG_CopyBuildValue( was.buildargs[ i ] )
+			end
+
+			ent:ObjToMachine( unpack( args, 1, was.buildcount or 0 ) )
 		else
 			ent:ObjToMachine()
 		end

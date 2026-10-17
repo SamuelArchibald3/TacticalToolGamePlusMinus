@@ -135,6 +135,28 @@ end
 --The HitSurface guard each buildable already sets stays where it is, on the
 --collision rather than on the build, so a second contact in the same tick still
 --cannot queue a second build.
+--What the landing leaves on the entity besides the arguments it hands
+--ObjToMachine, and which the build reads as well: where it hit, the surface's
+--normal, whether that was a wall, and that it has landed at all. Every
+--building's PhysicsCollide sets some of these, and its ObjToMachine or
+--FinishBuild reads them.
+--
+--Kept with the arguments, so a Rewind can build it again (RebuildEnt). Without
+--them a rebuilt boulder, barrier or box errored part way - SetPos handed nil -
+--and lay half built for the rest of the round.
+local LANDING = { "HitPostion", "WallNormal", "OnWall", "HitSurface" }
+
+function ENT:RecordLanding()
+	local landing = {}
+
+	for _, key in ipairs( LANDING ) do
+		landing[ key ] = TTG_CopyBuildValue( self[ key ] )
+	end
+
+	return landing
+end
+
+
 function ENT:BuildFromCollision( data, ... )
 	local args = { ... }
 	local count = select( "#", ... )
@@ -143,14 +165,22 @@ function ENT:BuildFromCollision( data, ... )
 	--Kept so a Rewind can put this entity back in the form it built into if it
 	--gets destroyed. ObjToMachine is only ever reached through this function,
 	--so this is the one place those arguments exist at all - most of them are a
-	--hit position and a wall normal that only the collision knew.
-	self.TTG_BuildArgs = args
+	--hit position and a wall normal that only the collision knew. Copies, which
+	--the build cannot move about.
+	self.TTG_BuildArgs = {}
+	for i = 1, count do
+		self.TTG_BuildArgs[ i ] = TTG_CopyBuildValue( args[ i ] )
+	end
 	self.TTG_BuildArgCount = count
 
 	timer.Simple( 0, function()
 		--the thing can be shot out of the air between hitting something and
 		--this running
 		if not IsValid( self ) then return end
+
+		--Once the collision has finished setting them, and before the build
+		--starts moving them
+		self.TTG_BuildLanding = self:RecordLanding()
 
 		self:ObjToMachine( unpack( args, 1, count ) )
 

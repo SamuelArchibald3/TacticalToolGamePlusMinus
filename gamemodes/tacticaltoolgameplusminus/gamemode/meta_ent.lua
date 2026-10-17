@@ -52,6 +52,19 @@ function TTGEnt:CreatedAt()
 end
 
 
+--A copy of a vector or angle, and anything else as it is. For what a building
+--keeps to be built again from by a Rewind (BuildFromCollision, RebuildEnt).
+--Builds move some of it about in place - a boulder ends up at its landing
+--point plus 80, added to the very vector it landed with - and what is kept
+--has to stay where the landing was, however many times it is built from.
+function TTG_CopyBuildValue( value )
+	if isvector( value ) then return Vector( value ) end
+	if isangle( value ) then return Angle( value ) end
+
+	return value
+end
+
+
 //returns true if the ent is in its built form
 function TTGEnt:IsBuilt()
 	if self.Built == true then
