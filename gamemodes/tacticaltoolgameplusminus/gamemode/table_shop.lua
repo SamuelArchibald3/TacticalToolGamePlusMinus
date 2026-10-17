@@ -138,7 +138,7 @@ print_name = "Boulder",
 class = "item",
 tool_name = "tool_boulder",
 pack_amount = 1,
-description = "Deploys a large boulder prop which deals {ent.damage} damage to enemy players who touch it. It has {ent.health_building} health while it builds and {ent.health} once built: two C4s break it, anything else takes a lot of hits. \nAlt fire steers your boulders toward where you aim. \n(The boulders killing damage is not an execution, it does not go through invulnerability or shield.)",
+description = "Deploys a large boulder prop which deals {ent.damage} damage to enemy players who touch it. It has {ent.health_building} health while it builds and {ent.health} once built. \nAlt fire steers your boulders toward where you aim. \n(The boulders killing damage is not an execution, it does not go through invulnerability or shield.)",
 bind_primary = "Deploy boulder (deploys at the position it impacts)",
 bind_alt = "Steer your boulders toward where you aim",
 }
