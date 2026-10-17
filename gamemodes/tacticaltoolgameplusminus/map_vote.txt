@@ -33,6 +33,10 @@ ttg_nukevlan
 # generated in mapsrc/
 ttg_3path_a1
 ttg_keep_a1
+ttg_gate_a1
+
+# Counter-Strike: Source's de_dust2, ported by mapsrc/port_css.py
+ttg_dust2_a1
 
 # From the Workshop. They are TTG maps, but they live in the Workshop cache or
 # the download folder rather than in maps/, so a server needs them copied over
