@@ -331,6 +331,9 @@ affected_by_lasso = true,
 --C4's 450 breaks one; anything else takes a while: 23 crowbar swings, 18 zaps
 --or Slow Pellets, about 14 Building Bombs or 3 Explosions
 health = 450,
+--but only this much while it is still building, as it always had: damage
+--taken then comes off the full health once it is built, as the Barrier's does
+health_building = 50,
 build_time = 5,
 build_radius = 80,
 time_break_control = 1,
@@ -354,6 +357,7 @@ takes_damage = true,
 collides_with_barriers = true,
 affected_by_lasso = true,
 health = 450,		--as the Boulder's
+health_building = 50,
 build_time = 5,
 build_radius = 80,
 time_break_control = 1,

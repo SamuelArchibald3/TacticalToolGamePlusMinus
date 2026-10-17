@@ -32,7 +32,7 @@ function ENT:InitializeColor()
 	end
 
 	--darker as it is damaged, as every building is
-	local colordeci = self:Health() / self.Ref.health
+	local colordeci = self:Health() / self:FullHealthNow()
 	self:SetColor( Color( self.BaseColor.r * colordeci, self.BaseColor.g * colordeci, self.BaseColor.b * colordeci, alpha ) )
 end
 

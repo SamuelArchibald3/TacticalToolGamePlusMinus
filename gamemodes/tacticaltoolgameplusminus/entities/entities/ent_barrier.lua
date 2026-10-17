@@ -139,8 +139,7 @@ function ENT:FinishBuild()
 	--stop the looping build sound
 	self.BuildingSound:Stop()
 	
-	local subtract_hp = self.Ref.health_building - self:Health() 
-		self:SetHealth( self.Ref.health - subtract_hp )
+	self:GrowToFullHealth()
 	
 	--make it so the function in meta_ent.lua will check players that are colliding with it
 	//self:SetCustomCollisionCheck( true )

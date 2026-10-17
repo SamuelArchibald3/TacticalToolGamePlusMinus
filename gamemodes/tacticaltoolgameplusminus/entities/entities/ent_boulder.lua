@@ -24,7 +24,8 @@ if !SERVER then return end
 //makes it so it has a reference table of all its attributes, to be set within the ent code
 function ENT:SetBaseVars()
 	self.Ref = self:GetRef()
-	self:SetHealth(self.Ref.health)
+	--the full health comes when it is built - see FinishBuild
+	self:SetHealth(self.Ref.health_building)
 
 	
 	self.Built = false
@@ -141,6 +142,9 @@ function ENT:FinishBuild()
 	--left a built boulder unbreakable by anything; its health (table_ent.lua)
 	--now decides how hard it is to get rid of.
 	self.CurTakeDamage = true
+
+	--from 50 while building up to its full health, as the Barrier does
+	self:GrowToFullHealth()
 	
 	//self:SetSkin( 3 )
 	
