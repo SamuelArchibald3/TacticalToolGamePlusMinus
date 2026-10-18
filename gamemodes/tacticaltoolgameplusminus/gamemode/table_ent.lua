@@ -328,10 +328,10 @@ damage = 200,
 takes_damage = true,
 collides_with_barriers = true,
 affected_by_lasso = true,
---C4's 450 breaks one; anything else takes a while: 23 crowbar swings, 18 zaps
---or Slow Pellets, 24 Building Bombs hit square on (about 19.5 each) or 3
+--As much as the Big Box. Two C4s; anything else takes a while: 28 crowbar
+--swings, 22 zaps or Slow Pellets, 28 Building Bombs hit square on, or 3
 --Explosions
-health = 450,
+health = 550,
 --but only this much while it is still building, as it always had: damage
 --taken then comes off the full health once it is built, as the Barrier's does
 health_building = 50,
@@ -357,7 +357,7 @@ damage = 200,
 takes_damage = true,
 collides_with_barriers = true,
 affected_by_lasso = true,
-health = 450,		--as the Boulder's
+health = 550,		--as the Boulder's
 health_building = 50,
 build_time = 5,
 build_radius = 80,
