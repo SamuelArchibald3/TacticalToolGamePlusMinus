@@ -36,17 +36,21 @@ end
 
 
 function ENT:PhysicsCollide(data, phys)
-	local pos = self:GetPos()
+	--Where the bomb is now, which is its physics body. self:GetPos() is still
+	--where it was a tick ago - the entity catches up with its body after the
+	--step this collision came out of - and at a throw's 850 or so a second that
+	--is 12 units back along its flight, which set the blast off 12 units short
+	--of what it hit.
+	local pos = phys:GetPos()
 	local hitent = data.HitEntity
-	
+
 	--this makes it so physics damage wont be taken
 	phys:EnableMotion(false)
-	
+
 	self:StartEffect( pos )
 
-	
-	
-	self:SetOwner(nil)
+	--It used to clear its owner here, after StartEffect. Its owner is the
+	--explosion now, which is what keeps it out of its own blast - see there.
 end
 
 
@@ -125,7 +129,20 @@ function ENT:StartEffect( pos )
 		
 	self:EmitSound(self.Ref.sound_explode)
 	self:KnockBackStuff()
-		
+
+	--Out of its own blast. The bomb is still here when the explosion goes off -
+	--Remove waits for the end of the tick - and the engine's RadiusDamage looks
+	--for a clear line from the blast to each building's middle. That line ran
+	--through the bomb, which counted as something in the way: the damage was
+	--measured to the building's middle instead of its surface, then cut by
+	--the bomb's mass over 350, 200 of it. A direct hit on a box did 18 where it
+	--should do 52, on a boulder 14.
+	--
+	--The line skips whatever is owned by the explosion (PassServerEntityFilter,
+	--"don't clip against own missiles"). After KnockBackStuff, which reads the
+	--owner as the thrower to leave out.
+	self:SetOwner( explosion )
+
 	self:Remove()
 end
 
