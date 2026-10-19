@@ -30,7 +30,8 @@ local function Ref()
 end
 
 
---tinted for its side, the way every building is
+--Its side's colour, the one every building is tinted, so which side a Bot is
+--on is plain at a glance. Nobody's side, no tint.
 local function TeamTint( teamid )
 	if teamid == TEAM_BLUE then return Color( 54, 224, 254, 255 ) end
 	if teamid == TEAM_RED then return Color( 255, 118, 118, 255 ) end
@@ -70,7 +71,8 @@ end
 function ENT:Initialize()
 	local ref = Ref()
 
-	self:ApplyLook( self.TTG_Look or { model = ref.bot_model, material = ref.bot_material, scale = ref.bot_scale } )
+	local look = self.TTG_Look or { model = ref.bot_model, material = ref.bot_material, scale = ref.bot_scale }
+	self:ApplyLook( look )
 	self:SetColor( TeamTint( self.TTG_Team ) )
 
 	self:SetHealth( ref.bot_health )
