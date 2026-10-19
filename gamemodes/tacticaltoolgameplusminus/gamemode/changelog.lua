@@ -20,16 +20,6 @@ TTG_CHANGELOG = {
 		notes = {
 			"New item: Evil Boulder. Comes in twos, hurts everyone, you included",
 			"Boulders can be destroyed",
-			"Alt fire on Boulders, Mines, Barriers, Blast-Traps and Nades works on all of yours, even after a Rewind",
-			"Rewind: rebuilt buildings now finish building",
-			"Every death leaves a gravestone; Cannibalism eats from it",
-			"New maps in the vote: Gate, Dust2",
 		},
-	},
-	{
-		date = "Oct 16",
-		notes = {
-			"Both capture zones are live at once, each on its own timer",
-		},
-	},
+	}
 }
