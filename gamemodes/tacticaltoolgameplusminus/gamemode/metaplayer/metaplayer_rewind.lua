@@ -92,20 +92,23 @@ function TTGPlayer:RewindAmmoSnapshot()
 end
 
 
---What abilities are held and what they are doing, by class.
+--What abilities are held and what they are doing, by slot.
 --
---Keyed by class rather than by slot because abilities can be moved between
---slots, but the slot is carried along - a revived player needs their abilities
---rebuilt into the keys they were already using.
+--By slot, because the same ability can be bought twice and each is its own
+--cooldown. This was keyed by class, and the second of a pair wrote over the
+--first: a revive gave back only one of them, and a rewind gave both the one
+--cooldown. The ability itself and its class are carried along, for telling a
+--pair apart once they have been moved between slots (RewindRestoreCooldowns).
 function TTGPlayer:RewindAbilitySnapshot()
 	local out = {}
 
 	for slot, abil in pairs( self:GetAbilitySlots() ) do
 		if IsValid( abil ) then
-			out[ abil:GetClass() ] = {
+			out[ slot ] = {
+				ent = abil,
+				class = abil:GetClass(),
 				on = abil.Cooldown == true,
 				time = abil.Time or 0,
-				slot = slot,
 			}
 		end
 	end
@@ -382,12 +385,21 @@ end
 
 
 --Put the cooldowns back where they were.
+--
+--Each ability gets what was recorded for it, matched in this order:
+--
+--  the very same ability - a living player's are the ones they had then,
+--    wherever ttg_swapabilities has moved them since
+--  the same kind in the same slot - a revived player's are new, built back
+--    into the slots they had (RewindReequip)
+--  any of its kind nothing else has claimed
+--
+--One bought since has nothing recorded, and there is no earlier state to put
+--it in.
 function TTGPlayer:RewindRestoreCooldowns( recorded, revived )
 	if recorded == nil then return end
 
-	for _, abil in pairs( self:GetAbilitySlots() ) do
-		if not IsValid( abil ) then continue end
-
+	local function restore( abil, was )
 		--Rewind never hands a living player their own cooldown back. Three
 		--seconds ago it had not been fired, so restoring it makes it free - and
 		--for everybody else holding one at that moment, not only for whoever
@@ -397,12 +409,7 @@ function TTGPlayer:RewindRestoreCooldowns( recorded, revived )
 		--fired is alive by definition, so a dead player's recorded cooldown is
 		--genuinely theirs. Skipping them would hand back a Rewind they died
 		--with half spent.
-		if abil:GetClass() == "tool_abil_rewind" and not revived then continue end
-
-		local was = recorded[ abil:GetClass() ]
-
-		--bought since; there is no earlier state to put it in
-		if was == nil then continue end
+		if abil:GetClass() == "tool_abil_rewind" and not revived then return end
 
 		abil.Cooldown = was.on
 		abil.Time = was.time
@@ -413,6 +420,45 @@ function TTGPlayer:RewindRestoreCooldowns( recorded, revived )
 		--think left to count this restored one down with. Without re-arming it
 		--the number sits on the hud forever and the ability never comes back.
 		if was.on then abil:NextThink( CurTime() + 1 ) end
+	end
+
+	local claimed, unmatched = {}, {}
+
+	local function claim( abil, slot, was )
+		claimed[ slot ] = true
+		unmatched[ abil ] = nil
+		restore( abil, was )
+	end
+
+	for _, abil in SortedPairs( self:GetAbilitySlots() ) do
+		if IsValid( abil ) then unmatched[ abil ] = true end
+	end
+
+	--the very same ability
+	for slot, was in SortedPairs( recorded ) do
+		if IsValid( was.ent ) and unmatched[ was.ent ] then
+			claim( was.ent, slot, was )
+		end
+	end
+
+	--the same kind in the same slot
+	for slot, abil in SortedPairs( self:GetAbilitySlots() ) do
+		local was = recorded[ slot ]
+		if unmatched[ abil ] and was != nil and not claimed[ slot ] and was.class == abil:GetClass() then
+			claim( abil, slot, was )
+		end
+	end
+
+	--any of its kind left over
+	for _, abil in SortedPairs( self:GetAbilitySlots() ) do
+		if not unmatched[ abil ] then continue end
+
+		for slot, was in SortedPairs( recorded ) do
+			if not claimed[ slot ] and was.class == abil:GetClass() then
+				claim( abil, slot, was )
+				break
+			end
+		end
 	end
 end
 
@@ -509,17 +555,18 @@ function TTGPlayer:RewindReequip( sample )
 
 	local slots = self:GetAbilitySlots()
 
-	for class, had in pairs( sample.abilities or {} ) do
-		if IsValid( slots[ had.slot ] ) then continue end
+	--every slot that had one, so two of the same ability come back as two
+	for slot, had in pairs( sample.abilities or {} ) do
+		if IsValid( slots[ slot ] ) then continue end
 
-		local abil = ents.Create( class )
+		local abil = ents.Create( had.class )
 		if not IsValid( abil ) then continue end
 
 		--same order fGiveTool builds one in: owner, slot on both sides, then
 		--spawn, or the hud has an ability it cannot name
 		abil:SetOwner( self )
-		slots[ had.slot ] = abil
-		abil:SetAbilitySlot( had.slot )
+		slots[ slot ] = abil
+		abil:SetAbilitySlot( slot )
 		abil:Spawn()
 	end
 end
