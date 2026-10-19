@@ -77,6 +77,18 @@ bind_primary = "Deploy sentry",
 }
 ,
 
+purchase_botfactory =
+{
+name = "purchase_botfactory",
+print_name = "Bot Factory",
+class = "item",
+tool_name = "tool_botfactory",
+pack_amount = 1,
+description = "Deploys a factory that makes a Bot every {ent.bot_interval} seconds once the fight is on, up to {ent.bot_max} at a time. \nBots run at the nearest enemy they can see and hit for {ent.bot_damage}. They have {ent.bot_health} health, last {ent.bot_lifetime} seconds, and go when the factory does. \nThe factory has {ent.health_building} health while it builds and {ent.health} once built.",
+bind_primary = "Deploy bot factory",
+}
+,
+
 purchase_stuntrap =
 {
 name = "purchase_stuntrap",

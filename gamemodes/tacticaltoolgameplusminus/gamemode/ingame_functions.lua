@@ -1005,6 +1005,15 @@ end
 
 --true if the rewind started. false is a refusal, and the ability charges no
 --cooldown for one.
+--Whether there is a fight on for a Bot Factory's Bots to be in: Combat, and no
+--Rewind playing back. Every other phase has nobody to run at - Setup keeps the
+--attackers in their spawn - and a playback is moving players along their own
+--paths. See ent_botfactory and ent_botminion.
+function TTG_BotsFighting()
+	return G_CurrentPhase == "Combat" and G_RewindPlayback == nil
+end
+
+
 function TTG_RewindAllPlayers( instigator )
 	--two playbacks at once would be lerping the same players toward different
 	--destinations on the same Think
@@ -1031,6 +1040,10 @@ function TTG_RewindAllPlayers( instigator )
 		cutoff = CurTime() - TOOL_TABLE.tool_abil_rewind.duration,
 		targets = targets,
 	}
+
+	--for whatever is not rewound but has to go: a Bot Factory's Bots
+	--(ent_botminion), which nothing records
+	hook.Run( "TTG_RewindStarted" )
 
 	--the animation shows what happened, but only a chat line says who did it
 	if IsValid( instigator ) then

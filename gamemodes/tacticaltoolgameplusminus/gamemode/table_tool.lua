@@ -408,6 +408,25 @@ sets_ent_team = true,
 }
 ,
 
+--throws a Bot Factory; see ent_botfactory in table_ent.lua for the Bots
+tool_botfactory =
+{
+name = "tool_botfactory",
+print_name = "Bot Factory",
+class = "item",
+thrown_ent = "ent_botfactory",
+throw_force = 170000,
+rate_of_fire = 1,
+automatic = false,
+infinite = false,
+v_model = "models/weapons/c_toolgun.mdl",
+w_model = "models/weapons/w_toolgun.mdl",
+color_skin = Color(255,255,255,255),
+shoot_sound = Sound("Weapon_Mortar.Single"),
+sets_ent_team = true,
+}
+,
+
 tool_chargeshot =
 {
 name = "tool_chargeshot",

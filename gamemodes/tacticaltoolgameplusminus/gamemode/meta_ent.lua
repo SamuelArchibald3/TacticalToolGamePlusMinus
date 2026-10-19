@@ -65,6 +65,14 @@ function TTG_CopyBuildValue( value )
 end
 
 
+--A Bot Factory's Bot (ent_botminion). Not a building - it is in no ENT_TABLE -
+--so the weapons that only hurt players and buildings ask this as well, and
+--hurt one the way they hurt a player.
+function TTGEnt:IsTTGBot()
+	return self:GetClass() == "ent_botminion"
+end
+
+
 //returns true if the ent is in its built form
 function TTGEnt:IsBuilt()
 	if self.Built == true then

@@ -178,6 +178,17 @@ function SWEP:SniperShoot( chargeamount )
 				ent:TakeDamageInfo( dmginfo )
 			end
 			
+		--a Bot Factory's Bot: what a player would take
+		elseif tr.Entity:IsTTGBot() and tr.Entity.TTG_Team != self.Owner:Team() then
+			if SERVER then
+				local dmginfo = DamageInfo()
+					dmginfo:SetDamage( self.Ref.player_damage_scale * chargeamount * .1 )
+					dmginfo:SetInflictor( self )
+					dmginfo:SetAttacker( self.Owner )
+
+				tr.Entity:TakeDamageInfo( dmginfo )
+			end
+
 		elseif CheckIfInEntTable(tr.Entity) then
 			local ent = tr.Entity
 			local entref = EntReference(tr.Entity:GetClass())

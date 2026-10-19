@@ -198,6 +198,44 @@ sight_grace = .4,	--how long it keeps a target it cannot currently see, before g
 }
 ,
 
+--The Bot Factory: built, and while a fight is on, a Bot beside it every
+--bot_interval seconds, no more than bot_max at once. The Bots are
+--ent_botminion and everything about them is here, in the bot_ fields: they are
+--not buildings, so they have no entry of their own. See ent_botfactory.lua.
+ent_botfactory =
+{
+name = "ent_botfactory",
+print_name = "Bot Factory",
+model = "models/items/grenadeammo.mdl",
+transition_model = "models/props_junk/plasticbucket001a.mdl",
+built_model = "models/props_combine/breenpod.mdl",
+sound_a = "physics/metal/metal_box_break"..math.random(1,2)..".wav",
+sound_b = "vehicles/crane/crane_magnet_release.wav",
+sound_build = "ambient/machines/engine4.wav",
+sound_spawn = "npc/turret_floor/deploy.wav",
+takes_damage = true,
+health = 150,
+health_building = 50,
+build_time = 8,
+build_radius = 64,
+
+bot_interval = 6,		--seconds between Bots
+bot_max = 3,			--alive at once, per factory
+bot_health = 30,		--two crowbar swings
+bot_speed = 170,		--players run at 190, so they can be outrun
+bot_damage = 15,
+bot_reach = 60,			--how close it has to be to hit
+bot_hit_interval = 1,	--seconds between hits
+bot_lifetime = 20,		--seconds, then it fizzles
+bot_range = 1500,		--how far it looks for somebody to run at
+bot_model = "models/stalker.mdl",
+bot_material = "",		--"" for the model's own; "models/shiny" for chrome
+bot_scale = 1,
+bot_sound_hit = "npc/zombie/claw_strike1.wav",
+bot_sound_die = "npc/roller/mine/rmine_explode_shock1.wav",
+}
+,
+
 ent_stuntrap =
 {
 name = "ent_stuntrap",

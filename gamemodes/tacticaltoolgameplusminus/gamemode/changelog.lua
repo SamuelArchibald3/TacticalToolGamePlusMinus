@@ -8,6 +8,12 @@
 
 TTG_CHANGELOG = {
 	{
+		date = "Oct 19",
+		notes = {
+			"New item: Bot Factory. Builds, then makes Bots that run at the nearest enemy and hit them",
+		},
+	},
+	{
 		date = "Oct 18",
 		notes = {
 			"Building Bomb: no longer blocks its own blast. 25 damage per direct hit",
