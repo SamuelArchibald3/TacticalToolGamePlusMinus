@@ -329,7 +329,7 @@ takes_damage = true,
 collides_with_barriers = true,
 affected_by_lasso = true,
 --As much as the Big Box. Two C4s; anything else takes a while: 28 crowbar
---swings, 22 zaps or Slow Pellets, 28 Building Bombs hit square on, or 3
+--swings, 22 zaps or Slow Pellets, 22 Building Bombs hit square on, or 3
 --Explosions
 health = 550,
 --but only this much while it is still building, as it always had: damage
@@ -504,10 +504,11 @@ print_name = "Building Bomb",
 model = "models/props_junk/metal_paintcan001a.mdl",
 sound_explode = "vehicles/airboat/pontoon_impact_hard1.wav",
 --The damage at the middle of the blast, down to nothing at iradiusoverride: a
---direct hit does about 97% of it. It was 55, when the bomb was in the way of
---its own blast and a direct hit did 18 to a box and 14 to a boulder; this keeps
---a thrown one about where that played, now that it is not.
-imagnitude = 20,
+--direct hit does about 97% of it, and with health a whole number that comes
+--to 25 off. It was 55 when the bomb was in the way of its own blast, and a
+--direct hit did 18 to a box and 14 to a boulder; a clip of six breaks a
+--sentry at this.
+imagnitude = 25,
 iradiusoverride = 200,
 takes_damage = false,
 force_radius = 128,
