@@ -22,6 +22,8 @@ AddCSLuaFile( "cl_scoreboard.lua" )
 AddCSLuaFile( "cl_typecommands.lua" )
 AddCSLuaFile( "cl_helpmenu.lua" )
 AddCSLuaFile( "cl_abilitykeys.lua" )
+AddCSLuaFile( "changelog.lua" )
+AddCSLuaFile( "cl_changelog.lua" )
 
 
 //all shared files

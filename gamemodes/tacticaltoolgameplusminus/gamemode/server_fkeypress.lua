@@ -81,6 +81,30 @@ end
 hook.Add("ShowTeam", "AbilityKeysGUI", AbilityKeysGUI)
 
 
+--changelog (what changed lately - changelog.lua)
+
+--F3 Key press: the gamemode's spare key, gm_showspare1 out of the box and used
+--for nothing else. F5 was asked for first, but out of the box that takes a
+--screenshot.
+function ChangelogGUI( ply )
+	if ply.ChangelogMenuIsOpen != true then
+		umsg.Start( "Open_ChangelogVgui", ply )
+		umsg.End()
+
+		ply.ChangelogMenuIsOpen = true
+
+	else
+		umsg.Start( "Close_ChangelogVgui", ply )
+		umsg.End()
+
+		ply.ChangelogMenuIsOpen = false
+	end
+end
+hook.Add( "ShowSpare1", "ChangelogGUI", ChangelogGUI )
+
+
+
+
 --The panel closes itself through here rather than locally, so the server's
 --idea of whether it is open stays true. Otherwise F2 would need pressing
 --twice to bring it back.
