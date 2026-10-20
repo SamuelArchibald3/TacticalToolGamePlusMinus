@@ -8,11 +8,15 @@ ENT.Spawnable 		= false
 --A Bot Factory's Bot (ent_botfactory). It runs at the nearest enemy player it
 --can see and hits them, and nothing else: not buildings, not other Bots.
 --
---Straight at them. None of the maps have a navmesh, so a Bot cannot plan a way
---round a wall - it goes for whoever it can see, gives up on somebody it has
---lost sight of for a second, and does not last long enough to matter when it
---gets stuck. Everything about it is in the factory's ENT_TABLE entry, the
---bot_ fields: a Bot is not a building, so it has none of its own.
+--It only goes for somebody it can see. On a map with a navmesh it then finds
+--its way round whatever is in between, and keeps after them for
+--bot_track_time once they are out of sight. On a map without one it can only
+--walk straight at them, so it gives up on somebody out of sight after
+--bot_lose_time - following them would only walk it into the wall they went
+--behind - and does not last long enough to matter when it gets stuck.
+--
+--Everything about it is in the factory's ENT_TABLE entry, the bot_ fields: a
+--Bot is not a building, so it has none of its own.
 --
 --It is hurt the way a player is. Bullets and blasts reach it by themselves;
 --the weapons that only hurt players and buildings ask IsTTGBot (meta_ent.lua)
@@ -203,10 +207,44 @@ function ENT:RunBehaviour()
 end
 
 
---Straight at them, hitting when in reach, for as long as the fight is on and
---they are an enemy in play. Every quarter second it looks again: somebody
---nearer may have come into view, and somebody out of sight for a second is
---given up on.
+--How long it keeps after somebody it has lost sight of: bot_track_time where
+--the map has a navmesh to follow them round a corner by, bot_lose_time where
+--it has not.
+function ENT:TrackTime()
+	local ref = Ref()
+
+	return navmesh.IsLoaded() and ref.bot_track_time or ref.bot_lose_time
+end
+
+
+--A step toward them. Along the navmesh where the map has one, round whatever
+--is in the way, the route worked out again every half second as they move.
+--Straight at them where it has none, or where the mesh has no way through.
+function ENT:StepToward( target )
+	if navmesh.IsLoaded() then
+		if CurTime() >= ( self.NextRouteAt or 0 ) then
+			self.NextRouteAt = CurTime() + .5
+
+			self.Route = self.Route or Path( "Follow" )
+			self.Route:SetMinLookAheadDistance( 300 )
+			self.Route:SetGoalTolerance( 20 )
+			self.Route:Compute( self, target:GetPos() )
+		end
+
+		if self.Route:IsValid() then
+			self.Route:Update( self )
+			return
+		end
+	end
+
+	self.loco:FaceTowards( target:GetPos() )
+	self.loco:Approach( target:GetPos(), 1 )
+end
+
+
+--At them, hitting when in reach, for as long as the fight is on and they are an
+--enemy in play. Every quarter second it looks again: somebody nearer may have
+--come into view, and somebody out of sight for TrackTime is given up on.
 function ENT:Chase( target )
 	self:StartActivity( self.Acts.run )
 
@@ -223,19 +261,18 @@ function ENT:Chase( target )
 				target, lostsince = nearest, nil
 			else
 				lostsince = lostsince or CurTime()
-				if CurTime() - lostsince > 1 then break end
+				if CurTime() - lostsince > self:TrackTime() then break end
 			end
 		end
-
-		self.loco:FaceTowards( target:GetPos() )
 
 		--In reach, it stands and swings rather than walking into them on the
 		--spot; a little inside reach, so a step back does not end it.
 		if ( target:GetPos() - self:GetPos() ):Length2D() > Ref().bot_reach * .75 then
 			if self:GetActivity() != self.Acts.run then self:StartActivity( self.Acts.run ) end
-			self.loco:Approach( target:GetPos(), 1 )
-		elseif self:GetActivity() != self.Acts.idle then
-			self:StartActivity( self.Acts.idle )
+			self:StepToward( target )
+		else
+			self.loco:FaceTowards( target:GetPos() )
+			if self:GetActivity() != self.Acts.idle then self:StartActivity( self.Acts.idle ) end
 		end
 
 		self:TryHit( target )
