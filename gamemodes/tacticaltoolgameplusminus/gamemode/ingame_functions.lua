@@ -1003,8 +1003,6 @@ function TTG_RewindTargets()
 end
 
 
---true if the rewind started. false is a refusal, and the ability charges no
---cooldown for one.
 --Whether there is a fight on for a Bot Factory's Bots to be in: Combat, and no
 --Rewind playing back. Every other phase has nobody to run at - Setup keeps the
 --attackers in their spawn - and a playback is moving players along their own
@@ -1014,6 +1012,8 @@ function TTG_BotsFighting()
 end
 
 
+--true if the rewind started. false is a refusal, and the ability charges no
+--cooldown for one.
 function TTG_RewindAllPlayers( instigator )
 	--two playbacks at once would be lerping the same players toward different
 	--destinations on the same Think
