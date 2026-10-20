@@ -189,12 +189,17 @@ takes_damage = true,
 health = 125,
 build_time = 24,
 build_radius = 64,
-radius = 600,
+radius = 900,		--600 until Oct 19
 bullet_damage = 1,	--3
 aim_cone = .02,
 charge_time = .3,	//.2
 aim_height = .7,	--where up the target to aim, as a fraction of their height. .5 is the waist, .7 is about the chest
 sight_grace = .4,	--how long it keeps a target it cannot currently see, before giving up and searching again
+--Each hit slows an enemy for slow_time seconds, starting the slow again rather
+--than adding another: it fires ten times a second. Harder to run past without
+--being any quicker to kill with.
+slow_buff = "Buff_SlowLow",
+slow_time = 1,
 }
 ,
 

@@ -173,10 +173,31 @@ function ENT:Shoot( )
 		bullet.Force	= 0	// Amount of force to give to phys objects
 		bullet.Damage	= self.Ref.bullet_damage
 		bullet.AmmoType = "Pistol"
+
+		--an enemy it hits is slowed for slow_time, from this hit
+		bullet.Callback = function( attacker, tr, dmginfo )
+			self:SlowIfEnemy( tr.Entity )
+		end
 	
 	self:FireBullets( bullet )
 	self:EmitSound(self.Ref.sound_d)
 	self:DoShootEffect(  )
+end
+
+
+
+--Slow an enemy player it has just hit, for slow_time from now.
+--
+--Started again rather than added to. It fires ten times a second, and the
+--buff system has no way to push a buff's end back - AddBuff on top would fill
+--all seven buff slots inside a second. The sentry is the only thing that hands
+--out this slow, so taking it off first cuts nothing else short.
+function ENT:SlowIfEnemy( ent )
+	if not IsValid( ent ) or not ent:IsValidGamePlayer() then return end
+	if ent:Team() == self.TTG_Team then return end
+
+	ent:RemoveBuff_ByName( self.Ref.slow_buff )
+	ent:AddBuff( self.Ref.slow_buff, self.Ref.slow_time, false )
 end
 
 

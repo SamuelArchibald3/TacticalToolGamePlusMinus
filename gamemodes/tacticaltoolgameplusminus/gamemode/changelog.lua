@@ -8,6 +8,12 @@
 
 TTG_CHANGELOG = {
 	{
+		date = "Oct 19",
+		notes = {
+			"Sentry: 1.5x range (900), and each hit slows you for a second",
+		},
+	},
+	{
 		date = "Oct 18",
 		notes = {
 			"Building Bomb: no longer blocks its own blast. 25 damage per direct hit",
