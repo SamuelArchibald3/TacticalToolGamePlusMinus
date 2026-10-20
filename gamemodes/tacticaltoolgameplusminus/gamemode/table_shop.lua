@@ -72,7 +72,7 @@ print_name = "Sentry",
 class = "item",
 tool_name = "tool_sentrydefender",
 pack_amount = 1,
-description = "Deploys a stationary sentry gun that shoots at enemies that come within its {ent.radius} radius. \nCan only shoots at players it can see.",
+description = "Deploys a stationary sentry gun that shoots at enemies that come within its {ent.radius} radius. Each hit slows them for {ent.slow_time} second. \nCan only shoot at players it can see.",
 bind_primary = "Deploy sentry",
 }
 ,

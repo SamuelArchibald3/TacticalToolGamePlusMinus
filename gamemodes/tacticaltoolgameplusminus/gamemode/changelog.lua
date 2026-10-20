@@ -11,6 +11,7 @@ TTG_CHANGELOG = {
 		date = "Oct 19",
 		notes = {
 			"New item: Bot Factory. Builds, then makes Bots that run at the nearest enemy and hit them",
+			"Sentry: 1.5x range (900), and each hit slows you for a second",
 		},
 	},
 	{
