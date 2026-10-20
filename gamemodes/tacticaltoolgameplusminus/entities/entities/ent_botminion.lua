@@ -86,8 +86,14 @@ function ENT:Initialize()
 	self.loco:SetAcceleration( 1000 )
 	self.loco:SetDeceleration( 1000 )
 	self.loco:SetStepHeight( 18 )
-	self.loco:SetJumpHeight( 58 )
 	self.loco:SetMaxYawRate( 360 )
+
+	--What a route may ask of it (mapsrc/navmesh.py). The navmeshes link a
+	--climb up to 64 high, and drops of any height: there is no fall damage
+	--(GM:GetFallDamage), and some spawns only have a long way down - Foundry's
+	--defenders start about 550 above the point.
+	self.loco:SetJumpHeight( 64 )
+	self.loco:SetDeathDropHeight( 2000 )
 
 	self.DieAt = CurTime() + ref.bot_lifetime
 	self.NextHit = 0
