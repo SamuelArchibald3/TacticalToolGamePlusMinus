@@ -73,6 +73,16 @@ function TTGEnt:IsTTGBot()
 end
 
 
+--On the ground: a player's OnGround, and a Bot's own (ent_botminion's
+--BotGrounded) - a Bot's engine flag does not follow it being knocked about.
+--How hard a player is knocked can depend on it: the crowbar pushes one on the
+--ground harder than one in the air.
+function TTGEnt:Grounded()
+	if self:IsTTGBot() then return self:BotGrounded() end
+	return self:OnGround()
+end
+
+
 //returns true if the ent is in its built form
 function TTGEnt:IsBuilt()
 	if self.Built == true then
@@ -167,7 +177,11 @@ function TTGEnt:Knockback( dir, horforce, vertforce )
 		
 		self:SetVelocity( Vector( dir.x, dir.y, 0 ) * horforce + Vector( 0, 0, vertforce ) )
 
-			
+	--a Bot Factory's Bot, as a player (who has no hunker): added to how it is
+	--moving, as a player's SetVelocity adds (ent_botminion's Shove)
+	elseif self:IsTTGBot() then
+		self:Shove( Vector( dir.x, dir.y, 0 ) * horforce + Vector( 0, 0, vertforce ) )
+
 	elseif self:GetPhysicsObject():IsValid() then
 		self:GetPhysicsObject():SetVelocity( Vector( dir.x, dir.y, 0 ) * horforce + Vector( 0, 0, vertforce ) )
 		

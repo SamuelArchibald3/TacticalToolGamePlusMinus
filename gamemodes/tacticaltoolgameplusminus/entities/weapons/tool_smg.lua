@@ -39,8 +39,9 @@ function SWEP:SMGShoot( )
 			bullet.Damage	=  self.BulletDamage
 			bullet.AmmoType = "Pistol"
 			bullet.Callback = function ( owner, tr, dmginfo )
-				if tr.Entity:IsPlayer() then
-					if tr.Entity:OnGround() then
+				--a player, or a Bot as a player
+				if tr.Entity:IsPlayer() or tr.Entity:IsTTGBot() then
+					if tr.Entity:Grounded() then
 						tr.Entity:Knockback( self.Owner:GetAimVector(), self.Ref.force_player_blast )
 					else
 						tr.Entity:Knockback( self.Owner:GetAimVector(), self.Ref.force_player_blast/4 )

@@ -50,6 +50,12 @@ function ENT:DoAbility()
 				ent:Knockback( Vector(aim[1], aim[2], 0), self.Ref.force_player_blast, self.Ref.force_player_blast_vert )
 				ent:AddBuff( "Buff_Airblasted", 1 )
 			end
+		--a Bot, as a player: not again within the second either
+		elseif ent:IsTTGBot() then
+			if ( ent.TTG_AirblastedUntil or 0 ) <= CurTime() then
+				ent:Knockback( Vector(aim[1], aim[2], 0), self.Ref.force_player_blast, self.Ref.force_player_blast_vert )
+				ent.TTG_AirblastedUntil = CurTime() + 1
+			end
 		--blast back physics ent
 		elseif ent:GetPhysicsObject( ):IsValid() and ent != self.Owner then
 		

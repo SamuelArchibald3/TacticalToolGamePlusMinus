@@ -362,9 +362,13 @@ function ENT:Chase( target )
 			end
 		end
 
-		--In reach, it stands and swings rather than walking into them on the
-		--spot; a little inside reach, so a step back does not end it.
-		if ( target:GetPos() - self:GetPos() ):Length2D() > Ref().bot_reach * .75 then
+		--Knocked about, it goes where the push takes it (Slide), and steers
+		--again once that has died away. In reach, it stands and swings rather
+		--than walking into them on the spot; a little inside reach, so a step
+		--back does not end it.
+		if self.ShoveVel then
+			--nothing: Slide has it
+		elseif ( target:GetPos() - self:GetPos() ):Length2D() > Ref().bot_reach * .75 then
 			if self:GetActivity() != self.Acts.run then self:StartActivity( self.Acts.run ) end
 			self:StepToward( target )
 		else
@@ -376,7 +380,7 @@ function ENT:Chase( target )
 
 		--up a climb the route skipped it past, or a hop, for a lip it has
 		--walked into
-		if self.loco:IsStuck() then
+		if not self.ShoveVel and self.loco:IsStuck() then
 			if not ( self.Route and self.Route:IsValid() and self:Climb( self.Route, true ) ) then self.loco:Jump() end
 			self.loco:ClearStuck()
 		end
@@ -415,7 +419,157 @@ end
 
 
 function ENT:Think()
-	self:Spent()
+	if self:Spent() then return end
+
+	if self.ShoveVel then
+		self:Slide( FrameTime() )
+		self:NextThink( CurTime() )
+		return true
+	end
+end
+
+
+------------------------------------------------------------------------------------------------
+--Knocked about
+------------------------------------------------------------------------------------------------
+
+--Knocked as a player is (TTGEnt:Knockback), so whatever pushes a player pushes
+--a Bot the same - and its own side can shove it where they want it. The push
+--is added to how it is moving; it slides to a stop with a player's friction on
+--the ground, flies under gravity off it, runs along whatever it hits, and
+--steers again once the push has died away.
+--
+--By hand, a tick at a time, as the engine moves a player. A NextBot's
+--locomotion takes no velocity it is handed on the ground, and only some of it
+--in the air: a crowbar's push slid a player 220 and moved a Bot nowhere.
+function ENT:Shove( push )
+	if not self.ShoveVel then
+		self.ShoveGrounded = self:BotGrounded()
+		self.ShoveVel = self.loco:GetVelocity()
+		self.ShoveSince = CurTime()
+
+		--its locomotion is left with nothing to do meanwhile
+		self.ShoveGravity = self.loco:GetGravity()
+		self.loco:SetGravity( 0 )
+	end
+
+	self.ShoveVel = self.ShoveVel + push
+
+	--Up, off the ground: the locomotion holds a Bot down to the floor it is
+	--walking on unless it is jumping.
+	if push.z > 0 then
+		self.ShoveGrounded = false
+		self.loco:Jump()
+	end
+end
+
+
+--How it is moving, as a player's GetVelocity: under a push, or walking.
+function ENT:ShoveVelocity()
+	return self.ShoveVel and Vector( self.ShoveVel ) or self.loco:GetVelocity()
+end
+
+
+--On the ground, for TTGEnt:Grounded, as a player's OnGround says it. Not an
+--OnGround of its own: the engine's Entity:OnGround would be found first.
+function ENT:BotGrounded()
+	if self.ShoveVel then return self.ShoveGrounded end
+	if self.loco:IsOnGround() then return true end
+
+	--or floor right under it: its locomotion only says so once it has moved,
+	--and a Bot made this tick has not
+	local tr = util.TraceHull( { start = self:GetPos() + Vector( 0, 0, 2 ), endpos = self:GetPos() - Vector( 0, 0, 2 ),
+		mins = self:OBBMins(), maxs = self:OBBMaxs(), mask = self:GetSolidMask(), filter = self } )
+	return tr.Hit and tr.HitNormal.z >= .7
+end
+
+
+local function Setting( name, default )
+	local cv = GetConVar( name )
+	return cv and cv:GetFloat() or default
+end
+
+
+--A tick of being knocked about.
+function ENT:Slide( dt )
+	local v = self.ShoveVel
+	local mins, maxs = self:OBBMins(), self:OBBMaxs()
+	local mask = self:GetSolidMask()
+
+	local function Trace( a, b )
+		return util.TraceHull( { start = a, endpos = b, mins = mins, maxs = maxs, mask = mask, filter = self } )
+	end
+
+	--From pos by move, along whatever it runs into, as a player moves: what
+	--it runs into takes that much off the push.
+	local function Move( pos, move )
+		for i = 1, 3 do
+			local tr = Trace( pos, pos + move )
+
+			--resting a hair into the floor, as a Bot stands: from just above it
+			if tr.StartSolid and i == 1 then
+				tr = Trace( pos + Vector( 0, 0, 1 ), pos + Vector( 0, 0, 1 ) + move )
+			end
+			if tr.StartSolid then return pos end
+
+			pos = tr.HitPos
+			if not tr.Hit then break end
+
+			local n = tr.HitNormal
+			v = v - n * math.min( v:Dot( n ), 0 )
+			move = move * ( 1 - tr.Fraction )
+			move = move - n * math.min( move:Dot( n ), 0 )
+		end
+
+		return pos
+	end
+
+	--Where it left it last tick: the locomotion still nudges it the odd
+	--tick - down to the floor, the tick after a jump - and a push is the
+	--push's to finish. Moved further than that, something meant it.
+	local pos = self:GetPos()
+	if self.ShovePos and pos:DistToSqr( self.ShovePos ) < 32 * 32 then pos = self.ShovePos end
+
+	local floor = Trace( pos + Vector( 0, 0, 2 ), pos - Vector( 0, 0, 2 ) )
+	local grounded = v.z <= 0 and floor.Hit and floor.HitNormal.z >= .7
+
+	if grounded then
+		v.z = 0
+
+		--a player's friction: sv_friction, and below sv_stopspeed it slows
+		--as if going that fast
+		local speed = v:Length()
+		if speed > 0 then
+			local drop = math.max( speed, Setting( "sv_stopspeed", 100 ) ) * Setting( "sv_friction", 8 ) * dt
+			v = v * ( math.max( speed - drop, 0 ) / speed )
+		end
+
+		--across, up a step and back down as a player takes a stair; off an
+		--edge it is left in the air, to fall from the next tick
+		local step = Vector( 0, 0, self.loco:GetStepHeight() )
+		local across = Move( Trace( pos, pos + step ).HitPos, v * dt )
+		pos = Trace( across, across - step - Vector( 0, 0, 2 ) ).HitPos
+	else
+		--half the tick's gravity before the move and half after, as the
+		--engine gives a player it
+		local g = Setting( "sv_gravity", 600 ) * dt / 2
+		v.z = v.z - g
+		pos = Move( pos, v * dt )
+		v.z = v.z - g
+	end
+
+	self:SetPos( pos )
+	self.loco:SetVelocity( vector_origin )
+	self.ShoveVel = v
+	self.ShovePos = pos
+	self.ShoveGrounded = grounded
+
+	--Died away, it is back on its feet. Or wedged somewhere a push cannot
+	--get it out of, it is left to its locomotion after a few seconds.
+	if ( grounded and v:Length2D() < 1 ) or CurTime() - self.ShoveSince > 5 then
+		self.ShoveVel, self.ShovePos = nil, nil
+		self.loco:SetGravity( self.ShoveGravity )
+	end
 end
 
 

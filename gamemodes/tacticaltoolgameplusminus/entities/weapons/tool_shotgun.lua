@@ -28,8 +28,9 @@ end
 function SWEP:PushHitPlys( )
 
 	for _, ent in pairs( self.LastShotHitEnts ) do
-		if ent:IsPlayer() then
-			if ent:OnGround() then
+		--a player, or a Bot as a player
+		if ent:IsPlayer() or ent:IsTTGBot() then
+			if ent:Grounded() then
 				ent:Knockback( self.Owner:GetAimVector(), self.Ref.force_player_blast )
 			else
 				ent:Knockback( self.Owner:GetAimVector(), self.Ref.force_player_blast/6 )

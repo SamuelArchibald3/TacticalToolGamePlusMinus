@@ -70,7 +70,7 @@ function ENT:PullBack( ent, enttype )
 		ent:Knockback( -shoot_ang, self.Ref.force_physics_blast, 300 )
 		
 	elseif enttype == "ply" then
-		if ent:OnGround() then
+		if ent:Grounded() then
 			ent:Knockback( -shoot_ang, self.Ref.force_player_blast, 300 )
 		else
 			ent:Knockback( -shoot_ang, self.Ref.force_player_blast/2, 300 )
@@ -101,7 +101,14 @@ function ENT:Think()
 			self:PullBack( ent, "ply" )
 			self.PulledBack = true
 			return
-			
+
+		--a Bot, as a player: not again within the second either
+		elseif ent:IsTTGBot() and ( ent.TTG_LassodUntil or 0 ) <= CurTime() then
+			ent.TTG_LassodUntil = CurTime() + 1
+			self:PullBack( ent, "ply" )
+			self.PulledBack = true
+			return
+
 		--can lasso props for now
 		elseif CheckIfInEntTable( ent ) then
 			local entref = EntReference(ent:GetClass())

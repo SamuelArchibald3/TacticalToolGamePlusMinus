@@ -107,12 +107,12 @@ function ENT:KnockBackStuff()
 			local rot = Angle(0, 0, 0)
 			knock_ang:Rotate( rot )
 		
-			--blast back a player
-			if ent:IsValidGamePlayer() and ent:Team() != self.TTG_Team then
+			--blast back a player, or a Bot as a player
+			if ( ent:IsValidGamePlayer() and ent:Team() != self.TTG_Team ) or ( ent:IsTTGBot() and ent.TTG_Team != self.TTG_Team ) then
 				
 
 
-				if ent:OnGround() then
+				if ent:Grounded() then
 					//ent:SetVelocity( knock_ang * self.Ref.force_player_blast + Vector(0, 0, 400))
 					ent:Knockback( knock_ang, self.Ref.force_player_blast, self.Ref.force_player_blast_vert )
 			

@@ -334,11 +334,19 @@ function SWEP:SwingMelee( )
 			
 		
 		--A Bot Factory's Bot: hit as a player is, less what only a player has -
-		--the snare, the knockback, the barrel disguise. One on the swinger's
-		--own side takes nothing (ent_botminion's friendly fire hook).
+		--the snare and the barrel disguise. Knocked as a player is, by either
+		--side, so its own side can shove it where they want it; one on the
+		--swinger's own side takes no damage (ent_botminion's friendly fire
+		--hook).
 		elseif ( IsValid( tr.Entity )) and tr.Entity:IsTTGBot() then
 			if SERVER then
 				self.Owner:EmitSound( self.Ref.sound_hit_flesh )
+
+				if tr.Entity:Grounded() then
+					tr.Entity:Knockback( Vector(aim[1], aim[2], 0), self.Ref.force_ply_ground )
+				else
+					tr.Entity:Knockback( Vector(aim[1], aim[2], 0), self.Ref.force_ply_air )
+				end
 
 				local dmginfo = DamageInfo()
 					dmginfo:SetDamage( self.Ref.damage )

@@ -103,7 +103,8 @@ function ENT:Think()
 			if self.OnCooldown != true then
 				self:AirblastAbility(  )
 			end
-		elseif CheckIfInEntTable( ent ) and ent != self and ent.TTG_Team != self.TTG_Team then
+		--an enemy Bot sets it off as an enemy player does
+		elseif ( CheckIfInEntTable( ent ) or ent:IsTTGBot() ) and ent != self and ent.TTG_Team != self.TTG_Team then
 			if self.OnCooldown != true then
 				self:AirblastAbility(  )
 			end
@@ -139,6 +140,18 @@ function ENT:AirblastAbility( blastallies )
 				ent:Knockback( finalang, 1000, 300 )
 			end)
 
+		--a Bot, as a player who has no hunker - stopped, then blasted - less
+		--the snare
+		elseif ent:IsTTGBot() then
+			ent:Shove( -ent:ShoveVelocity() )
+
+			timer.Simple( .1, function()
+				if not IsValid(self) or not IsValid(ent) then return end
+				local newang = Angle(0,self.TTG_Angles.y,0)
+
+				ent:Knockback( newang:Forward(), 1000, 300 )
+			end)
+
 		elseif ent:GetPhysicsObject( ):IsValid() and not ent:IsPlayer() then
 			local newang = Angle(0,self.TTG_Angles.y,0)
 			local finalang = newang:Forward()
@@ -165,7 +178,13 @@ function ENT:AirblastAbility( blastallies )
 					BlastEnt( ent )
 				end
 			end
-			
+
+		--a Bot, as a player
+		elseif ent:IsTTGBot() then
+			if blastallies == true or ent.TTG_Team != self.TTG_Team then
+				BlastEnt( ent )
+			end
+
 		elseif ent:GetPhysicsObject( ):IsValid() and not ent:IsPlayer() then
 			BlastEnt( ent )
 		end
