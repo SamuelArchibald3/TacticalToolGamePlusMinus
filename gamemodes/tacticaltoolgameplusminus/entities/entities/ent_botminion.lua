@@ -239,12 +239,103 @@ function ENT:StepToward( target )
 
 		if self.Route:IsValid() then
 			self.Route:Update( self )
+			self:Climb( self.Route )
 			return
 		end
 	end
 
 	self.loco:FaceTowards( target:GetPos() )
 	self.loco:Approach( target:GetPos(), 1 )
+end
+
+
+local CLIMB_UP = 2		--a path segment's type
+
+--Up a climb: lifted onto the ledge in front of it, not jumped there. A
+--NextBot jumping at a ledge ends up wedged in the floor at the foot of it -
+--spoon's step of 32 and threeway's of 64 both held one there for good - so
+--this is how a climb is done: room straight up and then across is checked
+--for its whole body, and it is moved up and over a few units a tick. The
+--navmesh generator's walker (mapsrc/navgen) climbs the same way.
+--toward is somewhere past the ledge, where the route goes on. True if it went
+--up.
+function ENT:Vault( toward )
+	local pos = self:GetPos()
+	local dir = toward - pos
+	dir.z = 0
+	if dir:IsZero() then return false end
+	dir:Normalize()
+
+	local mins, maxs = self:OBBMins(), self:OBBMaxs()
+	local step, jump = self.loco:GetStepHeight(), self.loco:GetJumpHeight()
+	local mask = self:GetSolidMask()
+
+	local function Room( a, b )
+		local tr = util.TraceHull( { start = a, endpos = b or a, mins = mins, maxs = maxs, mask = mask, filter = self } )
+		return not tr.Hit and not tr.StartSolid
+	end
+
+	--the top: the first spot ahead, more than a step and no more than a jump
+	--up (and a little: the floor at the foot of a climb can sit lower than its
+	--area), with room for all of it
+	local top
+	for d = 8, 72, 4 do
+		local p = pos + dir * d
+		local tr = util.TraceLine( { start = p + Vector( 0, 0, jump + 8 ), endpos = p + Vector( 0, 0, step + 1 ), mask = mask, filter = self } )
+		if tr.Hit and not tr.StartSolid and tr.HitNormal.z > .7 and Room( tr.HitPos + Vector( 0, 0, 1 ) ) then
+			top = tr.HitPos + Vector( 0, 0, 1 )
+			break
+		end
+	end
+	if not top then return false end
+
+	--from where it stands, or a little back if it has walked its front into
+	--the face of the step
+	local base
+	for back = 0, 8, 4 do
+		local b = pos - dir * back + Vector( 0, 0, 1 )
+		if Room( b ) then base = b break end
+	end
+	if not base then return false end
+
+	local above = Vector( base.x, base.y, top.z )
+	if not Room( base, above ) or not Room( above, top ) then return false end
+
+	for _, leg in ipairs( { { base, above }, { above, top } } ) do
+		local n = math.max( 1, math.ceil( leg[ 1 ]:Distance( leg[ 2 ] ) / 6 ) )
+		for i = 1, n do
+			self:SetPos( LerpVector( i / n, leg[ 1 ], leg[ 2 ] ) )
+			self.loco:SetVelocity( vector_origin )
+			coroutine.yield()
+		end
+	end
+
+	return true
+end
+
+
+--At the foot of a climb the route goes up, over it. Path:Update only walks:
+--it takes a Bot to the foot of a climb and no further - or, at a climb as high
+--as its jump, on to the top as if it had climbed, and the Bot walks into the
+--wall under it, stuck. True if it went up.
+function ENT:Climb( route, stuck )
+	local goal = route:GetCurrentGoal()
+	if not goal or not self.loco:IsOnGround() then return false end
+
+	if goal.type == CLIMB_UP and ( goal.pos - self:GetPos() ):Length2D() <= 40 then
+		--past the ledge: the segment after this one
+		local segs = route:GetAllSegments()
+		for i, s in ipairs( segs ) do
+			if s.pos:DistToSqr( goal.pos ) < 1 and segs[ i + 1 ] then return self:Vault( segs[ i + 1 ].pos ) end
+		end
+		return self:Vault( goal.pos + goal.forward * 64 )
+	end
+
+	if stuck and goal.pos.z - self:GetPos().z > self.loco:GetStepHeight() then
+		return self:Vault( goal.pos )
+	end
+
+	return false
 end
 
 
@@ -283,9 +374,10 @@ function ENT:Chase( target )
 
 		self:TryHit( target )
 
-		--a hop, for a lip it has walked into
+		--up a climb the route skipped it past, or a hop, for a lip it has
+		--walked into
 		if self.loco:IsStuck() then
-			self.loco:Jump()
+			if not ( self.Route and self.Route:IsValid() and self:Climb( self.Route, true ) ) then self.loco:Jump() end
 			self.loco:ClearStuck()
 		end
 
