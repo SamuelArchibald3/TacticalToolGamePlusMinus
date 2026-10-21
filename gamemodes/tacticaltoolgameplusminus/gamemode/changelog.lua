@@ -8,6 +8,12 @@
 
 TTG_CHANGELOG = {
 	{
+		date = "Oct 21",
+		notes = {
+			"Fixed: Building Bomb hurting players, and physics hits hurting players",
+		},
+	},
+	{
 		date = "Oct 19",
 		notes = {
 			"New item: Bot Factory. Builds, then makes Bots that run at the nearest enemy and hit them",

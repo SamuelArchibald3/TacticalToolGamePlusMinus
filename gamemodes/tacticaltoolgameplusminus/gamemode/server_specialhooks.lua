@@ -69,9 +69,8 @@ function GM:PlayerShouldTakeDamage( victim, attacker )
 	--during the playback still counts, deliberately (see TTG_RewindFinish),
 	--and where they land is somewhere they stood alive.
 	--
-	--Here rather than in an EntityTakeDamage hook, because ShieldScaleDamage
-	--returns a value for every player, which stops whichever of those hooks
-	--happen to run after it.
+	--Here rather than in an EntityTakeDamage hook: those run in no particular
+	--order, and one that returns a value stops the rest.
 	if victim:IsRewinding() and IsValid( attacker ) and attacker:GetClass() == "trigger_hurt" then
 		return false
 	end

@@ -329,9 +329,14 @@ if SERVER then
 		else
 			dmginfo:ScaleDamage( 1 )
 		end
-	 
-		return dmginfo
-	 
+
+		--Nothing returned. It used to hand back dmginfo, and hook.Run stops at
+		--the first EntityTakeDamage hook that returns anything: whichever of the
+		--others came after this one never ran for a player. One of them is
+		--SetEntityDamage, which keeps a Building Bomb's blast, physics hits and
+		--Setup's hurt volumes off players. The order they run in is the hook
+		--table's, which shifts as hooks are added: with the Bot Factory's in,
+		--this one ran first, and a Building Bomb hurt players.
 	end
 	hook.Add("EntityTakeDamage", "ShieldScaleDamage", ShieldScaleDamage)
 end
