@@ -86,10 +86,11 @@ function ENT:DamageEnt( hitent )
 	if hitent:IsWorld() then
 		HitWorld()
 
-	elseif hitent:IsValidGamePlayer() or CheckIfInEntTable( hitent ) then 
+	elseif hitent:IsValidGamePlayer() or CheckIfInEntTable( hitent ) or hitent:IsTTGBot() then 
 		if hitent:GetClass() == "ent_missile" and hitent.TTG_Team == self.TTG_Team and hitent.Creator == self.Creator then return end
 		
-		if hitent:IsPlayer() then
+		--a Bot Factory's Bot takes what a player would
+		if hitent:IsPlayer() or hitent:IsTTGBot() then
 			local dmginfo = DamageInfo()
 				dmginfo:SetDamage( self.Ref.damage_player )
 				dmginfo:SetInflictor( self )

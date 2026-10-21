@@ -72,8 +72,20 @@ print_name = "Sentry",
 class = "item",
 tool_name = "tool_sentrydefender",
 pack_amount = 1,
-description = "Deploys a stationary sentry gun that shoots at enemies that come within its {ent.radius} radius. \nCan only shoots at players it can see.",
+description = "Deploys a stationary sentry gun that shoots at enemies that come within its {ent.radius} radius. Each hit slows them for {ent.slow_time} second. \nCan only shoot at players it can see.",
 bind_primary = "Deploy sentry",
+}
+,
+
+purchase_botfactory =
+{
+name = "purchase_botfactory",
+print_name = "Bot Factory",
+class = "item",
+tool_name = "tool_botfactory",
+pack_amount = 1,
+description = "Deploys a factory that makes a Bot every {ent.bot_interval} seconds once the fight is on, up to {ent.bot_max} at a time. \nBots run at the nearest enemy they can see and hit for {ent.bot_damage}. They have {ent.bot_health} health, last {ent.bot_lifetime} seconds, and go when the factory does. \nThe factory has {ent.health_building} health while it builds and {ent.health} once built.",
+bind_primary = "Deploy bot factory",
 }
 ,
 
