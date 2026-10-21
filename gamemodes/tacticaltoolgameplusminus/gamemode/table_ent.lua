@@ -226,7 +226,7 @@ build_radius = 64,
 
 bot_interval = 6,		--seconds between Bots
 bot_max = 3,			--alive at once, per factory
-bot_health = 30,		--two crowbar swings
+bot_health = 20,		--one crowbar swing
 bot_speed = 170,		--players run at 190, so they can be outrun
 bot_damage = 15,
 bot_reach = 60,			--how close it has to be to hit
