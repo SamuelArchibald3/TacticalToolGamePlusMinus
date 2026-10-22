@@ -11,6 +11,7 @@ TTG_CHANGELOG = {
 		date = "Oct 21",
 		notes = {
 			"Fixed: Building Bomb hurting players, and physics hits hurting players",
+			"Bot Factory: 2 Bots at a time (was 3), one every 10s (was 6), 10 damage (was 15), slower (140, was 170)",
 		},
 	},
 	{
