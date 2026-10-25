@@ -32,8 +32,8 @@ ttg_nukevlan
 
 # generated in mapsrc/
 # ttg_3path_a1
-ttg_keep_a1
-ttg_gate_a1
+ttg_keep_a2
+ttg_gate_a2
 
 # Counter-Strike: Source's de_dust2, ported by mapsrc/port_css.py
 ttg_dust2_a1

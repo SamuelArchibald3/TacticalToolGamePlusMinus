@@ -8,6 +8,14 @@
 
 TTG_CHANGELOG = {
 	{
+		date = "Oct 24",
+		notes = {
+			"Sentry: no longer slows you (keeps its 900 range)",
+			"Nade: clip of 2 (was 3)",
+			"Bot Factory: out of the shop for now",
+		},
+	},
+	{
 		date = "Oct 21",
 		notes = {
 			"Fixed: Building Bomb hurting players, and physics hits hurting players",

@@ -26,3 +26,4 @@
 purchase_stuntrap
 purchase_mine
 purchase_ensnare
+purchase_botfactory
