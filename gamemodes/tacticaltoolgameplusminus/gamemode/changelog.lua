@@ -8,6 +8,12 @@
 
 TTG_CHANGELOG = {
 	{
+		date = "Oct 29",
+		notes = {
+			"Claude Item, Claude Weapon and Claude Ability: out of the shop for now",
+		},
+	},
+	{
 		date = "Oct 24",
 		notes = {
 			"Sentry: no longer slows you (keeps its 900 range)",

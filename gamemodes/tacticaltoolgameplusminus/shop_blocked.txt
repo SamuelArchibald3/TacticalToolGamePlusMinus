@@ -27,3 +27,6 @@ purchase_stuntrap
 purchase_mine
 purchase_ensnare
 purchase_botfactory
+purchase_claudebox
+purchase_claude
+purchase_claude_ability
